@@ -1515,7 +1515,7 @@ describe('CreateRuntimeProfileComponent UI & Service', () => {
     expect(getDrawerCheckbox()?.checked).toBe(false);
   });
 
-  it('should format runtime profile summary rows matching the screenshot', () => {
+  it('should format default runtime profile summary rows', () => {
     const rows: ISectionProperty[] = formatRuntimeProfileSummaryProperties({
       tier: 'Premium',
       lightningEngineEnabled: true,
@@ -1556,7 +1556,7 @@ describe('CreateRuntimeProfileComponent UI & Service', () => {
     ).toBe('Lakehouse runtime catalog (frontrow-team)');
   });
 
-  it('should render standalone RuntimeProfileSummary component with edit-drawer styling and inject it into CreateRuntimeProfileComponent by default when EditDrawer is closed', () => {
+  it('should render standalone RuntimeProfileSummary component with edit-drawer styling and inject it into CreateRuntimeProfileComponent by default when EditDrawer is closed', async () => {
     expect(RuntimeProfileSummary).toBeDefined();
 
     const summaryMarkup = ReactDOMServer.renderToStaticMarkup(
@@ -1583,13 +1583,18 @@ describe('CreateRuntimeProfileComponent UI & Service', () => {
     expect(summaryMarkup).toContain('Premium (Lightning Engine enabled)');
     expect(summaryMarkup).toContain('Same as executor');
 
-    const injectedCreateMarkup = ReactDOMServer.renderToStaticMarkup(
-      <CreateRuntimeProfileComponent SummaryComponent={RuntimeProfileSummary} />
-    );
-    expect(injectedCreateMarkup).toContain(
+    await act(async () => {
+      root.render(
+        <CreateRuntimeProfileComponent
+          service={mockService}
+          SummaryComponent={RuntimeProfileSummary}
+        />
+      );
+    });
+    expect(container.innerHTML).toContain(
       'data-testid="runtime-profile-summary-section"'
     );
-    expect(injectedCreateMarkup).toContain('Same as executor');
+    expect(container.innerHTML).toContain('Same as executor');
   });
 
   it('should handle Standard tier, disabled autoscaling, separate driver config, and empty fallbacks in summary', async () => {
@@ -1739,7 +1744,7 @@ describe('CreateRuntimeProfileComponent UI & Service', () => {
     );
   });
 
-  it('should calculate runtime pricing estimate DCU values matching the specification across all 6 test cases', () => {
+  it('should calculate runtime pricing estimate DCU values across machine shapes and autoscaling configurations', () => {
     expect(MACHINE_SHAPE_RESOURCES['highmem-4']).toEqual({
       vcpus: 4,
       memoryGib: 32
@@ -1757,7 +1762,7 @@ describe('CreateRuntimeProfileComponent UI & Service', () => {
     expect(getShapeDcu('unknown-shape')).toBe(0);
     expect(getShapeDcu('')).toBe(0);
 
-    // 1. Default values matching screenshot (highmem-4 = 5.6 DCU, initialExecutors: 5, minExecutors: 2, maxExecutors: 1000)
+    // 1. Baseline and autoscaling range for highmem-4 (5.6 DCU, initialExecutors: 5, minExecutors: 2, maxExecutors: 1000)
     const defaultEstimate = calculateRuntimePricingEstimate({
       executorMachineType: 'highmem-4',
       useDifferentDriverConfig: false,
