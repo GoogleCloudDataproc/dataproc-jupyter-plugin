@@ -1630,7 +1630,7 @@ describe('CreateRuntimeProfileComponent UI & Service', () => {
     );
   });
 
-  it('should calculate runtime pricing estimate DCU values matching the Pantheon specification across all 6 test cases', () => {
+  it('should calculate runtime pricing estimate DCU values matching the specification across all 6 test cases', () => {
     expect(MACHINE_SHAPE_RESOURCES['highmem-4']).toEqual({
       vcpus: 4,
       memoryGib: 32
