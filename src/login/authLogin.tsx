@@ -85,8 +85,7 @@ const AuthLoginComponent = ({
     // Fetch the feature flag
     requestAPI('settings')
       .then((data: any) => {
-        setRuntimeProfileUiEnabled(true);
-        // setRuntimeProfileUiEnabled(Boolean(data?.enable_runtime_profile_integration));
+        setRuntimeProfileUiEnabled(Boolean(data?.enable_runtime_profile_integration));
       })
       .catch(err => {
         console.error('Error fetching settings for feature flag', err);
