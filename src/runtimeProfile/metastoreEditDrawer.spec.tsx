@@ -40,9 +40,10 @@ jest.mock('../utils/utils', () => ({
 
 jest.mock('../utils/biglakeService', () => ({
   ...jest.requireActual('../utils/biglakeService'),
-  listBigLakeCatalogsAPI: jest
+  listIcebergCatalogsAPI: jest
     .fn()
-    .mockResolvedValue(['catalog-a', 'catalog-b'])
+    .mockResolvedValue(['catalog-a', 'catalog-b']),
+  listHiveCatalogsAPI: jest.fn().mockResolvedValue(['catalog-a', 'catalog-b'])
 }));
 
 jest.mock('../utils/metastoreService', () => ({
@@ -71,7 +72,10 @@ import {
 } from './metastoreEditDrawer';
 import { LAKEHOUSE_RUNTIME_CATALOG } from './runtimeProfileMapper';
 import { IMetastoreConfig } from './runtimeProfileInterface';
-import { listBigLakeCatalogsAPI } from '../utils/biglakeService';
+import {
+  listHiveCatalogsAPI,
+  listIcebergCatalogsAPI
+} from '../utils/biglakeService';
 
 describe('MetastoreEditDrawer & Metastore Flow', () => {
   const initialLakehouseConfig: IMetastoreConfig = {
@@ -328,15 +332,14 @@ describe('MetastoreEditDrawer interactions', () => {
     await click(radio('existing'));
     await wait();
 
-    expect(listBigLakeCatalogsAPI).toHaveBeenCalledTimes(1);
-    expect(listBigLakeCatalogsAPI).toHaveBeenCalledWith(
-      'my-project',
-      'us-central1'
-    );
+    expect(listIcebergCatalogsAPI).toHaveBeenCalledTimes(1);
+    expect(listIcebergCatalogsAPI).toHaveBeenCalledWith('my-project');
+    // The Hive endpoint is off, so its catalogs are not fetched.
+    expect(listHiveCatalogsAPI).not.toHaveBeenCalled();
 
     await chooseOption('existing-catalog-select', 'catalog-b');
     await wait();
-    expect(listBigLakeCatalogsAPI).toHaveBeenCalledTimes(1);
+    expect(listIcebergCatalogsAPI).toHaveBeenCalledTimes(1);
 
     await click(saveButton());
     expect(onSave.mock.calls[0][0]).toEqual(
@@ -364,18 +367,15 @@ describe('MetastoreEditDrawer interactions', () => {
     await renderDrawer();
     await click(checkbox('Hive Endpoint'));
     await wait();
-    (listBigLakeCatalogsAPI as jest.Mock).mockClear();
+    (listHiveCatalogsAPI as jest.Mock).mockClear();
 
     await typeInto(input('hive-project-id'), 'other-pro');
     await typeInto(input('hive-project-id'), 'other-project');
-    expect(listBigLakeCatalogsAPI).not.toHaveBeenCalled();
+    expect(listHiveCatalogsAPI).not.toHaveBeenCalled();
 
     await wait(PROJECT_INPUT_DEBOUNCE_MS + 100);
-    expect(listBigLakeCatalogsAPI).toHaveBeenCalledTimes(1);
-    expect(listBigLakeCatalogsAPI).toHaveBeenCalledWith(
-      'other-project',
-      'us-central1'
-    );
+    expect(listHiveCatalogsAPI).toHaveBeenCalledTimes(1);
+    expect(listHiveCatalogsAPI).toHaveBeenCalledWith('other-project');
   });
 
   it('saves a typed project right away and drops the old project service', async () => {
@@ -405,7 +405,7 @@ describe('MetastoreEditDrawer interactions', () => {
     expect(saveButton().disabled).toBe(false);
 
     let resolveCatalogs: (catalogs: string[]) => void = () => undefined;
-    (listBigLakeCatalogsAPI as jest.Mock).mockReturnValueOnce(
+    (listIcebergCatalogsAPI as jest.Mock).mockReturnValueOnce(
       new Promise(resolve => {
         resolveCatalogs = resolve;
       })
@@ -436,7 +436,7 @@ describe('MetastoreEditDrawer interactions', () => {
     await typeInto(input('hive-catalog-name'), 'my_hive');
 
     let resolveCatalogs: (catalogs: string[]) => void = () => undefined;
-    (listBigLakeCatalogsAPI as jest.Mock).mockReturnValueOnce(
+    (listHiveCatalogsAPI as jest.Mock).mockReturnValueOnce(
       new Promise(resolve => {
         resolveCatalogs = resolve;
       })
@@ -464,7 +464,7 @@ describe('MetastoreEditDrawer interactions', () => {
     await click(checkbox('Hive Endpoint'));
     await wait();
 
-    (listBigLakeCatalogsAPI as jest.Mock).mockResolvedValueOnce([
+    (listHiveCatalogsAPI as jest.Mock).mockResolvedValueOnce([
       'picked-catalog'
     ]);
     await click(

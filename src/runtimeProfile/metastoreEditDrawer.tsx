@@ -40,7 +40,10 @@ import {
   LAKEHOUSE_RUNTIME_CATALOG,
   METASTORE_NONE
 } from './runtimeProfileMapper';
-import { listBigLakeCatalogsAPI } from '../utils/biglakeService';
+import {
+  listHiveCatalogsAPI,
+  listIcebergCatalogsAPI
+} from '../utils/biglakeService';
 import { metastoreServiceListAPI } from '../utils/metastoreService';
 import { authApi } from '../utils/utils';
 
@@ -361,7 +364,7 @@ export const MetastoreEditDrawer: React.FC<IMetastoreEditDrawerProps> = ({
     }
     let cancelled = false;
     setIsLoadingCatalogs(true);
-    listBigLakeCatalogsAPI(state.projectId, region).then(catalogs => {
+    listIcebergCatalogsAPI(state.projectId).then(catalogs => {
       if (cancelled) {
         return;
       }
@@ -382,8 +385,7 @@ export const MetastoreEditDrawer: React.FC<IMetastoreEditDrawerProps> = ({
     state.metastoreType,
     state.icebergRestEndpointEnabled,
     state.catalogSelectionMode,
-    state.projectId,
-    region
+    state.projectId
   ]);
 
   // Catalogs for the Hive endpoint.
@@ -398,7 +400,7 @@ export const MetastoreEditDrawer: React.FC<IMetastoreEditDrawerProps> = ({
     }
     let cancelled = false;
     setIsLoadingHiveCatalogs(true);
-    listBigLakeCatalogsAPI(state.hiveProjectId, region).then(catalogs => {
+    listHiveCatalogsAPI(state.hiveProjectId).then(catalogs => {
       if (cancelled) {
         return;
       }
@@ -423,8 +425,7 @@ export const MetastoreEditDrawer: React.FC<IMetastoreEditDrawerProps> = ({
     open,
     state.metastoreType,
     state.hiveEndpointEnabled,
-    state.hiveProjectId,
-    region
+    state.hiveProjectId
   ]);
 
   // Dataproc Metastore services.
