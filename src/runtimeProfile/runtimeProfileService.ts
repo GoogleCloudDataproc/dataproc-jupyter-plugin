@@ -482,7 +482,7 @@ export class RuntimeProfileService implements IRuntimeProfileService {
       );
 
       const result = await response.json().catch(() => null);
-      if (!response.ok || result?.error) {
+      if (!response.ok || !result || result.error) {
         throw new Error(
           result?.error?.message ||
             `Failed to update runtime profile (${response.status}: ${response.statusText})`

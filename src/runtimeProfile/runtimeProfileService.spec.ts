@@ -517,6 +517,23 @@ describe('RuntimeProfileService', () => {
       ).rejects.toThrow('Failed to update runtime profile (502: Bad Gateway)');
     });
 
+    it('throws when the live update succeeds without a readable body', async () => {
+      const service = new RuntimeProfileService(false);
+      (authApi as jest.Mock).mockResolvedValue({ access_token: 'live-token' });
+      (loggedFetch as jest.Mock).mockResolvedValue({
+        ok: true,
+        status: 200,
+        statusText: 'OK',
+        json: jest
+          .fn()
+          .mockRejectedValue(new SyntaxError('Unexpected end of JSON input'))
+      });
+
+      await expect(
+        service.updateRuntimeProfile(existingProfile, payload)
+      ).rejects.toThrow('Failed to update runtime profile (200: OK)');
+    });
+
     it('returns the merged profile without calling the API in mock mode', async () => {
       const service = new RuntimeProfileService(true);
 

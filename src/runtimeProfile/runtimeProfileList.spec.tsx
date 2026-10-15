@@ -549,6 +549,18 @@ describe('RuntimeProfileList Component', () => {
     );
   });
 
+  it('should keep the Edit button disabled when there is no app to open the form', async () => {
+    await act(async () => {
+      root.render(<RuntimeProfileList />);
+    });
+    openFirstProfileDetails();
+
+    const editBtn = Array.from(
+      container.querySelectorAll('.secondary-action-btn')
+    ).find(btn => btn.textContent?.includes('Edit')) as HTMLButtonElement;
+    expect(editBtn.disabled).toBe(true);
+  });
+
   it('should show the saved values in the open details view and refresh the list after an edit', async () => {
     await act(async () => {
       root.render(<RuntimeProfileList />);

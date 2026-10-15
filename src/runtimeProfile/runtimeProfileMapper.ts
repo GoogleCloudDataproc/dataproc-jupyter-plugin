@@ -1002,8 +1002,6 @@ const FORM_DERIVED_PROPERTY_KEYS = new Set<string>([
   'spark.dataproc.executor.disk.size'
 ]);
 
-const LAKEHOUSE_CATALOG_PREFIX = 'dataproc.lakehouse.catalog.';
-
 /** Known machine type with the given Spark cores and memory, e.g. 4 and '32g' -> highmem-4. */
 const findMachineType = (
   cores: string | undefined,
@@ -1197,13 +1195,21 @@ export function mapSessionTemplateToFormValues(
     executionConfig?.authenticationConfig?.userWorkloadAuthenticationType;
   const idleTtl = parseDuration(executionConfig?.idleTtl);
   const sessionTtl = parseDuration(executionConfig?.ttl);
-  const defaultCatalog = getProperty('dataproc.lakehouse.defaultCatalog');
-  const hiveEndpointEnabled = Object.keys(properties).some(key => {
-    const catalog = key.startsWith(LAKEHOUSE_CATALOG_PREFIX)
-      ? key.slice(LAKEHOUSE_CATALOG_PREFIX.length)
-      : '';
-    return Boolean(catalog) && catalog !== defaultCatalog;
-  });
+  // The default catalog is stored by name (new catalog) or by resource
+  // (existing catalog); any other registered catalog is the Hive endpoint's.
+  const defaultCatalog = getProperty(LAKEHOUSE_DEFAULT_CATALOG_PROPERTY);
+  const hiveEndpointEnabled = Object.entries(properties).some(
+    ([key, value]) => {
+      const catalog = key.startsWith(LAKEHOUSE_CATALOG_PROPERTY_PREFIX)
+        ? key.slice(LAKEHOUSE_CATALOG_PROPERTY_PREFIX.length)
+        : '';
+      return (
+        Boolean(catalog) &&
+        catalog !== defaultCatalog &&
+        value.trim() !== defaultCatalog
+      );
+    }
+  );
 
   return {
     initialDisplayName: template.jupyterSession?.displayName || profileId,
@@ -1235,7 +1241,7 @@ export function mapSessionTemplateToFormValues(
       metastore:
         template.environmentConfig?.peripheralsConfig?.metastoreService,
       hiveEndpointEnabled,
-      projectId: getProperty('spark.dataproc.lakehouse.project')
+      projectId: getProperty(LAKEHOUSE_PROJECT_PROPERTY)
     },
     initialNetworkAndSecurityConfig: {
       executionIdentity:

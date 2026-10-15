@@ -224,17 +224,17 @@ describe('runtimeProfileMapper', () => {
       ).toBe('true');
       expect(
         result.runtimeConfig?.properties?.[
-        'spark.dynamicAllocation.initialExecutors'
+          'spark.dynamicAllocation.initialExecutors'
         ]
       ).toBe('2');
       expect(
         result.runtimeConfig?.properties?.[
-        'spark.dynamicAllocation.minExecutors'
+          'spark.dynamicAllocation.minExecutors'
         ]
       ).toBe('1');
       expect(
         result.runtimeConfig?.properties?.[
-        'spark.dynamicAllocation.maxExecutors'
+          'spark.dynamicAllocation.maxExecutors'
         ]
       ).toBe('8');
       expect(
@@ -355,7 +355,6 @@ describe('runtimeProfileMapper', () => {
       // Tier is an explicit UI control and intentionally overrides sparkProperties
       expect(props?.[DATAPROC_TIER_PROPERTY]).toBe('premium');
     });
-
 
     describe('metastore configuration', () => {
       const mapMetastore = (
@@ -747,6 +746,47 @@ describe('runtimeProfileMapper', () => {
         maxIdleTimeQuantity: 90,
         maxIdleTimeUnit: 'seconds'
       });
+    });
+
+    it('detects the Hive endpoint only for catalogs other than the default one', () => {
+      const hiveEnabledFor = (metastoreConfig: IMetastoreConfig) =>
+        mapSessionTemplateToFormValues(
+          mapRuntimeProfileToSessionTemplate(
+            {
+              displayName: 'lakehouse-profile',
+              region: 'us-central1',
+              metastoreConfig
+            },
+            'test-project',
+            'us-central1'
+          )
+        ).initialMetastoreConfig?.hiveEndpointEnabled;
+
+      // An existing default catalog is stored by resource, a new one by name
+      expect(
+        hiveEnabledFor({
+          metastoreType: 'lakehouse',
+          catalogSelectionMode: 'existing',
+          catalogId: 'my_catalog',
+          projectId: 'custom-project'
+        })
+      ).toBe(false);
+      expect(
+        hiveEnabledFor({
+          metastoreType: 'lakehouse',
+          catalogSelectionMode: 'new',
+          catalogName: 'sales_catalog'
+        })
+      ).toBe(false);
+      expect(
+        hiveEnabledFor({
+          metastoreType: 'lakehouse',
+          catalogSelectionMode: 'existing',
+          catalogId: 'my_catalog',
+          hiveEndpointEnabled: true,
+          hiveCatalogName: 'shared_hive'
+        })
+      ).toBe(true);
     });
 
     it('round-trips a profile created by the form back to the same session template', () => {

@@ -191,11 +191,14 @@ export default function RuntimeProfileList({ app }: { app?: JupyterLab }) {
         key={selectedProfile.name}
         profile={selectedProfile}
         onBack={() => setSelectedProfile(null)}
-        onEdit={() =>
-          app?.commands.execute('create-runtime-profile-component', {
-            mode: 'edit',
-            profile: { ...selectedProfile }
-          })
+        onEdit={
+          app
+            ? () =>
+                app.commands.execute('create-runtime-profile-component', {
+                  mode: 'edit',
+                  profile: { ...selectedProfile }
+                })
+            : undefined
         }
         onDeleteSuccess={() => {
           setSelectedProfile(null);
