@@ -95,11 +95,16 @@ import {
   INetworkAndSecurityConfig,
   IRegionOption,
   IRuntimeEnvironmentConfig,
+  IRuntimeProfileFormInitialValues,
   ISessionLifecycleConfig,
   ProfileLabels,
+  RuntimeProfileFormMode,
   SparkProperties
 } from './runtimeProfileInterface';
+import { IRuntimeProfileTemplate } from './runtimeProfileListMapper';
+import { mapSessionTemplateToFormValues } from './runtimeProfileMapper';
 import {
+  RUNTIME_PROFILE_UPDATED_EVENT,
   RuntimeProfileService,
   runtimeProfileService
 } from './runtimeProfileService';
@@ -122,6 +127,7 @@ import {
   IRuntimeProfileSummaryProps,
   RuntimeProfileSummary
 } from './runtimeProfileSummary';
+import { eventEmitter } from '../utils/signalEmitter';
 
 interface IRuntimeProfileFormData {
   displayName: string;
@@ -410,7 +416,8 @@ export const formatOtherCustomizationProperties = (
   ];
 };
 
-export interface ICreateRuntimeProfileComponentProps {
+export interface ICreateRuntimeProfileComponentProps
+  extends IRuntimeProfileFormInitialValues {
   app?: JupyterLab;
   launcher?: ILauncher;
   themeManager?: IThemeManager;
@@ -418,19 +425,14 @@ export interface ICreateRuntimeProfileComponentProps {
   service?: RuntimeProfileService;
   onBack?: () => void;
   onSuccess?: () => void;
-  initialTier?: string;
-  initialLightningEngineEnabled?: boolean;
-  initialExecutorCategory?: ExecutorCategoryType;
-  initialExecutorType?: string;
-  initialRuntimeEnvironmentConfig?: IRuntimeEnvironmentConfig;
-  initialExecutorAndDriverConfig?: IExecutorAndDriverConfig;
-  initialAutoscalingConfig?: IAutoscalingConfig;
-  initialMetastoreConfig?: IMetastoreConfig;
-  initialNetworkAndSecurityConfig?: INetworkAndSecurityConfig;
-  initialSessionLifecycleConfig?: ISessionLifecycleConfig;
-  initialSparkProperties?: SparkProperties;
-  initialLabels?: ProfileLabels;
   SummaryComponent?: React.ComponentType<IRuntimeProfileSummaryProps>;
+  /**
+   * 'create' (default) opens an empty form that creates a new profile.
+   * 'edit' pre-fills the form from `profile` and saves changes to it.
+   */
+  mode?: RuntimeProfileFormMode;
+  /** Runtime profile (session template) to edit when mode is 'edit'. */
+  profile?: IRuntimeProfileTemplate;
 }
 
 const MACHINE_TYPE_GROUPS: Record<
@@ -500,27 +502,43 @@ export const renderGroupedMachineOptions = (
 
 export const CreateRuntimeProfileComponent: React.FC<
   ICreateRuntimeProfileComponentProps
-> = ({
-  app,
-  launcher,
-  themeManager,
-  service = runtimeProfileService,
-  onBack,
-  onSuccess,
-  initialTier,
-  initialLightningEngineEnabled,
-  initialExecutorCategory,
-  initialExecutorType,
-  initialRuntimeEnvironmentConfig,
-  initialExecutorAndDriverConfig,
-  initialAutoscalingConfig,
-  initialMetastoreConfig,
-  initialNetworkAndSecurityConfig,
-  initialSessionLifecycleConfig,
-  initialSparkProperties,
-  initialLabels,
-  SummaryComponent = RuntimeProfileSummary
-}): React.JSX.Element => {
+> = (props): React.JSX.Element => {
+  const isEditMode = props.mode === 'edit' && Boolean(props.profile);
+  // Edit mode seeds the same initial values the create flow accepts from the
+  // selected profile; explicitly passed props still take precedence.
+  const editInitialValues = useMemo<IRuntimeProfileFormInitialValues>(
+    () =>
+      isEditMode && props.profile
+        ? mapSessionTemplateToFormValues(props.profile)
+        : {},
+    [isEditMode, props.profile]
+  );
+  const {
+    app,
+    launcher,
+    themeManager,
+    service = runtimeProfileService,
+    profile,
+    onBack,
+    onSuccess,
+    initialDisplayName,
+    initialRegion,
+    initialDescription,
+    initialTier,
+    initialLightningEngineEnabled,
+    initialExecutorCategory,
+    initialExecutorType,
+    initialRuntimeEnvironmentConfig,
+    initialExecutorAndDriverConfig,
+    initialAutoscalingConfig,
+    initialMetastoreConfig,
+    initialNetworkAndSecurityConfig,
+    initialSessionLifecycleConfig,
+    initialSparkProperties,
+    initialLabels,
+    SummaryComponent = RuntimeProfileSummary
+  } = { ...editInitialValues, ...props };
+
   // Options & Data State
   const [regions, setRegions] = useState<IRegionOption[]>([]);
   const [projectId, setProjectId] = useState<string | undefined>(
@@ -585,9 +603,9 @@ export const CreateRuntimeProfileComponent: React.FC<
   } = useForm<IRuntimeProfileFormData>({
     mode: 'onChange',
     defaultValues: {
-      displayName: defaultRuntimeId,
-      region: '',
-      description: ''
+      displayName: initialDisplayName ?? defaultRuntimeId,
+      region: initialRegion ?? '',
+      description: initialDescription ?? ''
     }
   });
 
@@ -855,10 +873,11 @@ export const CreateRuntimeProfileComponent: React.FC<
           setRegions(loadedRegions);
 
           // Pre-select the region saved in Settings, else the first region.
+          // An edited profile keeps its own region, which can't change.
           const defaultRegion =
             loadedRegions.find(r => r.name === credentials?.region_id) ??
             loadedRegions[0];
-          if (defaultRegion) {
+          if (defaultRegion && !isEditMode) {
             setValue('region', defaultRegion.name, { shouldValidate: true });
           }
         }
@@ -887,7 +906,7 @@ export const CreateRuntimeProfileComponent: React.FC<
     return () => {
       isMounted = false;
     };
-  }, [service, setValue]);
+  }, [service, setValue, isEditMode]);
 
   const handleBack = () => {
     if (onBack) {
@@ -921,13 +940,26 @@ export const CreateRuntimeProfileComponent: React.FC<
         labels
       };
 
-      await service.createRuntimeProfile(payload, undefined, data.region);
+      if (isEditMode && profile) {
+        const updatedProfile = await service.updateRuntimeProfile(
+          profile,
+          payload
+        );
+        Notification.emit(
+          `Runtime profile "${data.displayName}" updated successfully.`,
+          'success',
+          { autoClose: 5000 }
+        );
+        eventEmitter.emit(RUNTIME_PROFILE_UPDATED_EVENT, updatedProfile);
+      } else {
+        await service.createRuntimeProfile(payload, undefined, data.region);
 
-      Notification.emit(
-        `Runtime profile "${data.displayName}" created successfully.`,
-        'success',
-        { autoClose: 5000 }
-      );
+        Notification.emit(
+          `Runtime profile "${data.displayName}" created successfully.`,
+          'success',
+          { autoClose: 5000 }
+        );
+      }
 
       if (app && launcher) {
         try {
@@ -947,7 +979,10 @@ export const CreateRuntimeProfileComponent: React.FC<
       }
     } catch (error: any) {
       const errorMessage =
-        error?.message || 'Failed to create runtime profile.';
+        error?.message ||
+        (isEditMode
+          ? 'Failed to update runtime profile.'
+          : 'Failed to create runtime profile.');
       Notification.emit(errorMessage, 'error', { autoClose: 5000 });
     }
   };
@@ -955,6 +990,12 @@ export const CreateRuntimeProfileComponent: React.FC<
   const ExpandIconComponent = expandAdditionalConfig
     ? iconExpandLess.react
     : iconExpandMore.react;
+
+  // An edited profile can't move to another region, so only its own is listed.
+  const regionOptions: IRegionOption[] =
+    isEditMode && initialRegion
+      ? [{ name: initialRegion, displayName: initialRegion }]
+      : regions;
 
   return (
     <div className="runtime-profile-main-wrapper">
@@ -977,7 +1018,9 @@ export const CreateRuntimeProfileComponent: React.FC<
             className="icon-white logo-alignment-style"
           />
         </div>
-        <div className="cluster-details-title">Create a runtime profile</div>
+        <div className="cluster-details-title">
+          {isEditMode ? 'Edit Runtime Profile' : 'Create a runtime profile'}
+        </div>
       </div>
 
       <div className="runtime-profile-content-layout">
@@ -1034,9 +1077,9 @@ export const CreateRuntimeProfileComponent: React.FC<
                       id="runtime-profile-region"
                       label="Region *"
                       notched
-                      disabled={isLoadingOptions}
+                      disabled={isLoadingOptions || isEditMode}
                     >
-                      {regions.map(r => (
+                      {regionOptions.map(r => (
                         <MenuItem key={r.name} value={r.name}>
                           {r.displayName}
                         </MenuItem>
@@ -1363,6 +1406,8 @@ export const CreateRuntimeProfileComponent: React.FC<
             >
               {isSubmitting ? (
                 <CircularProgress size={16} color="inherit" />
+              ) : isEditMode ? (
+                'Save'
               ) : (
                 'Create a runtime profile'
               )}
@@ -1393,6 +1438,7 @@ export const CreateRuntimeProfileComponent: React.FC<
         open={isRuntimeConfigDrawerOpen}
         config={activeRuntimeEnvironmentConfig}
         service={service}
+        isRuntimeProfileIdReadOnly={isEditMode}
         onClose={() => setIsRuntimeConfigDrawerOpen(false)}
         onSave={(updatedConfig: IRuntimeEnvironmentConfig) => {
           setRuntimeEnvironmentConfig(updatedConfig);
@@ -1439,17 +1485,21 @@ export class CreateRuntimeProfile extends DataprocWidget {
   app: JupyterLab;
   launcher: ILauncher;
   settingRegistry: ISettingRegistry;
+  profile?: IRuntimeProfileTemplate;
 
+  /** Pass `profile` to open the form in edit mode for that runtime profile. */
   constructor(
     app: JupyterLab,
     launcher: ILauncher,
     themeManager: IThemeManager,
-    settingRegistry: ISettingRegistry
+    settingRegistry: ISettingRegistry,
+    profile?: IRuntimeProfileTemplate
   ) {
     super(themeManager);
     this.app = app;
     this.launcher = launcher;
     this.settingRegistry = settingRegistry;
+    this.profile = profile;
   }
 
   renderInternal(): React.JSX.Element {
@@ -1459,6 +1509,8 @@ export class CreateRuntimeProfile extends DataprocWidget {
         launcher={this.launcher}
         themeManager={this.themeManager}
         settingRegistry={this.settingRegistry}
+        mode={this.profile ? 'edit' : 'create'}
+        profile={this.profile}
       />
     );
   }

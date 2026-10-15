@@ -337,6 +337,37 @@ describe('RuntimeProfileDetails Component', () => {
     expect(container.textContent).not.toContain('Runtime configuration');
   });
 
+  it('should enable the header Edit button when onEdit is provided and keep section edit icons disabled', async () => {
+    const onEditMock = jest.fn();
+    await act(async () => {
+      root.render(
+        <RuntimeProfileDetails
+          profile={mockProfile}
+          onBack={jest.fn()}
+          onEdit={onEditMock}
+        />
+      );
+    });
+
+    const editBtn = Array.from(
+      container.querySelectorAll('.secondary-action-btn')
+    ).find(btn => btn.textContent?.includes('Edit')) as HTMLButtonElement;
+    expect(editBtn.disabled).toBe(false);
+
+    act(() => {
+      editBtn.click();
+    });
+    expect(onEditMock).toHaveBeenCalledTimes(1);
+
+    const subsectionEditBtns = Array.from(
+      container.querySelectorAll<HTMLButtonElement>(
+        '.runtime-profile-details-subsection-edit-btn'
+      )
+    );
+    expect(subsectionEditBtns).toHaveLength(7);
+    subsectionEditBtns.forEach(btn => expect(btn.disabled).toBe(true));
+  });
+
   it('should open delete modal, handle Escape/Cancel, and delete or notify on error', async () => {
     const onDeleteSuccessMock = jest.fn();
     await renderDetails(jest.fn(), onDeleteSuccessMock);

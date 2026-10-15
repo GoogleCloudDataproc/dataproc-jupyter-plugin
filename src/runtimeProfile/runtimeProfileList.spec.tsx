@@ -32,8 +32,12 @@ jest.mock('../handler/handler', () => ({
 import React, { act } from 'react';
 import { createRoot, Root } from 'react-dom/client';
 import RuntimeProfileList from './runtimeProfileList';
-import { RuntimeProfileService } from './runtimeProfileService';
+import {
+  RUNTIME_PROFILE_UPDATED_EVENT,
+  RuntimeProfileService
+} from './runtimeProfileService';
 import { Notification } from '@jupyterlab/apputils';
+import { eventEmitter } from '../utils/signalEmitter';
 
 jest.mock('@jupyterlab/apputils', () => ({
   ...jest.requireActual('@jupyterlab/apputils'),
@@ -510,5 +514,94 @@ describe('RuntimeProfileList Component', () => {
       clickBack();
       expect(container.querySelector('.runtime-profile-table')).not.toBeNull();
     }
+  });
+
+  const openFirstProfileDetails = () =>
+    act(() => {
+      (
+        container.querySelector('.profile-name-button-link') as HTMLElement
+      ).click();
+    });
+
+  it('should open the selected profile in the runtime profile form in edit mode when Edit is clicked', async () => {
+    const mockApp: any = {
+      commands: {
+        execute: jest.fn()
+      }
+    };
+    await act(async () => {
+      root.render(<RuntimeProfileList app={mockApp} />);
+    });
+    openFirstProfileDetails();
+
+    const editBtn = Array.from(
+      container.querySelectorAll('.secondary-action-btn')
+    ).find(btn => btn.textContent?.includes('Edit')) as HTMLButtonElement;
+    expect(editBtn.disabled).toBe(false);
+
+    act(() => {
+      editBtn.click();
+    });
+
+    expect(mockApp.commands.execute).toHaveBeenCalledWith(
+      'create-runtime-profile-component',
+      { mode: 'edit', profile: mockTemplates[0] }
+    );
+  });
+
+  it('should keep the Edit button disabled when there is no app to open the form', async () => {
+    await act(async () => {
+      root.render(<RuntimeProfileList />);
+    });
+    openFirstProfileDetails();
+
+    const editBtn = Array.from(
+      container.querySelectorAll('.secondary-action-btn')
+    ).find(btn => btn.textContent?.includes('Edit')) as HTMLButtonElement;
+    expect(editBtn.disabled).toBe(true);
+  });
+
+  it('should show the saved values in the open details view and refresh the list after an edit', async () => {
+    await act(async () => {
+      root.render(<RuntimeProfileList />);
+    });
+    openFirstProfileDetails();
+    expect(container.textContent).toContain('Short description');
+
+    await act(async () => {
+      // An unrelated profile doesn't replace the open one
+      eventEmitter.emit(RUNTIME_PROFILE_UPDATED_EVENT, {
+        ...mockTemplates[1],
+        description: 'Other profile change'
+      });
+    });
+    expect(container.textContent).not.toContain('Other profile change');
+
+    await act(async () => {
+      eventEmitter.emit(RUNTIME_PROFILE_UPDATED_EVENT, {
+        ...mockTemplates[0],
+        description: 'Updated description'
+      });
+    });
+
+    expect(container.textContent).toContain('Resource details');
+    expect(container.textContent).toContain('Updated description');
+    expect(container.textContent).not.toContain('Short description');
+    // Initial load plus one refresh per saved profile
+    expect(RuntimeProfileService.fetchRuntimeProfiles).toHaveBeenCalledTimes(3);
+  });
+
+  it('should stop listening for profile updates after unmounting', async () => {
+    await act(async () => {
+      root.render(<RuntimeProfileList />);
+    });
+    act(() => {
+      root.unmount();
+    });
+    // afterEach unmounts again, so give it a fresh root
+    root = createRoot(container);
+
+    eventEmitter.emit(RUNTIME_PROFILE_UPDATED_EVENT, mockTemplates[0]);
+    expect(RuntimeProfileService.fetchRuntimeProfiles).toHaveBeenCalledTimes(1);
   });
 });

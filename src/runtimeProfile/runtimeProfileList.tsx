@@ -16,13 +16,17 @@
  */
 
 import React, { useState, useEffect, useRef } from 'react';
-import { RuntimeProfileService } from './runtimeProfileService';
+import {
+  RUNTIME_PROFILE_UPDATED_EVENT,
+  RuntimeProfileService
+} from './runtimeProfileService';
 import { LabIcon } from '@jupyterlab/ui-components';
 import { Notification } from '@jupyterlab/apputils';
 import addRuntimeIcon from '../../style/icons/plus_icon.svg';
 import refreshIcon from '../../style/icons/refresh_icon.svg';
 import { CircularProgress } from '@mui/material';
 import { DataprocLoggingService, LOG_LEVEL } from '../utils/loggingService';
+import { eventEmitter } from '../utils/signalEmitter';
 import {
   IRuntimeProfileRow,
   IRuntimeProfileTemplate,
@@ -115,6 +119,22 @@ export default function RuntimeProfileList({ app }: { app?: JupyterLab }) {
     fetchProfiles(pageTokens[currentPage]);
   }, [currentPage]);
 
+  // A profile saved in the edit tab: show its new values here.
+  useEffect(() => {
+    const handleProfileUpdated = (updatedProfile: IRuntimeProfileTemplate) => {
+      setSelectedProfile(current =>
+        current && current.name === updatedProfile?.name
+          ? updatedProfile
+          : current
+      );
+      fetchProfiles(pageTokens[currentPage]);
+    };
+    eventEmitter.on(RUNTIME_PROFILE_UPDATED_EVENT, handleProfileUpdated);
+    return () => {
+      eventEmitter.off(RUNTIME_PROFILE_UPDATED_EVENT, handleProfileUpdated);
+    };
+  }, [currentPage, pageTokens]);
+
   const openDeleteModal = (profile: IRuntimeProfileRow) => {
     setOpenDropdownId(null);
     setProfileToDelete(profile);
@@ -171,6 +191,15 @@ export default function RuntimeProfileList({ app }: { app?: JupyterLab }) {
         key={selectedProfile.name}
         profile={selectedProfile}
         onBack={() => setSelectedProfile(null)}
+        onEdit={
+          app
+            ? () =>
+                app.commands.execute('create-runtime-profile-component', {
+                  mode: 'edit',
+                  profile: { ...selectedProfile }
+                })
+            : undefined
+        }
         onDeleteSuccess={() => {
           setSelectedProfile(null);
           if (profiles.length === 1 && currentPage > 0) {

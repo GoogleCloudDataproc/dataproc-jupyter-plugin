@@ -781,13 +781,22 @@ export interface IRuntimeEnvironmentEditDrawerProps {
   open: boolean;
   config: IRuntimeEnvironmentConfig;
   service?: IRuntimeProfileService;
+  /** Shows the Runtime Profile ID read-only, e.g. when editing an existing profile. */
+  isRuntimeProfileIdReadOnly?: boolean;
   onClose: () => void;
   onSave: (updatedConfig: IRuntimeEnvironmentConfig) => void;
 }
 
 export const RuntimeEnvironmentEditDrawer: React.FC<
   IRuntimeEnvironmentEditDrawerProps
-> = ({ open, config, service = runtimeProfileService, onClose, onSave }) => {
+> = ({
+  open,
+  config,
+  service = runtimeProfileService,
+  isRuntimeProfileIdReadOnly = false,
+  onClose,
+  onSave
+}) => {
   const [draftConfig, setDraftConfig] =
     useState<IRuntimeEnvironmentConfig>(config);
   const [isSelectBucketOpen, setIsSelectBucketOpen] = useState<boolean>(false);
@@ -852,7 +861,9 @@ export const RuntimeEnvironmentEditDrawer: React.FC<
   };
 
   const trimmedProfileId = (draftConfig.runtimeProfileId ?? '').trim();
-  const runtimeProfileIdError = !trimmedProfileId
+  const runtimeProfileIdError = isRuntimeProfileIdReadOnly
+    ? ''
+    : !trimmedProfileId
     ? RUNTIME_PROFILE_REQUIRED_ERROR
     : !RUNTIME_PROFILE_ID_REGEX.test(trimmedProfileId)
     ? RUNTIME_PROFILE_FORMAT_ERROR
@@ -906,6 +917,7 @@ export const RuntimeEnvironmentEditDrawer: React.FC<
             onChange={e =>
               handleFieldChange('runtimeProfileId', e.target.value)
             }
+            disabled={isRuntimeProfileIdReadOnly}
             variant="outlined"
             size="small"
             fullWidth

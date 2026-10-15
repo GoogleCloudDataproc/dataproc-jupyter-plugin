@@ -555,6 +555,11 @@ describe('extension index.ts comprehensive test suite', () => {
       );
     });
 
+    const lastOpenedTabTitle = () => {
+      const calls = (appMock.shell.add as jest.Mock).mock.calls;
+      return calls[calls.length - 1][0].title.label;
+    };
+
     it('should register and execute create-runtime-profile-component command', () => {
       const command = commandsMap.get('create-runtime-profile-component');
       expect(command).toBeDefined();
@@ -566,12 +571,43 @@ describe('extension index.ts comprehensive test suite', () => {
         appMock,
         launcherMock,
         themeManagerMock,
-        settingRegistryMock
+        settingRegistryMock,
+        undefined
       );
       expect(appMock.shell.add).toHaveBeenCalledWith(
         expect.any(MainAreaWidget),
         'main'
       );
+      expect(lastOpenedTabTitle()).toBe('Create Runtime Profile');
+    });
+
+    it('should open create-runtime-profile-component in edit mode for the given profile', () => {
+      const command = commandsMap.get('create-runtime-profile-component');
+      const profile = {
+        name: 'projects/test-project/locations/us-central1/sessionTemplates/sample-profile',
+        jupyterSession: { displayName: 'sample-profile', kernel: 'PYTHON' }
+      };
+
+      command.execute({ mode: 'edit', profile });
+      expect(CreateRuntimeProfile).toHaveBeenLastCalledWith(
+        appMock,
+        launcherMock,
+        themeManagerMock,
+        settingRegistryMock,
+        profile
+      );
+      expect(lastOpenedTabTitle()).toBe('Edit Runtime Profile');
+
+      // A profile without edit mode still opens the create form
+      command.execute({ profile });
+      expect(CreateRuntimeProfile).toHaveBeenLastCalledWith(
+        appMock,
+        launcherMock,
+        themeManagerMock,
+        settingRegistryMock,
+        undefined
+      );
+      expect(lastOpenedTabTitle()).toBe('Create Runtime Profile');
     });
 
     it('should register and execute create-cluster-component command', () => {
