@@ -61,14 +61,8 @@ export function formatRuntimeProfileSummaryProperties(
 
   // 4. Executor node
   const autoscalingEnabled = input.autoscalingEnabled ?? true;
-  const minExec = parseExecutorCount(
-    input.minExecutors,
-    DEFAULT_MIN_EXECUTORS
-  );
-  const maxExec = parseExecutorCount(
-    input.maxExecutors,
-    DEFAULT_MAX_EXECUTORS
-  );
+  const minExec = parseExecutorCount(input.minExecutors, DEFAULT_MIN_EXECUTORS);
+  const maxExec = parseExecutorCount(input.maxExecutors, DEFAULT_MAX_EXECUTORS);
   const initExec = parseExecutorCount(
     input.initialExecutors,
     DEFAULT_INITIAL_EXECUTORS
@@ -84,23 +78,18 @@ export function formatRuntimeProfileSummaryProperties(
   const executorTarget = [executorDisplayName, compactDisk]
     .filter(Boolean)
     .join(', ');
-  const executorPrefix = autoscalingEnabled
-    ? `Min: ${minExec}, Max: ${maxExec}`
-    : `${initExec}`;
+  const executorPrefix = autoscalingEnabled ? '' : `${initExec}`;
 
-  const executorNodeValue = executorTarget
-    ? `${executorPrefix} x ${executorTarget}`
-    : executorPrefix;
+  const executorNodeValue =
+    executorPrefix && executorTarget
+      ? `${executorPrefix} x ${executorTarget}`
+      : executorTarget || executorPrefix || DEFAULT_EMPTY_DISPLAY_VALUE;
 
   // 5. Driver node
+  const isSameDriver = !input.useDifferentDriverConfig;
   const normalizedDriverShape = input.driverMachineType?.trim()
     ? normalizeMachineTypeName(input.driverMachineType, ALL_MACHINE_TYPES)
     : undefined;
-  const isSameDriver =
-    input.useDifferentDriverConfig === false ||
-    (!input.useDifferentDriverConfig &&
-      (!normalizedDriverShape ||
-        normalizedDriverShape === normalizedExecutorShape));
 
   const driverDisplayName = normalizedDriverShape
     ? getMachineTypeLabel(normalizedDriverShape) || ''
