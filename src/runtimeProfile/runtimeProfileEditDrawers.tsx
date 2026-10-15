@@ -781,13 +781,21 @@ export interface IRuntimeEnvironmentEditDrawerProps {
   open: boolean;
   config: IRuntimeEnvironmentConfig;
   service?: IRuntimeProfileService;
+  isProfileIdDisabled?: boolean;
   onClose: () => void;
   onSave: (updatedConfig: IRuntimeEnvironmentConfig) => void;
 }
 
 export const RuntimeEnvironmentEditDrawer: React.FC<
   IRuntimeEnvironmentEditDrawerProps
-> = ({ open, config, service = runtimeProfileService, onClose, onSave }) => {
+> = ({
+  open,
+  config,
+  service = runtimeProfileService,
+  isProfileIdDisabled = false,
+  onClose,
+  onSave
+}) => {
   const [draftConfig, setDraftConfig] =
     useState<IRuntimeEnvironmentConfig>(config);
   const [isSelectBucketOpen, setIsSelectBucketOpen] = useState<boolean>(false);
@@ -797,10 +805,16 @@ export const RuntimeEnvironmentEditDrawer: React.FC<
     if (!open) {
       return;
     }
-    const normalizedVersion =
-      !config.runtimeVersion || config.runtimeVersion === '2.3'
-        ? RUNTIME_VERSION_OPTIONS[0]
-        : config.runtimeVersion;
+    const matchedVersionOption = config.runtimeVersion
+      ? RUNTIME_VERSION_OPTIONS.find(
+          opt =>
+            opt === config.runtimeVersion ||
+            opt.startsWith(`${config.runtimeVersion} `)
+        )
+      : undefined;
+    const normalizedVersion = !config.runtimeVersion
+      ? RUNTIME_VERSION_OPTIONS[0]
+      : matchedVersionOption || config.runtimeVersion;
     setDraftConfig({
       ...config,
       runtimeVersion: normalizedVersion
@@ -852,7 +866,9 @@ export const RuntimeEnvironmentEditDrawer: React.FC<
   };
 
   const trimmedProfileId = (draftConfig.runtimeProfileId ?? '').trim();
-  const runtimeProfileIdError = !trimmedProfileId
+  const runtimeProfileIdError = isProfileIdDisabled
+    ? ''
+    : !trimmedProfileId
     ? RUNTIME_PROFILE_REQUIRED_ERROR
     : !RUNTIME_PROFILE_ID_REGEX.test(trimmedProfileId)
     ? RUNTIME_PROFILE_FORMAT_ERROR
@@ -903,6 +919,7 @@ export const RuntimeEnvironmentEditDrawer: React.FC<
             id="edit-runtime-profile-id"
             label="Runtime Profile ID"
             value={draftConfig.runtimeProfileId ?? ''}
+            disabled={isProfileIdDisabled}
             onChange={e =>
               handleFieldChange('runtimeProfileId', e.target.value)
             }
