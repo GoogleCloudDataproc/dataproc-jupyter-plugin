@@ -534,16 +534,33 @@ export function mapRuntimeProfileToSessionTemplate(
   // Execution Config (Network & Security)
   let subnetworkUri: string | undefined;
   if (payload.networkAndSecurityConfig?.networkSource === 'shared_from_host') {
-    const sharedSub = payload.networkAndSecurityConfig?.sharedSubnetwork;
-    const hostProject = payload.networkAndSecurityConfig?.hostProjectId;
-    if (sharedSub) {
-      subnetworkUri =
-        sharedSub.startsWith('projects/') || !hostProject
-          ? sharedSub
-          : `projects/${hostProject}/regions/${targetRegion}/subnetworks/${sharedSub}`;
+    const sharedSub = payload.networkAndSecurityConfig.sharedSubnetwork?.trim();
+    const hostProject = payload.networkAndSecurityConfig.hostProjectId?.trim();
+    if (!sharedSub) {
+      throw new Error(
+        'Shared subnetwork is required when shared VPC network is selected.'
+      );
     }
-  } else {
-    subnetworkUri = payload.networkAndSecurityConfig?.subnetwork || undefined;
+    subnetworkUri =
+      sharedSub.startsWith('projects/') || !hostProject
+        ? sharedSub
+        : `projects/${hostProject}/regions/${targetRegion}/subnetworks/${sharedSub}`;
+  } else if (payload.networkAndSecurityConfig) {
+    subnetworkUri =
+      payload.networkAndSecurityConfig.subnetwork?.trim() || undefined;
+    const selectedNetwork = (
+      payload.networkAndSecurityConfig.primaryNetwork ||
+      payload.networkAndSecurityConfig.networkInThisProject
+    )?.trim();
+    if (
+      !subnetworkUri &&
+      (payload.networkAndSecurityConfig.networkSource === 'project' ||
+        selectedNetwork)
+    ) {
+      throw new Error(
+        'Subnetwork is required when a project network is selected.'
+      );
+    }
   }
 
   const networkTags =
@@ -554,22 +571,33 @@ export function mapRuntimeProfileToSessionTemplate(
 
   let kmsKey: string | undefined;
   if (payload.networkAndSecurityConfig?.encryption === 'customer_managed_key') {
+    const keyRing = payload.networkAndSecurityConfig.keyRing?.trim();
+    const cryptoKey = payload.networkAndSecurityConfig.cryptoKey?.trim();
+    const manualKeyName = payload.networkAndSecurityConfig.kmsKeyName?.trim();
     if (
       payload.networkAndSecurityConfig.kmsKeySelectionMode !== 'manual' &&
-      payload.networkAndSecurityConfig.keyRing &&
-      payload.networkAndSecurityConfig.cryptoKey
+      keyRing &&
+      cryptoKey
     ) {
-      kmsKey = `projects/${projectId}/locations/${targetRegion}/keyRings/${payload.networkAndSecurityConfig.keyRing}/cryptoKeys/${payload.networkAndSecurityConfig.cryptoKey}`;
-    } else if (payload.networkAndSecurityConfig.kmsKeyName) {
-      kmsKey = payload.networkAndSecurityConfig.kmsKeyName;
+      kmsKey = `projects/${projectId}/locations/${targetRegion}/keyRings/${keyRing}/cryptoKeys/${cryptoKey}`;
+    } else if (manualKeyName) {
+      kmsKey = manualKeyName;
+    }
+    if (!kmsKey) {
+      throw new Error(
+        'Customer-managed encryption key (Cloud KMS key) is required when customer-managed encryption is selected.'
+      );
     }
   }
 
-  const serviceAccount =
-    payload.networkAndSecurityConfig?.serviceAccount?.trim() || undefined;
-
   const isUserAccount =
     payload.networkAndSecurityConfig?.executionIdentity === 'user_account';
+  const isServiceAccount =
+    payload.networkAndSecurityConfig?.executionIdentity === 'service_account';
+
+  const serviceAccount = isServiceAccount
+    ? payload.networkAndSecurityConfig?.serviceAccount?.trim() || undefined
+    : undefined;
 
   const executionConfig: NonNullable<
     NonNullable<

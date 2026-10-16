@@ -217,6 +217,7 @@ export const DEFAULT_METASTORE_CONFIG: IMetastoreConfig = {
 export const DEFAULT_NETWORK_SECURITY_CONFIG: INetworkAndSecurityConfig = {
   executionIdentity: 'service_account',
   networkInThisProject: 'default',
+  subnetwork: 'default',
   encryption: 'google_managed'
 };
 

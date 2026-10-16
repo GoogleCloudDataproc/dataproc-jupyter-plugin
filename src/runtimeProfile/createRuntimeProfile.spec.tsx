@@ -1711,6 +1711,33 @@ describe('CreateRuntimeProfileComponent UI & Service', () => {
       'li[role="option"][data-value="__no_items__"]'
     );
     expect(emptyOption?.textContent).toBe('No items to display');
+
+    // Switch back to 'Networks in this project'
+    const projectRadio = document.body.querySelector(
+      '#edit-network-source-project'
+    ) as HTMLInputElement;
+    await act(async () => {
+      projectRadio.click();
+    });
+    expect(getSaveBtn()?.disabled).toBe(false);
+
+    // Selecting Cloud KMS key without a key ring / crypto key disables Save
+    const cmekRadio = document.body.querySelector(
+      '#edit-encryption-customer-managed'
+    ) as HTMLInputElement;
+    await act(async () => {
+      cmekRadio.click();
+    });
+    expect(getSaveBtn()?.disabled).toBe(true);
+
+    // Switch back to Google-managed encryption key
+    const googleManagedRadio = document.body.querySelector(
+      '#edit-encryption-google-managed'
+    ) as HTMLInputElement;
+    await act(async () => {
+      googleManagedRadio.click();
+    });
+    expect(getSaveBtn()?.disabled).toBe(false);
   });
 
   it('should calculate runtime pricing estimate DCU values across machine shapes and autoscaling configurations', () => {

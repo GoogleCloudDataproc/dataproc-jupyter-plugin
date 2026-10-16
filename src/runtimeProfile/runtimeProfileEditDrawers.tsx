@@ -1868,6 +1868,7 @@ export const NetworkSecurityEditDrawer: React.FC<
               config.primaryNetwork || config.networkInThisProject || 'default';
             if (!networks.includes(currentNet)) {
               setPrimaryNetwork(networks[0]);
+              setSubnetwork('');
             }
           }
         } catch (error) {
@@ -2042,6 +2043,11 @@ export const NetworkSecurityEditDrawer: React.FC<
         }
       } catch (error) {
         console.error('Failed to load subnetworks:', error);
+        if (isMounted) {
+          setFetchedSubnetworks([]);
+          setSubnetwork('');
+          setHasFetchedSubnetworks(true);
+        }
       } finally {
         if (isMounted) {
           setIsLoadingSubnetworks(false);
@@ -2237,15 +2243,24 @@ export const NetworkSecurityEditDrawer: React.FC<
     setIsValidManualKey(value === '' || KMS_KEY_REGEX.test(value.trim()));
   };
 
+  const hasResolvedKmsKey =
+    kmsKeySelectionMode === 'manual'
+      ? Boolean(kmsKeyName.trim()) &&
+        isValidManualKey &&
+        KMS_KEY_REGEX.test(kmsKeyName.trim())
+      : Boolean(keyRing.trim() && cryptoKey.trim());
+
   const isSaveDisabled =
-    (networkSource === 'project' && hasNoSubnetworks) ||
+    (networkSource === 'project' &&
+      (hasNoSubnetworks ||
+        isLoadingNetworks ||
+        isLoadingSubnetworks ||
+        !subnetwork.trim())) ||
     (networkSource === 'shared_from_host' &&
       (hasNoSharedSubnetworks ||
         isLoadingSharedSubnetworks ||
         !sharedSubnetwork.trim())) ||
-    (encryption === 'customer_managed_key' &&
-      kmsKeySelectionMode === 'manual' &&
-      !isValidManualKey);
+    (encryption === 'customer_managed_key' && !hasResolvedKmsKey);
 
   const handleSave = () => {
     if (isSaveDisabled) {
@@ -2276,7 +2291,7 @@ export const NetworkSecurityEditDrawer: React.FC<
       networkSource,
       primaryNetwork,
       networkInThisProject: primaryNetwork,
-      subnetwork,
+      subnetwork: subnetwork.trim(),
       sharedSubnetwork:
         networkSource === 'shared_from_host'
           ? sharedSubnetwork.trim() || undefined
@@ -2288,7 +2303,10 @@ export const NetworkSecurityEditDrawer: React.FC<
       networkTags: parsedTags,
       internalIpOnly,
       executionIdentity,
-      serviceAccount: serviceAccount.trim() || undefined,
+      serviceAccount:
+        executionIdentity === 'service_account'
+          ? serviceAccount.trim() || undefined
+          : undefined,
       encryption,
       kmsKeySelectionMode:
         encryption === 'customer_managed_key' ? kmsKeySelectionMode : undefined,
