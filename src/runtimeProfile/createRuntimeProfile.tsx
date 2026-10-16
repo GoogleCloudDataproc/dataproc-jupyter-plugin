@@ -43,6 +43,7 @@ import { SectionDetail, ISectionProperty } from '../controls/SectionDetail';
 import '../../style/runtimeProfile.css';
 import {
   ExecutorAndDriverEditDrawer,
+  NetworkSecurityEditDrawer,
   RuntimeEnvironmentEditDrawer,
   RUNTIME_VERSION_OPTIONS,
   SelectBucketEditDrawer
@@ -216,6 +217,7 @@ export const DEFAULT_METASTORE_CONFIG: IMetastoreConfig = {
 export const DEFAULT_NETWORK_SECURITY_CONFIG: INetworkAndSecurityConfig = {
   executionIdentity: 'service_account',
   networkInThisProject: 'default',
+  subnetwork: 'default',
   encryption: 'google_managed'
 };
 
@@ -360,16 +362,21 @@ export const formatNetworkSecurityProperties = (
     '';
   const encryptionKey =
     config.encryption || DEFAULT_NETWORK_SECURITY_CONFIG.encryption || '';
+  const isSharedNetwork = config.networkSource === 'shared_from_host';
   return [
     {
       label: 'Execution identity',
       value: EXECUTION_IDENTITY_DISPLAY_MAP[identityKey] || identityKey
     },
     {
-      label: 'Network in this project',
-      value:
-        config.networkInThisProject ||
-        DEFAULT_NETWORK_SECURITY_CONFIG.networkInThisProject
+      label: isSharedNetwork
+        ? 'Network shared from host'
+        : 'Network in this project',
+      value: isSharedNetwork
+        ? config.sharedSubnetwork || 'default'
+        : config.primaryNetwork ||
+          config.networkInThisProject ||
+          DEFAULT_NETWORK_SECURITY_CONFIG.networkInThisProject
     },
     {
       label: 'Encryption',
@@ -546,6 +553,8 @@ export const CreateRuntimeProfileComponent: React.FC<
   const [isExecutorDriverDrawerOpen, setIsExecutorDriverDrawerOpen] =
     useState<boolean>(false);
   const formScrollContainerRef = React.useRef<HTMLDivElement | null>(null);
+  const [isNetworkSecurityDrawerOpen, setIsNetworkSecurityDrawerOpen] =
+    useState<boolean>(false);
 
   // Tier and Lightning Engine state
   const initialTierValue =
@@ -604,6 +613,8 @@ export const CreateRuntimeProfileComponent: React.FC<
     }
   });
 
+  const selectedRegion = watch('region');
+
   // Configuration values derived from initial props or defaults.
   // TODO: Validation on runtimeProfileId / displayName field will be handled in upcoming PRs.
   const [runtimeEnvironmentConfig, setRuntimeEnvironmentConfig] =
@@ -652,10 +663,10 @@ export const CreateRuntimeProfileComponent: React.FC<
     () => initialMetastoreConfig || DEFAULT_METASTORE_CONFIG,
     [initialMetastoreConfig]
   );
-  const networkAndSecurityConfig = useMemo<INetworkAndSecurityConfig>(
-    () => initialNetworkAndSecurityConfig || DEFAULT_NETWORK_SECURITY_CONFIG,
-    [initialNetworkAndSecurityConfig]
-  );
+  const [networkAndSecurityConfig, setNetworkAndSecurityConfig] =
+    useState<INetworkAndSecurityConfig>(
+      () => initialNetworkAndSecurityConfig || DEFAULT_NETWORK_SECURITY_CONFIG
+    );
   const sessionLifecycleConfig = useMemo<ISessionLifecycleConfig>(
     () => initialSessionLifecycleConfig || DEFAULT_SESSION_LIFECYCLE_CONFIG,
     [initialSessionLifecycleConfig]
@@ -700,8 +711,8 @@ export const CreateRuntimeProfileComponent: React.FC<
       {
         title: 'Network and security',
         properties: formatNetworkSecurityProperties(networkAndSecurityConfig),
-        isEditDisabled: true,
-        onEdit: undefined
+        isEditDisabled: false,
+        onEdit: () => setIsNetworkSecurityDrawerOpen(true)
       },
       {
         title: 'Session lifecycle',
@@ -1458,7 +1469,6 @@ export const CreateRuntimeProfileComponent: React.FC<
           setIsRuntimeConfigDrawerOpen(false);
         }}
       />
-
       <ExecutorAndDriverEditDrawer
         open={isExecutorDriverDrawerOpen}
         config={executorAndDriverConfig}
@@ -1488,6 +1498,18 @@ export const CreateRuntimeProfileComponent: React.FC<
             executorMachineType: execMachineName
           });
           setIsExecutorDriverDrawerOpen(false);
+        }}
+      />
+
+      <NetworkSecurityEditDrawer
+        open={isNetworkSecurityDrawerOpen}
+        config={networkAndSecurityConfig}
+        region={selectedRegion}
+        service={service}
+        onClose={() => setIsNetworkSecurityDrawerOpen(false)}
+        onSave={updatedConfig => {
+          setNetworkAndSecurityConfig(updatedConfig);
+          setIsNetworkSecurityDrawerOpen(false);
         }}
       />
     </div>
@@ -1527,6 +1549,7 @@ export {
   RuntimeEnvironmentEditDrawer,
   ExecutorAndDriverEditDrawer,
   SelectBucketEditDrawer,
+  NetworkSecurityEditDrawer,
   RUNTIME_VERSION_OPTIONS,
   RuntimeProfileSummary,
   RuntimePricingEstimate,

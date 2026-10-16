@@ -166,11 +166,11 @@ describe('CreateRuntimeProfileComponent UI & Service', () => {
     expect(editButtons).toHaveLength(7);
     expect(editButtons[0].getAttribute('aria-disabled')).toBe('false');
     expect(editButtons[1].getAttribute('aria-disabled')).toBe('false');
-    Array.from(editButtons)
-      .slice(2)
-      .forEach(btn => {
-        expect(btn.getAttribute('aria-disabled')).toBe('true');
-      });
+    expect(editButtons[2].getAttribute('aria-disabled')).toBe('true');
+    expect(editButtons[3].getAttribute('aria-disabled')).toBe('true');
+    expect(editButtons[4].getAttribute('aria-disabled')).toBe('false');
+    expect(editButtons[5].getAttribute('aria-disabled')).toBe('true');
+    expect(editButtons[6].getAttribute('aria-disabled')).toBe('true');
 
     const displayNameInput = container.querySelector(
       '#runtime-profile-display-name'
@@ -1633,6 +1633,111 @@ describe('CreateRuntimeProfileComponent UI & Service', () => {
     expect(getProfileTierSummaryValue()).toBe(
       'Premium (Lightning Engine enabled)'
     );
+  });
+
+  it('should provide network, subnetwork, shared VPC, keyRing, and cryptoKey methods on RuntimeProfileService', async () => {
+    const networks = await mockService.getNetworks();
+    expect(networks).toEqual(['default']);
+
+    const subnetworks = await mockService.getSubnetworks('default');
+    expect(subnetworks).toEqual(['default']);
+
+    const sharedVpc = await mockService.getSharedVpcSubnetworks();
+    expect(sharedVpc).toEqual({ hostProjectId: '', subnetworks: [] });
+
+    const keyRings = await mockService.getKeyRings();
+    expect(keyRings).toEqual([]);
+
+    const cryptoKeys = await mockService.getCryptoKeys('test-ring');
+    expect(cryptoKeys).toEqual([]);
+  });
+
+  it('disables Save in NetworkSecurityEditDrawer when shared network has no available subnetworks', async () => {
+    const sharedVpcSpy = jest
+      .spyOn(mockService, 'getSharedVpcSubnetworks')
+      .mockResolvedValue({ hostProjectId: '', subnetworks: [] });
+
+    await act(async () => {
+      root.render(<CreateRuntimeProfileComponent service={mockService} />);
+    });
+
+    // Open Network and security edit drawer (index 4)
+    const editButtons = container.querySelectorAll(
+      '.section-detail-edit-button'
+    );
+    await act(async () => {
+      (editButtons[4] as HTMLButtonElement).click();
+    });
+
+    // Should not fetch shared VPC subnetworks when 'project' network source is selected
+    expect(sharedVpcSpy).not.toHaveBeenCalled();
+
+    const getSaveBtn = () =>
+      Array.from(
+        document.body.querySelectorAll('.edit-drawer-footer button')
+      ).find(b => b.textContent?.trim() === 'Save') as HTMLButtonElement;
+
+    expect(getSaveBtn()?.disabled).toBe(false);
+
+    // Switch to 'Networks shared from host project'
+    const sharedRadio = document.body.querySelector(
+      '#edit-network-source-shared'
+    ) as HTMLInputElement;
+    expect(sharedRadio).not.toBeNull();
+    await act(async () => {
+      sharedRadio.click();
+    });
+
+    expect(sharedVpcSpy).toHaveBeenCalledTimes(1);
+    expect(
+      document.body.querySelector('.edit-drawer-info-banner-text')?.textContent
+    ).toBe('No shared subnetworks are available in this region.');
+    expect(
+      document.body.querySelector('#edit-shared-network-tags')
+    ).not.toBeNull();
+    expect(getSaveBtn()?.disabled).toBe(true);
+
+    // Open Shared subnetwork dropdown and verify 'No items to display' is shown
+    const sharedSubnetTrigger = document.body.querySelector(
+      '#edit-shared-subnetwork'
+    ) as HTMLElement;
+    expect(sharedSubnetTrigger).not.toBeNull();
+    await act(async () => {
+      sharedSubnetTrigger.dispatchEvent(
+        new MouseEvent('mousedown', { bubbles: true, button: 0 })
+      );
+    });
+    const emptyOption = document.body.querySelector(
+      'li[role="option"][data-value="__no_items__"]'
+    );
+    expect(emptyOption?.textContent).toBe('No items to display');
+
+    // Switch back to 'Networks in this project'
+    const projectRadio = document.body.querySelector(
+      '#edit-network-source-project'
+    ) as HTMLInputElement;
+    await act(async () => {
+      projectRadio.click();
+    });
+    expect(getSaveBtn()?.disabled).toBe(false);
+
+    // Selecting Cloud KMS key without a key ring / crypto key disables Save
+    const cmekRadio = document.body.querySelector(
+      '#edit-encryption-customer-managed'
+    ) as HTMLInputElement;
+    await act(async () => {
+      cmekRadio.click();
+    });
+    expect(getSaveBtn()?.disabled).toBe(true);
+
+    // Switch back to Google-managed encryption key
+    const googleManagedRadio = document.body.querySelector(
+      '#edit-encryption-google-managed'
+    ) as HTMLInputElement;
+    await act(async () => {
+      googleManagedRadio.click();
+    });
+    expect(getSaveBtn()?.disabled).toBe(false);
   });
 
   it('should calculate runtime pricing estimate DCU values across machine shapes and autoscaling configurations', () => {

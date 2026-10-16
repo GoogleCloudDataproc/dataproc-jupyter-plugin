@@ -540,5 +540,124 @@ describe('runtimeProfileMapper', () => {
         expect(result.environmentConfig).toBeUndefined();
       });
     });
+
+    it('should map serviceAccount, shared VPC subnetwork with hostProjectId, and KMS keyRing/cryptoKey', () => {
+      const payload: ICreateRuntimeProfilePayload = {
+        displayName: 'Network Security Profile',
+        region: 'us-central1',
+        networkAndSecurityConfig: {
+          networkSource: 'shared_from_host',
+          sharedSubnetwork: 'shared-subnet-1',
+          hostProjectId: 'host-vpc-project',
+          executionIdentity: 'service_account',
+          serviceAccount: 'custom-sa@test-project.iam.gserviceaccount.com',
+          encryption: 'customer_managed_key',
+          kmsKeySelectionMode: 'select',
+          keyRing: 'my-key-ring',
+          cryptoKey: 'my-crypto-key'
+        }
+      };
+
+      const result = mapRuntimeProfileToSessionTemplate(
+        payload,
+        'test-project',
+        'us-central1'
+      );
+
+      const execConfig = result.environmentConfig?.executionConfig;
+      expect(execConfig?.subnetworkUri).toBe(
+        'projects/host-vpc-project/regions/us-central1/subnetworks/shared-subnet-1'
+      );
+      expect(execConfig?.serviceAccount).toBe(
+        'custom-sa@test-project.iam.gserviceaccount.com'
+      );
+      expect(execConfig?.kmsKey).toBe(
+        'projects/test-project/locations/us-central1/keyRings/my-key-ring/cryptoKeys/my-crypto-key'
+      );
+    });
+
+    it('should omit serviceAccount when executionIdentity is user_account', () => {
+      const result = mapRuntimeProfileToSessionTemplate(
+        {
+          displayName: 'User Account Profile',
+          region: 'us-central1',
+          networkAndSecurityConfig: {
+            networkSource: 'project',
+            primaryNetwork: 'default',
+            subnetwork: 'default',
+            executionIdentity: 'user_account',
+            serviceAccount: 'stale-sa@test-project.iam.gserviceaccount.com',
+            encryption: 'google_managed'
+          }
+        },
+        'test-project',
+        'us-central1'
+      );
+
+      const execConfig = result.environmentConfig?.executionConfig;
+      expect(execConfig?.serviceAccount).toBeUndefined();
+      expect(execConfig?.authentication_config).toEqual({
+        user_workload_authentication_type: 'END_USER_CREDENTIALS'
+      });
+    });
+
+    it('should throw when customer_managed_key is selected without a resolved KMS key', () => {
+      expect(() =>
+        mapRuntimeProfileToSessionTemplate(
+          {
+            displayName: 'Unresolved CMEK Profile',
+            region: 'us-central1',
+            networkAndSecurityConfig: {
+              networkSource: 'project',
+              primaryNetwork: 'default',
+              subnetwork: 'default',
+              encryption: 'customer_managed_key',
+              kmsKeySelectionMode: 'select',
+              keyRing: 'my-ring',
+              cryptoKey: ''
+            }
+          },
+          'test-project',
+          'us-central1'
+        )
+      ).toThrow(
+        'Customer-managed encryption key (Cloud KMS key) is required when customer-managed encryption is selected.'
+      );
+    });
+
+    it('should throw when a project network or shared VPC network is selected without a subnetwork', () => {
+      expect(() =>
+        mapRuntimeProfileToSessionTemplate(
+          {
+            displayName: 'Missing Subnetwork Profile',
+            region: 'us-central1',
+            networkAndSecurityConfig: {
+              networkSource: 'project',
+              primaryNetwork: 'custom-vpc',
+              subnetwork: ''
+            }
+          },
+          'test-project',
+          'us-central1'
+        )
+      ).toThrow('Subnetwork is required when a project network is selected.');
+
+      expect(() =>
+        mapRuntimeProfileToSessionTemplate(
+          {
+            displayName: 'Missing Shared Subnetwork Profile',
+            region: 'us-central1',
+            networkAndSecurityConfig: {
+              networkSource: 'shared_from_host',
+              sharedSubnetwork: ''
+            }
+          },
+          'test-project',
+          'us-central1'
+        )
+      ).toThrow(
+        'Shared subnetwork is required when shared VPC network is selected.'
+      );
+    });
   });
 });
