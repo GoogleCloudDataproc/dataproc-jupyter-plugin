@@ -637,7 +637,6 @@ export default function RuntimeProfileDetails({
   const rawTier = getProp(DATAPROC_TIER_PROPERTY).trim().toLowerCase();
   const isPremiumTier =
     rawTier === 'premium' ||
-    rawTier === 'accelerated' ||
     (!rawTier &&
       getDefaultTierForVersion(currentProfile.runtimeConfig?.version) ===
         'Premium');
