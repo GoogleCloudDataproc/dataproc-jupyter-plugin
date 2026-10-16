@@ -35,12 +35,17 @@ import {
   DISK_TIER_OPTIONS,
   DISK_TIER_SSD,
   HDD_DISK_SIZES,
+  IAutoscalingConfig,
   IExecutorAndDriverDraftConfig,
   IExecutorAndDriverEditDrawerProps,
   IMachineTypeOption,
   IRuntimeEnvironmentConfig,
   IRuntimeProfileService,
-  SSD_DISK_SIZES
+  ISessionLifecycleConfig,
+  ProfileLabels,
+  SparkProperties,
+  SSD_DISK_SIZES,
+  TimeUnit
 } from './runtimeProfileInterface';
 import {
   applyDriverDiskTierChangeToDraft,
@@ -1670,6 +1675,819 @@ export const ExecutorAndDriverEditDrawer: React.FC<
           </div>
         </div>
       )}
+    </EditDrawer>
+  );
+};
+
+export const TIME_UNIT_OPTIONS: { value: TimeUnit; label: string }[] = [
+  { value: 'minutes', label: 'minutes' },
+  { value: 'hours', label: 'hours' },
+  { value: 'days', label: 'days' },
+  { value: 'seconds', label: 'seconds' }
+];
+
+export const INTEGER_REGEX = /^-?\d+$/;
+export const LABEL_KEY_REGEX = /^[\p{Ll}][\p{Ll}\p{Lo}\p{N}_-]{0,62}$/u;
+export const LABEL_VALUE_REGEX = /^[\p{Ll}\p{Lo}\p{N}_-]{0,63}$/u;
+export const LABEL_KEY_FORMAT_ERROR =
+  'Only hyphens (-), underscores (_), lowercase characters, and numbers are allowed. Keys must start with a lowercase character. International characters are allowed.';
+export const LABEL_VALUE_FORMAT_ERROR =
+  'Only hyphens (-), underscores (_), lowercase characters, and numbers are allowed. International characters are allowed.';
+
+const validateAutoscalingField = (
+  rawVal: string,
+  fieldLabel: 'Initial executors' | 'Minimum executors' | 'Maximum executors'
+): string => {
+  const trimmed = rawVal.trim();
+  if (!INTEGER_REGEX.test(trimmed)) {
+    return `${fieldLabel} must be an integer.`;
+  }
+  const parsed = parseInt(trimmed, 10);
+  if (parsed < 2) {
+    return `${fieldLabel} must be greater than or equal to 2.`;
+  }
+  return '';
+};
+
+const UNIT_TO_SECONDS: Record<TimeUnit, number> = {
+  seconds: 1,
+  s: 1,
+  minutes: 60,
+  m: 60,
+  hours: 3600,
+  h: 3600,
+  days: 86400,
+  d: 86400
+};
+const MIN_LIFECYCLE_SECONDS = 10 * 60; // 10 minutes
+const MAX_IDLE_TIME_SECONDS = 330 * 3600; // 330 hours
+const MAX_SESSION_TIME_SECONDS = 14 * 86400; // 14 days
+
+const validateLifecycleQuantity = (
+  rawVal: string,
+  unit: TimeUnit,
+  fieldLabel: 'Max idle time quantity' | 'Max session time quantity'
+): string => {
+  const trimmed = rawVal.trim();
+  if (!INTEGER_REGEX.test(trimmed)) {
+    return `${fieldLabel} must be an integer.`;
+  }
+  const parsed = parseInt(trimmed, 10);
+  const totalSeconds = parsed * UNIT_TO_SECONDS[unit];
+  if (fieldLabel === 'Max idle time quantity') {
+    if (
+      totalSeconds < MIN_LIFECYCLE_SECONDS ||
+      totalSeconds > MAX_IDLE_TIME_SECONDS
+    ) {
+      return 'Max idle time must be between 10 minutes and 330 hours.';
+    }
+  } else {
+    if (
+      totalSeconds < MIN_LIFECYCLE_SECONDS ||
+      totalSeconds > MAX_SESSION_TIME_SECONDS
+    ) {
+      return 'Max session time must be between 10 minutes and 14 days.';
+    }
+  }
+  return '';
+};
+
+export interface IAutoscalingEditDrawerProps {
+  open: boolean;
+  config: IAutoscalingConfig;
+  onClose: () => void;
+  onSave: (updatedConfig: IAutoscalingConfig) => void;
+}
+
+export const AutoscalingEditDrawer: React.FC<IAutoscalingEditDrawerProps> = ({
+  open,
+  config,
+  onClose,
+  onSave
+}) => {
+  const [draftConfig, setDraftConfig] = useState<IAutoscalingConfig>(config);
+  const [initialExecutorsInput, setInitialExecutorsInput] = useState<string>(
+    String(config.initialExecutors ?? 2)
+  );
+  const [minExecutorsInput, setMinExecutorsInput] = useState<string>(
+    String(config.minExecutors ?? 2)
+  );
+  const [maxExecutorsInput, setMaxExecutorsInput] = useState<string>(
+    String(config.maxExecutors ?? 1000)
+  );
+
+  useEffect(() => {
+    if (open) {
+      setDraftConfig(config);
+      setInitialExecutorsInput(String(config.initialExecutors ?? 2));
+      setMinExecutorsInput(String(config.minExecutors ?? 2));
+      setMaxExecutorsInput(String(config.maxExecutors ?? 1000));
+    }
+  }, [open, config]);
+
+  const isAutoscalingEnabled = draftConfig.autoscalingEnabled ?? true;
+
+  const baseInitialError = validateAutoscalingField(
+    initialExecutorsInput,
+    'Initial executors'
+  );
+  const baseMinError = validateAutoscalingField(
+    minExecutorsInput,
+    'Minimum executors'
+  );
+  const baseMaxError = validateAutoscalingField(
+    maxExecutorsInput,
+    'Maximum executors'
+  );
+
+  const initVal = parseInt(initialExecutorsInput.trim(), 10);
+  const minVal = parseInt(minExecutorsInput.trim(), 10);
+  const maxVal = parseInt(maxExecutorsInput.trim(), 10);
+
+  const initialRangeError =
+    !baseInitialError &&
+    !Number.isNaN(initVal) &&
+    ((!baseMinError && !Number.isNaN(minVal) && initVal < minVal) ||
+      (!baseMaxError && !Number.isNaN(maxVal) && initVal > maxVal))
+      ? 'Initial executors must be between minimum and maximum executors.'
+      : '';
+
+  const minRangeError =
+    !baseMinError &&
+    !baseMaxError &&
+    !Number.isNaN(minVal) &&
+    !Number.isNaN(maxVal) &&
+    minVal > maxVal
+      ? 'Minimum executors must not exceed maximum executors.'
+      : '';
+
+  const initialExecutorsError = isAutoscalingEnabled
+    ? baseInitialError || initialRangeError
+    : '';
+  const minExecutorsError = isAutoscalingEnabled
+    ? baseMinError || minRangeError
+    : '';
+  const maxExecutorsError = isAutoscalingEnabled ? baseMaxError : '';
+
+  const isAutoscalingSaveDisabled =
+    isAutoscalingEnabled &&
+    Boolean(initialExecutorsError || minExecutorsError || maxExecutorsError);
+
+  const handleSave = () => {
+    if (isAutoscalingSaveDisabled) {
+      return;
+    }
+    onSave({
+      ...draftConfig,
+      initialExecutors:
+        isAutoscalingEnabled || !Number.isNaN(initVal)
+          ? initVal
+          : config.initialExecutors ?? 2,
+      minExecutors:
+        isAutoscalingEnabled || !Number.isNaN(minVal)
+          ? minVal
+          : config.minExecutors ?? 2,
+      maxExecutors:
+        isAutoscalingEnabled || !Number.isNaN(maxVal)
+          ? maxVal
+          : config.maxExecutors ?? 1000
+    });
+  };
+
+  return (
+    <EditDrawer
+      open={open}
+      title="Autoscaling"
+      isSaveDisabled={isAutoscalingSaveDisabled}
+      onClose={onClose}
+      onSave={handleSave}
+    >
+      <div className="edit-drawer-helper-text">
+        Configure dynamic resource allocation to scale executors based on
+        workload.
+      </div>
+
+      <FormControlLabel
+        control={
+          <Checkbox
+            id="edit-autoscaling-enabled"
+            checked={isAutoscalingEnabled}
+            onChange={e =>
+              setDraftConfig(prev => ({
+                ...prev,
+                autoscalingEnabled: e.target.checked
+              }))
+            }
+            size="small"
+          />
+        }
+        label="Enabled"
+      />
+
+      <div className="edit-drawer-field-group">
+        <TextField
+          id="edit-initial-executors"
+          label="Initial executors"
+          value={initialExecutorsInput}
+          onChange={e => setInitialExecutorsInput(e.target.value)}
+          variant="outlined"
+          size="small"
+          fullWidth
+          disabled={!isAutoscalingEnabled}
+          error={Boolean(initialExecutorsError)}
+          InputLabelProps={{ shrink: true }}
+        />
+        {initialExecutorsError && (
+          <div
+            className="edit-drawer-error-text"
+            id="initial-executors-error-text"
+          >
+            <span className="edit-drawer-error-icon">
+              <FieldErrorIcon />
+            </span>
+            <span>{initialExecutorsError}</span>
+          </div>
+        )}
+      </div>
+
+      <div className="edit-drawer-field-group">
+        <TextField
+          id="edit-minimum-executors"
+          label="Minimum executors"
+          value={minExecutorsInput}
+          onChange={e => setMinExecutorsInput(e.target.value)}
+          variant="outlined"
+          size="small"
+          fullWidth
+          disabled={!isAutoscalingEnabled}
+          error={Boolean(minExecutorsError)}
+          InputLabelProps={{ shrink: true }}
+        />
+        {minExecutorsError && (
+          <div
+            className="edit-drawer-error-text"
+            id="minimum-executors-error-text"
+          >
+            <span className="edit-drawer-error-icon">
+              <FieldErrorIcon />
+            </span>
+            <span>{minExecutorsError}</span>
+          </div>
+        )}
+      </div>
+
+      <div className="edit-drawer-field-group">
+        <TextField
+          id="edit-maximum-executors"
+          label="Maximum executors"
+          value={maxExecutorsInput}
+          onChange={e => setMaxExecutorsInput(e.target.value)}
+          variant="outlined"
+          size="small"
+          fullWidth
+          disabled={!isAutoscalingEnabled}
+          error={Boolean(maxExecutorsError)}
+          InputLabelProps={{ shrink: true }}
+        />
+        {maxExecutorsError && (
+          <div
+            className="edit-drawer-error-text"
+            id="maximum-executors-error-text"
+          >
+            <span className="edit-drawer-error-icon">
+              <FieldErrorIcon />
+            </span>
+            <span>{maxExecutorsError}</span>
+          </div>
+        )}
+      </div>
+    </EditDrawer>
+  );
+};
+
+const parseDurationString = (
+  rawString: string | undefined,
+  defaultQty: number,
+  defaultUnit: TimeUnit
+): { quantity: number; unit: TimeUnit } => {
+  if (!rawString) {
+    return { quantity: defaultQty, unit: defaultUnit };
+  }
+  const match = rawString.trim().match(/^(\d+)\s*([a-zA-Z]+)?$/);
+  if (!match) {
+    return { quantity: defaultQty, unit: defaultUnit };
+  }
+  const quantity = parseInt(match[1], 10);
+  const rawUnit = (match[2] || '').toLowerCase();
+  let unit: TimeUnit = defaultUnit;
+  if (rawUnit.startsWith('m')) {
+    unit = 'minutes';
+  } else if (rawUnit.startsWith('h')) {
+    unit = 'hours';
+  } else if (rawUnit.startsWith('d')) {
+    unit = 'days';
+  } else if (rawUnit.startsWith('s')) {
+    unit = 'seconds';
+  }
+  return { quantity: Number.isNaN(quantity) ? defaultQty : quantity, unit };
+};
+
+export interface ISessionLifecycleEditDrawerProps {
+  open: boolean;
+  config: ISessionLifecycleConfig;
+  onClose: () => void;
+  onSave: (updatedConfig: ISessionLifecycleConfig) => void;
+}
+
+export const SessionLifecycleEditDrawer: React.FC<
+  ISessionLifecycleEditDrawerProps
+> = ({ open, config, onClose, onSave }) => {
+  const [idleQuantityInput, setIdleQuantityInput] = useState<string>('60');
+  const [idleUnit, setIdleUnit] = useState<TimeUnit>('minutes');
+  const [sessionQuantityInput, setSessionQuantityInput] = useState<string>('3');
+  const [sessionUnit, setSessionUnit] = useState<TimeUnit>('days');
+
+  useEffect(() => {
+    if (open) {
+      const parsedIdle = parseDurationString(
+        config.maxIdleTime,
+        config.maxIdleTimeQuantity ?? 60,
+        config.maxIdleTimeUnit ?? 'minutes'
+      );
+      const parsedSession = parseDurationString(
+        config.maxSessionTime,
+        config.maxSessionTimeQuantity ?? 3,
+        config.maxSessionTimeUnit ?? 'days'
+      );
+      setIdleQuantityInput(
+        String(config.maxIdleTimeQuantity ?? parsedIdle.quantity)
+      );
+      setIdleUnit(config.maxIdleTimeUnit ?? parsedIdle.unit);
+      setSessionQuantityInput(
+        String(config.maxSessionTimeQuantity ?? parsedSession.quantity)
+      );
+      setSessionUnit(config.maxSessionTimeUnit ?? parsedSession.unit);
+    }
+  }, [open, config]);
+
+  const idleQuantityError = validateLifecycleQuantity(
+    idleQuantityInput,
+    idleUnit,
+    'Max idle time quantity'
+  );
+  const sessionQuantityError = validateLifecycleQuantity(
+    sessionQuantityInput,
+    sessionUnit,
+    'Max session time quantity'
+  );
+  const isLifecycleSaveDisabled = Boolean(
+    idleQuantityError || sessionQuantityError
+  );
+
+  const handleSave = () => {
+    if (isLifecycleSaveDisabled) {
+      return;
+    }
+    const safeIdleQty = parseInt(idleQuantityInput.trim(), 10);
+    const safeSessionQty = parseInt(sessionQuantityInput.trim(), 10);
+    onSave({
+      ...config,
+      maxIdleTimeQuantity: safeIdleQty,
+      maxIdleTimeUnit: idleUnit,
+      maxIdleTime: `${safeIdleQty} ${idleUnit}`,
+      maxSessionTimeQuantity: safeSessionQty,
+      maxSessionTimeUnit: sessionUnit,
+      maxSessionTime: `${safeSessionQty} ${sessionUnit}`
+    });
+  };
+
+  return (
+    <EditDrawer
+      open={open}
+      title="Session lifecycle"
+      isSaveDisabled={isLifecycleSaveDisabled}
+      onClose={onClose}
+      onSave={handleSave}
+    >
+      <div className="edit-drawer-field-group">
+        <div className="edit-drawer-section-heading">Max idle time</div>
+        <div className="edit-drawer-helper-text">
+          Max notebook idle time before the session is auto-terminated. Can be
+          anywhere between 10 minutes to 330 hours.
+        </div>
+
+        <div className="edit-drawer-row">
+          <div className="edit-drawer-col">
+            <TextField
+              id="edit-max-idle-time-quantity"
+              label="Max idle time quantity"
+              value={idleQuantityInput}
+              onChange={e => setIdleQuantityInput(e.target.value)}
+              variant="outlined"
+              size="small"
+              fullWidth
+              error={Boolean(idleQuantityError)}
+              InputLabelProps={{ shrink: true }}
+            />
+            {idleQuantityError && (
+              <div
+                className="edit-drawer-error-text"
+                id="max-idle-time-quantity-error-text"
+              >
+                <span className="edit-drawer-error-icon">
+                  <FieldErrorIcon />
+                </span>
+                <span>{idleQuantityError}</span>
+              </div>
+            )}
+          </div>
+          <div className="edit-drawer-col">
+            <FormControl size="small" fullWidth variant="outlined">
+              <InputLabel id="edit-max-idle-time-unit-label" shrink>
+                Max idle time unit
+              </InputLabel>
+              <Select
+                labelId="edit-max-idle-time-unit-label"
+                id="edit-max-idle-time-unit"
+                label="Max idle time unit"
+                notched
+                value={idleUnit}
+                onChange={e => setIdleUnit(e.target.value as TimeUnit)}
+              >
+                {TIME_UNIT_OPTIONS.map(opt => (
+                  <MenuItem key={opt.value} value={opt.value}>
+                    {opt.label}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+          </div>
+        </div>
+      </div>
+
+      <div className="edit-drawer-field-group">
+        <div className="edit-drawer-section-heading">Max session time</div>
+        <div className="edit-drawer-helper-text">
+          Max lifetime of a session. Can be anywhere from 10 minutes to 14 days.
+        </div>
+
+        <div className="edit-drawer-row">
+          <div className="edit-drawer-col">
+            <TextField
+              id="edit-max-session-time-quantity"
+              label="Max session time quantity"
+              value={sessionQuantityInput}
+              onChange={e => setSessionQuantityInput(e.target.value)}
+              variant="outlined"
+              size="small"
+              fullWidth
+              error={Boolean(sessionQuantityError)}
+              InputLabelProps={{ shrink: true }}
+            />
+            {sessionQuantityError && (
+              <div
+                className="edit-drawer-error-text"
+                id="max-session-time-quantity-error-text"
+              >
+                <span className="edit-drawer-error-icon">
+                  <FieldErrorIcon />
+                </span>
+                <span>{sessionQuantityError}</span>
+              </div>
+            )}
+          </div>
+          <div className="edit-drawer-col">
+            <FormControl size="small" fullWidth variant="outlined">
+              <InputLabel id="edit-max-session-time-unit-label" shrink>
+                Max session time unit
+              </InputLabel>
+              <Select
+                labelId="edit-max-session-time-unit-label"
+                id="edit-max-session-time-unit"
+                label="Max session time unit"
+                notched
+                value={sessionUnit}
+                onChange={e => setSessionUnit(e.target.value as TimeUnit)}
+              >
+                {TIME_UNIT_OPTIONS.map(opt => (
+                  <MenuItem key={opt.value} value={opt.value}>
+                    {opt.label}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+          </div>
+        </div>
+      </div>
+    </EditDrawer>
+  );
+};
+
+interface IKeyValueEntry {
+  key: string;
+  value: string;
+}
+
+const recordToEntries = (record?: Record<string, string>): IKeyValueEntry[] => {
+  if (!record || Object.keys(record).length === 0) {
+    return [];
+  }
+  return Object.entries(record).map(([key, value]) => ({ key, value }));
+};
+
+const entriesToRecord = (entries: IKeyValueEntry[]): Record<string, string> => {
+  const result: Record<string, string> = {};
+  entries.forEach(({ key, value }) => {
+    const trimmedKey = key.trim();
+    if (trimmedKey) {
+      result[trimmedKey] = value.trim();
+    }
+  });
+  return result;
+};
+
+export interface IOtherCustomizationEditDrawerProps {
+  open: boolean;
+  sparkProperties: SparkProperties;
+  labels: ProfileLabels;
+  onClose: () => void;
+  onSave: (
+    updatedSparkProperties: SparkProperties,
+    updatedLabels: ProfileLabels
+  ) => void;
+}
+
+export const OtherCustomizationEditDrawer: React.FC<
+  IOtherCustomizationEditDrawerProps
+> = ({ open, sparkProperties, labels, onClose, onSave }) => {
+  const [sparkEntries, setSparkEntries] = useState<IKeyValueEntry[]>([]);
+  const [labelEntries, setLabelEntries] = useState<IKeyValueEntry[]>([]);
+
+  useEffect(() => {
+    if (open) {
+      setSparkEntries(recordToEntries(sparkProperties));
+      setLabelEntries(recordToEntries(labels));
+    }
+  }, [open, sparkProperties, labels]);
+
+  const handleEntryChange = (
+    setList: React.Dispatch<React.SetStateAction<IKeyValueEntry[]>>,
+    index: number,
+    field: 'key' | 'value',
+    newVal: string
+  ) => {
+    setList(prev => {
+      const updated = [...prev];
+      updated[index] = { ...updated[index], [field]: newVal };
+      return updated;
+    });
+  };
+
+  const handleAddEntry = (
+    setList: React.Dispatch<React.SetStateAction<IKeyValueEntry[]>>
+  ) => {
+    setList(prev => [...prev, { key: '', value: '' }]);
+  };
+
+  const handleRemoveEntry = (
+    setList: React.Dispatch<React.SetStateAction<IKeyValueEntry[]>>,
+    index: number
+  ) => {
+    setList(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const getSparkKeyError = (keyVal: string, idx: number): string => {
+    if (keyVal.trim() === '') {
+      return 'Key is required';
+    }
+    const isDuplicate = sparkEntries.some(
+      (entry, i) => i !== idx && entry.key.trim() === keyVal.trim()
+    );
+    if (isDuplicate) {
+      return 'The key is already present';
+    }
+    return '';
+  };
+
+  const getLabelKeyError = (keyVal: string, idx: number): string => {
+    if (keyVal.trim() === '') {
+      return 'Key is required';
+    }
+    if (!LABEL_KEY_REGEX.test(keyVal)) {
+      return LABEL_KEY_FORMAT_ERROR;
+    }
+    const isDuplicate = labelEntries.some(
+      (entry, i) => i !== idx && entry.key.trim() === keyVal.trim()
+    );
+    if (isDuplicate) {
+      return 'The key is already present';
+    }
+    return '';
+  };
+
+  const getLabelValueError = (valueVal: string): string => {
+    if (valueVal !== '' && !LABEL_VALUE_REGEX.test(valueVal)) {
+      return LABEL_VALUE_FORMAT_ERROR;
+    }
+    return '';
+  };
+
+  const hasInvalidLabelEntry = labelEntries.some(
+    (entry, idx) =>
+      Boolean(getLabelKeyError(entry.key, idx)) ||
+      Boolean(getLabelValueError(entry.value))
+  );
+
+  const hasInvalidSparkEntry = sparkEntries.some((entry, idx) =>
+    Boolean(getSparkKeyError(entry.key, idx))
+  );
+
+  return (
+    <EditDrawer
+      open={open}
+      title="Other customizations"
+      isSaveDisabled={hasInvalidLabelEntry || hasInvalidSparkEntry}
+      onClose={onClose}
+      onSave={() =>
+        onSave(entriesToRecord(sparkEntries), entriesToRecord(labelEntries))
+      }
+    >
+      {/* Spark Properties Section */}
+      <div className="edit-drawer-field-group">
+        <div className="edit-drawer-section-heading">Spark properties</div>
+        <div className="edit-drawer-helper-text">
+          Custom Spark properties applied to every workload that runs on this
+          profile, for example spark.executor.memory.
+        </div>
+        <div className="edit-drawer-kv-list">
+          {sparkEntries.map((entry, idx) => {
+            const sparkKeyError = getSparkKeyError(entry.key, idx);
+            return (
+              <div key={`spark-prop-${idx}`} className="edit-drawer-kv-row">
+                <div className="edit-drawer-kv-col">
+                  <TextField
+                    id={`edit-spark-property-key-${idx}`}
+                    label={`Key ${idx + 1} *`}
+                    value={entry.key}
+                    onChange={e =>
+                      handleEntryChange(
+                        setSparkEntries,
+                        idx,
+                        'key',
+                        e.target.value
+                      )
+                    }
+                    variant="outlined"
+                    size="small"
+                    fullWidth
+                    error={Boolean(sparkKeyError)}
+                  />
+                  {sparkKeyError && (
+                    <div
+                      className="edit-drawer-error-text"
+                      id={`spark-key-error-${idx}`}
+                    >
+                      <span className="edit-drawer-error-icon">
+                        <FieldErrorIcon />
+                      </span>
+                      <span>{sparkKeyError}</span>
+                    </div>
+                  )}
+                </div>
+                <div className="edit-drawer-kv-col">
+                  <TextField
+                    id={`edit-spark-property-value-${idx}`}
+                    label={`Value ${idx + 1}`}
+                    value={entry.value}
+                    onChange={e =>
+                      handleEntryChange(
+                        setSparkEntries,
+                        idx,
+                        'value',
+                        e.target.value
+                      )
+                    }
+                    variant="outlined"
+                    size="small"
+                    fullWidth
+                  />
+                </div>
+                <button
+                  type="button"
+                  className="edit-drawer-remove-btn"
+                  aria-label={`Remove Spark property ${idx + 1}`}
+                  onClick={() => handleRemoveEntry(setSparkEntries, idx)}
+                >
+                  &#x2715;
+                </button>
+              </div>
+            );
+          })}
+        </div>
+        <button
+          type="button"
+          className="edit-drawer-add-btn"
+          disabled={hasInvalidSparkEntry}
+          onClick={() => handleAddEntry(setSparkEntries)}
+        >
+          + Add property
+        </button>
+      </div>
+
+      {/* Labels Section */}
+      <div className="edit-drawer-field-group">
+        <div className="edit-drawer-section-heading">Labels</div>
+        <div className="edit-drawer-helper-text">
+          A list of key:value pairs to attach to the session template for
+          tracking.
+        </div>
+        <div className="edit-drawer-kv-list">
+          {labelEntries.map((entry, idx) => {
+            const keyError = getLabelKeyError(entry.key, idx);
+            const valueError = getLabelValueError(entry.value);
+            return (
+              <div key={`label-entry-${idx}`} className="edit-drawer-kv-row">
+                <div className="edit-drawer-kv-col">
+                  <TextField
+                    id={`edit-label-key-${idx}`}
+                    label={`Key ${idx + 1} *`}
+                    value={entry.key}
+                    onChange={e =>
+                      handleEntryChange(
+                        setLabelEntries,
+                        idx,
+                        'key',
+                        e.target.value
+                      )
+                    }
+                    variant="outlined"
+                    size="small"
+                    fullWidth
+                    error={Boolean(keyError)}
+                  />
+                  {keyError && (
+                    <div
+                      className="edit-drawer-error-text"
+                      id={`label-key-error-${idx}`}
+                    >
+                      <span className="edit-drawer-error-icon">
+                        <FieldErrorIcon />
+                      </span>
+                      <span>{keyError}</span>
+                    </div>
+                  )}
+                </div>
+                <div className="edit-drawer-kv-col">
+                  <TextField
+                    id={`edit-label-value-${idx}`}
+                    label={`Value ${idx + 1}`}
+                    value={entry.value}
+                    onChange={e =>
+                      handleEntryChange(
+                        setLabelEntries,
+                        idx,
+                        'value',
+                        e.target.value
+                      )
+                    }
+                    variant="outlined"
+                    size="small"
+                    fullWidth
+                    error={Boolean(valueError)}
+                  />
+                  {valueError && (
+                    <div
+                      className="edit-drawer-error-text"
+                      id={`label-value-error-${idx}`}
+                    >
+                      <span className="edit-drawer-error-icon">
+                        <FieldErrorIcon />
+                      </span>
+                      <span>{valueError}</span>
+                    </div>
+                  )}
+                </div>
+                <button
+                  type="button"
+                  className="edit-drawer-remove-btn"
+                  aria-label={`Remove label ${idx + 1}`}
+                  onClick={() => handleRemoveEntry(setLabelEntries, idx)}
+                >
+                  &#x2715;
+                </button>
+              </div>
+            );
+          })}
+        </div>
+        <button
+          type="button"
+          className="edit-drawer-add-btn"
+          disabled={hasInvalidLabelEntry}
+          onClick={() => handleAddEntry(setLabelEntries)}
+        >
+          + Add label
+        </button>
+      </div>
     </EditDrawer>
   );
 };
