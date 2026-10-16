@@ -136,6 +136,7 @@ export const EditDrawer: React.FC<IEditDrawerProps> = ({
       anchor="right"
       open={open}
       onClose={onClose}
+      onWheel={e => e.stopPropagation()}
       PaperProps={{
         className: `edit-drawer-paper ${paperClassName || ''}`,
         style: { width, ...paperStyle }
