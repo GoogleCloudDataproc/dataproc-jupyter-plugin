@@ -491,6 +491,8 @@ export function mapRuntimeProfileToSessionTemplate(
   const pythonRepo =
     payload.runtimeEnvironmentConfig?.pythonPackageRepository &&
     payload.runtimeEnvironmentConfig.pythonPackageRepository !==
+      'Google managed PyPI pull-through cache' &&
+    payload.runtimeEnvironmentConfig.pythonPackageRepository !==
       'Google Managed PyPI pull through cache'
       ? payload.runtimeEnvironmentConfig.pythonPackageRepository
       : undefined;

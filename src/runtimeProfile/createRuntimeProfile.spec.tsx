@@ -176,14 +176,14 @@ describe('CreateRuntimeProfileComponent UI & Service', () => {
       '#runtime-profile-display-name'
     ) as HTMLInputElement;
     expect(displayNameInput?.value).toMatch(/^runtime-[0-9a-f]{12}$/);
-    expect(getFieldValue('Runtime Profile ID')).toBe(displayNameInput?.value);
-    expect(getFieldValue('Dataproc Runtime Version')).toBe(
-      '2.3 LTS (Spark 3.5.1, Python 3.12)'
+    expect(getFieldValue('Runtime profile ID')).toBe(displayNameInput?.value);
+    expect(getFieldValue('Spark runtime version')).toBe(
+      '2.3 LTS (Spark 3.5, Java 17, Scala 2.13)'
     );
     expect(getFieldValue('Custom spark image')).toBe('None');
-    expect(getFieldValue('Cloud Storage Staging bucket')).toBe('Auto');
+    expect(getFieldValue('Cloud storage staging bucket')).toBe('Auto');
     expect(getFieldValue('Python package repository')).toBe(
-      'Google Managed PyPI pull through cache'
+      'Google managed PyPI pull-through cache'
     );
     expect(getFieldValue('Autoscaling')).toBe('Enabled');
     expect(getFieldValue('Metastore')).toBe('Lakehouse runtime catalog');
@@ -280,12 +280,12 @@ describe('CreateRuntimeProfileComponent UI & Service', () => {
       );
     });
 
-    expect(getFieldValue('Runtime Profile ID')).toBe('custom-runtime-id');
-    expect(getFieldValue('Dataproc Runtime Version')).toBe('2.2 LTS');
+    expect(getFieldValue('Runtime profile ID')).toBe('custom-runtime-id');
+    expect(getFieldValue('Spark runtime version')).toBe('2.2 LTS');
     expect(getFieldValue('Custom spark image')).toBe(
       'gcr.io/my-project/spark:latest'
     );
-    expect(getFieldValue('Cloud Storage Staging bucket')).toBe(
+    expect(getFieldValue('Cloud storage staging bucket')).toBe(
       'gs://my-staging-bucket'
     );
     expect(getFieldValue('Python package repository')).toBe(
@@ -1020,6 +1020,26 @@ describe('CreateRuntimeProfileComponent UI & Service', () => {
       '#edit-runtime-profile-id'
     ) as HTMLInputElement;
     expect(profileIdInput).not.toBeNull();
+    expect(
+      document.body.querySelector('#edit-runtime-profile-id-label')?.textContent
+    ).toBe('Runtime profile ID *');
+    expect(
+      document.body.querySelector('#edit-dataproc-runtime-version-label')
+        ?.textContent
+    ).toBe('Spark runtime version *');
+    expect(
+      document.body.querySelector('.edit-drawer-section-heading')?.textContent
+    ).toBe('Cloud storage staging bucket');
+    expect(
+      document.body.querySelector('#edit-cloud-storage-staging-bucket-label')
+        ?.textContent
+    ).toBe('Staging bucket');
+    const pypiInput = document.body.querySelector(
+      '#edit-python-package-repository'
+    ) as HTMLInputElement;
+    expect(pypiInput?.placeholder).toBe(
+      'Google managed PyPI pull-through cache'
+    );
 
     const saveBtn = document.body.querySelector(
       '.edit-drawer-footer .submit-button-style'
