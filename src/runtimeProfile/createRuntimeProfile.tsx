@@ -996,6 +996,15 @@ export const CreateRuntimeProfileComponent: React.FC<
     if (!target || !formScrollContainerRef.current) {
       return;
     }
+    // When scrolling inside an open EditDrawer, modal, or portaled popup outside the wrapper DOM, do not scroll the create form
+    if (
+      !event.currentTarget.contains(target) ||
+      target.closest(
+        '.edit-drawer-paper, .edit-drawer-container, .MuiDrawer-root, .MuiModal-root'
+      )
+    ) {
+      return;
+    }
     // When scrolling over the Summary and Pricing Estimate card, let the right panel scroll itself
     if (
       target.closest('[data-testid="runtime-profile-summary-pricing-card"]')

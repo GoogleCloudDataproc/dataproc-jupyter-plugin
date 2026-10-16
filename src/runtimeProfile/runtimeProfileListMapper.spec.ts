@@ -15,10 +15,21 @@
  * limitations under the License.
  */
 
+jest.mock('../handler/handler', () => ({
+  requestAPI: jest.fn().mockResolvedValue({
+    dataproc_url: 'https://dataproc.googleapis.com/',
+    compute_url: 'https://compute.googleapis.com/compute',
+    metastore_url: 'https://metastore.googleapis.com/',
+    cloudkms_url: 'https://cloudkms.googleapis.com/',
+    cloudresourcemanager_url: 'https://cloudresourcemanager.googleapis.com/',
+    datacatalog_url: 'https://datacatalog.googleapis.com/',
+    storage_url: 'https://storage.googleapis.com/'
+  })
+}));
+
 import { runtimeProfileListMapper } from './runtimeProfileListMapper';
 
 describe('runtimeProfileListMapper', () => {
-
 
   it('should map all fields properly and fallback when optional fields are missing', () => {
     const templates = [
@@ -27,7 +38,11 @@ describe('runtimeProfileListMapper', () => {
         description: 'Full description',
         jupyterSession: { displayName: 'Display Profile' },
         runtimeConfig: {
-          version: '2.2'
+          version: '2.2',
+          properties: {
+            'dataproc.tier': 'premium',
+            'spark.dataproc.engine': 'lightningEngine'
+          }
         },
         creator: 'alice@google.com',
         updateTime: '2024-03-10T12:00:00Z'
@@ -38,6 +53,14 @@ describe('runtimeProfileListMapper', () => {
         jupyterSession: {},
         creator: 'system-service',
         updateTime: ''
+      },
+      {
+        // Template on runtime 3.1 without explicit dataproc.tier property defaults to Premium
+        name: 'projects/test-proj/locations/us-east4/sessionTemplates/v31-profile',
+        jupyterSession: { displayName: 'V31 Profile' },
+        runtimeConfig: {
+          version: '3.1'
+        }
       }
     ];
 
@@ -47,20 +70,36 @@ describe('runtimeProfileListMapper', () => {
       id: 'projects/test-proj/locations/europe-west1/sessionTemplates/full-profile',
       name: 'Display Profile',
       region: 'europe-west1',
-      description: 'Full description',
       runtimeVersion: '2.2',
+      tier: 'Premium',
+      engine: 'Lightning Engine',
+      lastUsed: 'Mar 10, 2024',
       creator: 'alice',
-      lastUsed: 'Mar 10, 2024'
+      description: 'Full description'
     });
 
     expect(result[1]).toEqual({
       id: 'short-name',
       name: 'short-name',
       region: '',
-      description: '',
       runtimeVersion: '',
+      tier: 'Standard',
+      engine: 'Default',
+      lastUsed: '',
       creator: 'system-service',
-      lastUsed: ''
+      description: ''
+    });
+
+    expect(result[2]).toEqual({
+      id: 'projects/test-proj/locations/us-east4/sessionTemplates/v31-profile',
+      name: 'V31 Profile',
+      region: 'us-east4',
+      runtimeVersion: '3.1',
+      tier: 'Premium',
+      engine: 'Default',
+      lastUsed: '',
+      creator: '',
+      description: ''
     });
   });
 
