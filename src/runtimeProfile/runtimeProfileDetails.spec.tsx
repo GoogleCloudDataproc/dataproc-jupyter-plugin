@@ -163,6 +163,18 @@ describe('RuntimeProfileDetails Component', () => {
     expect(container.textContent).toContain('test123');
     expect(container.textContent).toContain('PYTHON');
 
+    // Configuration section is collapsed by default
+    expect(container.textContent).not.toContain('Runtime configuration');
+    const configHeader = container.querySelector(
+      '[aria-controls="runtime-profile-config-content"]'
+    ) as HTMLElement;
+    expect(configHeader.getAttribute('aria-expanded')).toBe('false');
+
+    act(() => {
+      configHeader.click();
+    });
+    expect(configHeader.getAttribute('aria-expanded')).toBe('true');
+
     // Runtime configuration
     expect(container.textContent).toContain('Runtime configuration');
     expect(container.textContent).toContain('Spark runtime version');
@@ -181,6 +193,8 @@ describe('RuntimeProfileDetails Component', () => {
     expect(container.textContent).toContain(
       'Executor and driver configuration'
     );
+    expect(container.textContent).toContain('Tier');
+    expect(container.textContent).toContain('Accelerated');
     expect(container.textContent).toContain('Lightning Engine');
     expect(container.textContent).toContain('Enabled');
     expect(container.textContent).toContain('Standard persistent disk, 400GB');
@@ -307,6 +321,16 @@ describe('RuntimeProfileDetails Component', () => {
 
     await renderDetails(jest.fn(), undefined, customProfile);
 
+    const configHeader = container.querySelector(
+      '[aria-controls="runtime-profile-config-content"]'
+    ) as HTMLElement;
+    expect(container.textContent).not.toContain('Runtime configuration');
+
+    act(() => {
+      configHeader.click();
+    });
+    expect(container.textContent).toContain('Runtime configuration');
+
     expect(container.textContent).toContain(
       'us-central1-docker.pkg.dev/my-proj/repo/img:latest'
     );
@@ -314,6 +338,7 @@ describe('RuntimeProfileDetails Component', () => {
     expect(container.textContent).toContain(
       'https://us-central1-python.pkg.dev/my-proj/pypi'
     );
+    expect(container.textContent).toContain('Standard');
     expect(container.textContent).toContain('Customer-managed');
     expect(container.textContent).toContain('Disabled');
     expect(container.textContent).toContain('Enabled');
@@ -328,32 +353,31 @@ describe('RuntimeProfileDetails Component', () => {
     );
     expect(container.textContent).toContain('None');
 
-    const configHeader = container.querySelector(
-      '[aria-controls="runtime-profile-config-content"]'
-    ) as HTMLElement;
-    act(() => {
-      configHeader.click();
-    });
-    expect(container.textContent).not.toContain('Runtime configuration');
-
     act(() => {
       configHeader.dispatchEvent(
         new KeyboardEvent('keydown', { key: 'Enter', bubbles: true })
       );
     });
-    expect(container.textContent).toContain('Runtime configuration');
+    expect(container.textContent).not.toContain('Runtime configuration');
 
     act(() => {
       configHeader.dispatchEvent(
         new KeyboardEvent('keydown', { key: ' ', bubbles: true })
       );
     });
-    expect(container.textContent).not.toContain('Runtime configuration');
+    expect(container.textContent).toContain('Runtime configuration');
   });
 
   it('should open RuntimeEnvironmentEditDrawer and ExecutorAndDriverEditDrawer, call updateRuntimeProfile on Save, and notify user', async () => {
     const onUpdateSuccessMock = jest.fn();
     await renderDetails(jest.fn(), undefined, mockProfile, onUpdateSuccessMock);
+
+    const configHeader = container.querySelector(
+      '[aria-controls="runtime-profile-config-content"]'
+    ) as HTMLElement;
+    act(() => {
+      configHeader.click();
+    });
 
     // 1. Open Runtime configuration drawer
     const editRuntimeBtn = container.querySelector(
@@ -618,10 +642,47 @@ describe('RuntimeProfileDetails Component', () => {
     expect(updatedProps['dataproc.tier']).toBe('premium');
     expect(updatedProps['spark.dataproc.engine']).toBeUndefined();
     expect(updatedProps['spark.executor.cores']).toBe('4');
+    expect(updatedProps['spark.executor.memory']).toBeUndefined();
     expect(updatedProps['spark.dataproc.executor.resource.accelerator.type']).toBe(
       'l4'
     );
+    expect(updatedProps['spark.driver.cores']).toBe('4');
+    expect(updatedProps['spark.driver.memory']).toBe('16g');
     expect(updatedProps['spark.dataproc.driver.compute.tier']).toBe('premium');
+
+    // 2.x template without dataproc.tier defaults to Standard and leaves dataproc.tier unset if unchanged
+    const template2xNoTier: IRuntimeProfileTemplate = {
+      name: 'projects/test-project/locations/us-central1/sessionTemplates/no-tier-2x',
+      runtimeConfig: {
+        version: '2.3',
+        properties: {
+          'spark:spark.executor.cores': '4',
+          'spark:spark.executor.memory': '16g'
+        }
+      }
+    };
+    const cfg2xNoTier = buildExecutorAndDriverConfigFromTemplate(template2xNoTier);
+    expect(cfg2xNoTier.tier).toBe('Standard');
+
+    const saved2xUnchanged = applyExecutorAndDriverUpdateToTemplate(
+      template2xNoTier,
+      cfg2xNoTier
+    );
+    expect(
+      saved2xUnchanged.runtimeConfig?.properties?.['dataproc.tier']
+    ).toBeUndefined();
+
+    // 3.1+ template without dataproc.tier defaults to Premium
+    const template31NoTier: IRuntimeProfileTemplate = {
+      name: 'projects/test-project/locations/us-central1/sessionTemplates/no-tier-31',
+      runtimeConfig: {
+        version: '3.1',
+        properties: {}
+      }
+    };
+    expect(buildExecutorAndDriverConfigFromTemplate(template31NoTier).tier).toBe(
+      'Premium'
+    );
   });
 });
 

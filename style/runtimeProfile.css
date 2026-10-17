@@ -931,6 +931,11 @@ body[data-jp-theme-light='false'] .runtime-profile-details-wrapper {
   line-height: 18px;
 }
 
+.runtime-profile-details-body > :last-child,
+#runtime-profile-config-content > :last-child {
+  border-bottom: none;
+}
+
 .runtime-profile-details-label,
 .runtime-profile-details-value {
   box-sizing: border-box;
