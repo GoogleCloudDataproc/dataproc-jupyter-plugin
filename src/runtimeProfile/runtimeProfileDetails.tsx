@@ -1059,13 +1059,13 @@ export default function RuntimeProfileDetails({
       if (isMountedRef.current) {
         setCurrentProfile(savedProfile);
         closeDrawer();
-        onUpdateSuccess?.(savedProfile);
-        Notification.emit(
-          `Runtime Profile ${displayName} successfully updated`,
-          'success',
-          { autoClose: 5000 }
-        );
       }
+      onUpdateSuccess?.(savedProfile);
+      Notification.emit(
+        `Runtime Profile ${displayName} successfully updated`,
+        'success',
+        { autoClose: 5000 }
+      );
     } catch (error) {
       safeLog(`Error updating profile: ${error}`, LOG_LEVEL.ERROR);
       Notification.emit(`Failed to update ${displayName}: ${error}`, 'error', {
