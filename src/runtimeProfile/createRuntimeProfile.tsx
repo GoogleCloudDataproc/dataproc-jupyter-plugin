@@ -40,6 +40,12 @@ import LeftArrowIcon from '../../style/icons/left_arrow_icon.svg';
 import expandLessIcon from '../../style/icons/expand_less.svg';
 import expandMoreIcon from '../../style/icons/expand_more.svg';
 import { SectionDetail, ISectionProperty } from '../controls/SectionDetail';
+import {
+  LAKEHOUSE_RUNTIME_CATALOG,
+  METASTORE_NONE,
+  isAcceleratedMachine,
+  normalizeMachineTypeName
+} from './runtimeProfileMapper';
 import '../../style/runtimeProfile.css';
 import {
   AutoscalingEditDrawer,
@@ -50,10 +56,7 @@ import {
   SelectBucketEditDrawer,
   SessionLifecycleEditDrawer
 } from './runtimeProfileEditDrawers';
-import {
-  isAcceleratedMachine,
-  normalizeMachineTypeName
-} from './runtimeProfileMapper';
+import { MetastoreEditDrawer } from './metastoreEditDrawer';
 import {
   DATAPROC_TIER_DOC,
   LIGHTNING_ENGINE_DOC,
@@ -211,6 +214,8 @@ export const DEFAULT_AUTOSCALING_CONFIG: IAutoscalingConfig = {
   maxExecutors: 10
 };
 
+// No metastoreType: nothing is sent until the user saves the Metastore drawer,
+// so the service uses the Lakehouse runtime catalog by default.
 export const DEFAULT_METASTORE_CONFIG: IMetastoreConfig = {
   metastore: '',
   hiveEndpointEnabled: false
@@ -337,18 +342,34 @@ export const formatMetastoreProperties = (
   if (!config) {
     return [];
   }
-  const isHiveEnabled =
-    config.hiveEndpointEnabled ?? DEFAULT_METASTORE_CONFIG.hiveEndpointEnabled;
-  return [
+  const isDataprocMetastore = config.metastoreType === 'dataproc';
+  const lakehouseLabel = config.metastore || LAKEHOUSE_RUNTIME_CATALOG;
+  const metastoreLabel = isDataprocMetastore
+    ? config.dataprocMetastoreService || METASTORE_NONE
+    : config.projectId
+    ? `${lakehouseLabel} (project: ${config.projectId})`
+    : lakehouseLabel;
+
+  const properties: ISectionProperty[] = [
     {
       label: 'Metastore',
-      value: config.metastore || 'Lakehouse runtime catalog'
-    },
-    {
-      label: 'Hive endpoint',
-      value: isHiveEnabled ? 'Enabled' : 'Disabled'
+      value: metastoreLabel
     }
   ];
+
+  // Hive endpoint is a Lakehouse runtime catalog option; it does not apply to
+  // Dataproc Metastore.
+  if (!isDataprocMetastore) {
+    const isHiveEnabled =
+      config.hiveEndpointEnabled ??
+      DEFAULT_METASTORE_CONFIG.hiveEndpointEnabled;
+    properties.push({
+      label: 'Hive endpoint',
+      value: isHiveEnabled ? 'Enabled' : 'Disabled'
+    });
+  }
+
+  return properties;
 };
 
 export const formatNetworkSecurityProperties = (
@@ -546,6 +567,8 @@ export const CreateRuntimeProfileComponent: React.FC<
     useState<boolean>(true);
   const [isRuntimeConfigDrawerOpen, setIsRuntimeConfigDrawerOpen] =
     useState<boolean>(false);
+  const [isMetastoreDrawerOpen, setIsMetastoreDrawerOpen] =
+    useState<boolean>(false);
   const [isExecutorDriverDrawerOpen, setIsExecutorDriverDrawerOpen] =
     useState<boolean>(false);
   const formScrollContainerRef = React.useRef<HTMLDivElement | null>(null);
@@ -657,9 +680,8 @@ export const CreateRuntimeProfileComponent: React.FC<
     useState<IAutoscalingConfig>(
       () => initialAutoscalingConfig || DEFAULT_AUTOSCALING_CONFIG
     );
-  const metastoreConfig = useMemo<IMetastoreConfig>(
-    () => initialMetastoreConfig || DEFAULT_METASTORE_CONFIG,
-    [initialMetastoreConfig]
+  const [metastoreConfig, setMetastoreConfig] = useState<IMetastoreConfig>(
+    () => initialMetastoreConfig || DEFAULT_METASTORE_CONFIG
   );
   const networkAndSecurityConfig = useMemo<INetworkAndSecurityConfig>(
     () => initialNetworkAndSecurityConfig || DEFAULT_NETWORK_SECURITY_CONFIG,
@@ -681,6 +703,10 @@ export const CreateRuntimeProfileComponent: React.FC<
       initialAutoscalingConfig || DEFAULT_AUTOSCALING_CONFIG
     );
   }, [initialAutoscalingConfig]);
+
+  useEffect(() => {
+    setMetastoreConfig(initialMetastoreConfig || DEFAULT_METASTORE_CONFIG);
+  }, [initialMetastoreConfig]);
 
   useEffect(() => {
     setSessionLifecycleConfig(
@@ -721,8 +747,8 @@ export const CreateRuntimeProfileComponent: React.FC<
       {
         title: 'Metastore configuration',
         properties: formatMetastoreProperties(metastoreConfig),
-        isEditDisabled: true,
-        onEdit: undefined
+        isEditDisabled: false,
+        onEdit: () => setIsMetastoreDrawerOpen(true)
       },
       {
         title: 'Network and security',
@@ -1501,6 +1527,16 @@ export const CreateRuntimeProfileComponent: React.FC<
           setIsRuntimeConfigDrawerOpen(false);
         }}
       />
+      <MetastoreEditDrawer
+        open={isMetastoreDrawerOpen}
+        config={metastoreConfig}
+        region={watch('region')}
+        onClose={() => setIsMetastoreDrawerOpen(false)}
+        onSave={(updatedConfig: IMetastoreConfig) => {
+          setMetastoreConfig(updatedConfig);
+          setIsMetastoreDrawerOpen(false);
+        }}
+      />
 
       <ExecutorAndDriverEditDrawer
         open={isExecutorDriverDrawerOpen}
@@ -1605,6 +1641,7 @@ export {
   SessionLifecycleEditDrawer,
   OtherCustomizationEditDrawer,
   SelectBucketEditDrawer,
+  MetastoreEditDrawer,
   RUNTIME_VERSION_OPTIONS,
   RuntimeProfileSummary,
   RuntimePricingEstimate,

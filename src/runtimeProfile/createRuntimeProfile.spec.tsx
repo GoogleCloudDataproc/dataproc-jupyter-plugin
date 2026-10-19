@@ -49,6 +49,9 @@ import {
   CreateRuntimeProfileComponent,
   ExecutorAndDriverEditDrawer,
   RuntimeEnvironmentEditDrawer,
+  MetastoreEditDrawer,
+  DEFAULT_METASTORE_CONFIG,
+  formatMetastoreProperties,
   AutoscalingEditDrawer,
   SessionLifecycleEditDrawer,
   OtherCustomizationEditDrawer,
@@ -167,13 +170,19 @@ describe('CreateRuntimeProfileComponent UI & Service', () => {
       '.section-detail-edit-button'
     );
     expect(editButtons).toHaveLength(7);
-    expect(editButtons[0].getAttribute('aria-disabled')).toBe('false');
-    expect(editButtons[1].getAttribute('aria-disabled')).toBe('false');
-    expect(editButtons[2].getAttribute('aria-disabled')).toBe('false');
-    expect(editButtons[3].getAttribute('aria-disabled')).toBe('true');
-    expect(editButtons[4].getAttribute('aria-disabled')).toBe('true');
-    expect(editButtons[5].getAttribute('aria-disabled')).toBe('false');
-    expect(editButtons[6].getAttribute('aria-disabled')).toBe('false');
+    // All sections except Network and security (4) are editable.
+    const expectedDisabled = [
+      'false',
+      'false',
+      'false',
+      'false',
+      'true',
+      'false',
+      'false'
+    ];
+    Array.from(editButtons).forEach((btn, idx) => {
+      expect(btn.getAttribute('aria-disabled')).toBe(expectedDisabled[idx]);
+    });
 
     const displayNameInput = container.querySelector(
       '#runtime-profile-display-name'
@@ -1032,6 +1041,105 @@ describe('CreateRuntimeProfileComponent UI & Service', () => {
     await act(async () => {
       saveBtn.click();
     });
+  });
+
+  it('formats metastore summary labels for Lakehouse and Dataproc Metastore configs and exposes MetastoreEditDrawer', () => {
+    expect(MetastoreEditDrawer).toBeDefined();
+
+    // Default config
+    const formatted = formatMetastoreProperties(DEFAULT_METASTORE_CONFIG);
+    expect(formatted).toHaveLength(2);
+    expect(formatted.find(p => p.label === 'Metastore')?.value).toBe(
+      'Lakehouse runtime catalog'
+    );
+    expect(formatted.find(p => p.label === 'Hive endpoint')?.value).toBe(
+      'Disabled'
+    );
+
+    // Lakehouse with specific project ID
+    const formattedWithProject = formatMetastoreProperties({
+      metastore: 'Lakehouse runtime catalog',
+      metastoreType: 'lakehouse',
+      projectId: 'frontrow-team',
+      hiveEndpointEnabled: true
+    });
+    expect(formattedWithProject.find(p => p.label === 'Metastore')?.value).toBe(
+      'Lakehouse runtime catalog (project: frontrow-team)'
+    );
+    expect(
+      formattedWithProject.find(p => p.label === 'Hive endpoint')?.value
+    ).toBe('Enabled');
+
+    // Dataproc Metastore: Hive endpoint is Lakehouse-only, so no Hive row,
+    // even if a stale hiveEndpointEnabled value is present.
+    const formattedDpms = formatMetastoreProperties({
+      metastoreType: 'dataproc',
+      dataprocMetastoreService:
+        'projects/test-proj/locations/us-central1/services/dpms-service',
+      hiveEndpointEnabled: true
+    });
+    expect(formattedDpms).toEqual([
+      {
+        label: 'Metastore',
+        value: 'projects/test-proj/locations/us-central1/services/dpms-service'
+      }
+    ]);
+
+    expect(formatMetastoreProperties(undefined)).toEqual([]);
+  });
+
+  it('opens the Metastore drawer from the summary and uses the saved config', async () => {
+    const createSpy = jest
+      .spyOn(mockService, 'createRuntimeProfile')
+      .mockResolvedValue({ displayName: 'created', region: 'us-central1' });
+
+    await act(async () => {
+      root.render(<CreateRuntimeProfileComponent service={mockService} />);
+    });
+
+    // Metastore configuration is the 4th section.
+    await act(async () => {
+      (
+        container.querySelectorAll(
+          '.section-detail-edit-button'
+        )[3] as HTMLButtonElement
+      ).click();
+    });
+    const dataprocCard = Array.from(
+      document.body.querySelectorAll('.node-config-card')
+    ).find(card => card.textContent?.includes('Dataproc Metastore'));
+    await act(async () => {
+      (dataprocCard as HTMLElement).click();
+    });
+    await act(async () => {
+      (
+        document.body.querySelector(
+          '.edit-drawer-footer button'
+        ) as HTMLButtonElement
+      ).click();
+    });
+
+    // The summary shows the saved Dataproc Metastore config, without a Hive row.
+    expect(getFieldValue('Metastore')).toBe('None');
+    expect(getFieldValue('Hive endpoint')).toBeUndefined();
+
+    await act(async () => {
+      (
+        container.querySelector('button[type="submit"]') as HTMLButtonElement
+      ).click();
+    });
+    expect(createSpy).toHaveBeenCalledWith(
+      expect.objectContaining({
+        metastoreConfig: {
+          metastore: 'Dataproc Metastore',
+          metastoreType: 'dataproc',
+          projectId: undefined,
+          dataprocMetastoreService: undefined
+        }
+      }),
+      undefined,
+      'us-central1'
+    );
   });
 
   it('supports browsing buckets, viewing bucket files, searching buckets, and opening create bucket placeholder drawer', async () => {
