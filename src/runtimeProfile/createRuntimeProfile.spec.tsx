@@ -55,9 +55,6 @@ import {
   AutoscalingEditDrawer,
   SessionLifecycleEditDrawer,
   OtherCustomizationEditDrawer,
-  MetastoreEditDrawer,
-  DEFAULT_METASTORE_CONFIG,
-  formatMetastoreProperties,
   generateRandomHex,
   RuntimeProfileSummary,
   formatRuntimeProfileSummaryProperties,
@@ -173,37 +170,15 @@ describe('CreateRuntimeProfileComponent UI & Service', () => {
       '.section-detail-edit-button'
     );
     expect(editButtons).toHaveLength(7);
-    // Runtime configuration (0), Executor and driver configuration (1), and
-    // Metastore configuration (3) are editable; the remaining sections are still read-only.
+    // All sections except Network and security (4) are editable.
     const expectedDisabled = [
       'false',
       'false',
-      'true',
-      'false',
-      'true',
-      'true',
-      'true'
-    ];
-    Array.from(editButtons).forEach((btn, idx) => {
-      expect(btn.getAttribute('aria-disabled')).toBe(expectedDisabled[idx]);
-    });
-    expect(editButtons[0].getAttribute('aria-disabled')).toBe('false');
-    expect(editButtons[1].getAttribute('aria-disabled')).toBe('false');
-    expect(editButtons[2].getAttribute('aria-disabled')).toBe('false');
-    expect(editButtons[3].getAttribute('aria-disabled')).toBe('true');
-    expect(editButtons[4].getAttribute('aria-disabled')).toBe('true');
-    expect(editButtons[5].getAttribute('aria-disabled')).toBe('false');
-    expect(editButtons[6].getAttribute('aria-disabled')).toBe('false');
-    // Runtime configuration (0), Executor and driver configuration (1), and
-    // Metastore configuration (3) are editable; the remaining sections are still read-only.
-    const expectedDisabled = [
       'false',
       'false',
       'true',
       'false',
-      'true',
-      'true',
-      'true'
+      'false'
     ];
     Array.from(editButtons).forEach((btn, idx) => {
       expect(btn.getAttribute('aria-disabled')).toBe(expectedDisabled[idx]);
