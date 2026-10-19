@@ -364,18 +364,28 @@ export const MetastoreEditDrawer: React.FC<IMetastoreEditDrawerProps> = ({
     }
     let cancelled = false;
     setIsLoadingCatalogs(true);
-    listIcebergCatalogsAPI(state.projectId).then(catalogs => {
-      if (cancelled) {
-        return;
-      }
-      setCatalogsList(catalogs);
-      setIsLoadingCatalogs(false);
-      // Pre-select the first catalog when none is chosen yet.
-      setState(prev => ({
-        ...prev,
-        catalogId: prev.catalogId || catalogs[0] || ''
-      }));
-    });
+    listIcebergCatalogsAPI(state.projectId)
+      .then(catalogs => {
+        if (cancelled) {
+          return;
+        }
+        setCatalogsList(catalogs);
+        // Pre-select the first catalog when none is chosen yet.
+        setState(prev => ({
+          ...prev,
+          catalogId: prev.catalogId || catalogs[0] || ''
+        }));
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setCatalogsList([]);
+        }
+      })
+      .finally(() => {
+        if (!cancelled) {
+          setIsLoadingCatalogs(false);
+        }
+      });
     return () => {
       cancelled = true;
       setIsLoadingCatalogs(false);
@@ -400,23 +410,33 @@ export const MetastoreEditDrawer: React.FC<IMetastoreEditDrawerProps> = ({
     }
     let cancelled = false;
     setIsLoadingHiveCatalogs(true);
-    listHiveCatalogsAPI(state.hiveProjectId).then(catalogs => {
-      if (cancelled) {
-        return;
-      }
-      setHiveCatalogsList(catalogs);
-      setIsLoadingHiveCatalogs(false);
-      // Pre-select the first catalog when none is chosen yet.
-      setState(prev =>
-        prev.hiveCatalogId || !catalogs[0]
-          ? prev
-          : {
-              ...prev,
-              hiveCatalogId: catalogs[0],
-              hiveCatalogName: prev.hiveCatalogName || catalogs[0]
-            }
-      );
-    });
+    listHiveCatalogsAPI(state.hiveProjectId)
+      .then(catalogs => {
+        if (cancelled) {
+          return;
+        }
+        setHiveCatalogsList(catalogs);
+        // Pre-select the first catalog when none is chosen yet.
+        setState(prev =>
+          prev.hiveCatalogId || !catalogs[0]
+            ? prev
+            : {
+                ...prev,
+                hiveCatalogId: catalogs[0],
+                hiveCatalogName: prev.hiveCatalogName || catalogs[0]
+              }
+        );
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setHiveCatalogsList([]);
+        }
+      })
+      .finally(() => {
+        if (!cancelled) {
+          setIsLoadingHiveCatalogs(false);
+        }
+      });
     return () => {
       cancelled = true;
       setIsLoadingHiveCatalogs(false);
@@ -486,6 +506,7 @@ export const MetastoreEditDrawer: React.FC<IMetastoreEditDrawerProps> = ({
       state.hiveEndpointEnabled &&
       (isLoadingHiveCatalogs ||
         !state.hiveProjectId.trim() ||
+        !state.hiveCatalogId ||
         !state.hiveCatalogName.trim() ||
         hiveCatalogNameError)
     ) {

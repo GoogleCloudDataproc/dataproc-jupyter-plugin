@@ -491,4 +491,27 @@ describe('MetastoreEditDrawer interactions', () => {
       })
     );
   });
+
+  it('disables Save when Hive catalog fetch fails even if a catalog name is typed', async () => {
+    (listHiveCatalogsAPI as jest.Mock).mockRejectedValueOnce(
+      new Error('network error')
+    );
+    await renderDrawer();
+    await click(checkbox('Hive Endpoint'));
+    await wait();
+
+    await typeInto(input('hive-catalog-name'), 'my_hive');
+    expect(saveButton().disabled).toBe(true);
+  });
+
+  it('disables Save when Iceberg existing catalog fetch fails', async () => {
+    (listIcebergCatalogsAPI as jest.Mock).mockRejectedValueOnce(
+      new Error('network error')
+    );
+    await renderDrawer();
+    await click(radio('existing'));
+    await wait();
+
+    expect(saveButton().disabled).toBe(true);
+  });
 });
