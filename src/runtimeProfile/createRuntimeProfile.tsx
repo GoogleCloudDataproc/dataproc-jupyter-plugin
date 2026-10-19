@@ -681,7 +681,7 @@ export const CreateRuntimeProfileComponent: React.FC<
       () => initialAutoscalingConfig || DEFAULT_AUTOSCALING_CONFIG
     );
   const [metastoreConfig, setMetastoreConfig] = useState<IMetastoreConfig>(
-    initialMetastoreConfig || DEFAULT_METASTORE_CONFIG
+    () => initialMetastoreConfig || DEFAULT_METASTORE_CONFIG
   );
   const networkAndSecurityConfig = useMemo<INetworkAndSecurityConfig>(
     () => initialNetworkAndSecurityConfig || DEFAULT_NETWORK_SECURITY_CONFIG,
@@ -703,6 +703,10 @@ export const CreateRuntimeProfileComponent: React.FC<
       initialAutoscalingConfig || DEFAULT_AUTOSCALING_CONFIG
     );
   }, [initialAutoscalingConfig]);
+
+  useEffect(() => {
+    setMetastoreConfig(initialMetastoreConfig || DEFAULT_METASTORE_CONFIG);
+  }, [initialMetastoreConfig]);
 
   useEffect(() => {
     setSessionLifecycleConfig(
