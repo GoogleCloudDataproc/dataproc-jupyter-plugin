@@ -27,6 +27,7 @@ import ExpandLessIcon from '../../style/icons/expand_less.svg';
 import ExpandMoreIcon from '../../style/icons/expand_more.svg';
 import {
   formatLastUsed,
+  getDefaultTierForVersion,
   IRuntimeProfileTemplate,
   parseRuntimeProfileResourceName
 } from './runtimeProfileListMapper';
@@ -319,7 +320,12 @@ export const buildExecutorAndDriverConfigFromTemplate = (
   const rawTier = getPropertyValue(properties, DATAPROC_TIER_PROPERTY)
     .trim()
     .toLowerCase();
-  const tier = rawTier === 'standard' ? 'Standard' : 'Premium';
+  const tier =
+    rawTier === 'standard'
+      ? 'Standard'
+      : rawTier === 'premium'
+        ? 'Premium'
+        : getDefaultTierForVersion(profile.runtimeConfig?.version);
   const lightningEngineEnabled =
     getPropertyValue(properties, DATAPROC_LIGHTNING_ENGINE_PROPERTY).trim() ===
     'lightningEngine';
@@ -410,8 +416,15 @@ export const applyExecutorAndDriverUpdateToTemplate = (
   profile: IRuntimeProfileTemplate,
   updated: IExecutorAndDriverConfig
 ): IRuntimeProfileTemplate => {
+  const existingProps = profile.runtimeConfig?.properties || {};
+  const existingRawTier = getPropertyValue(
+    existingProps,
+    DATAPROC_TIER_PROPERTY
+  )
+    .trim()
+    .toLowerCase();
   const nextProps: Record<string, string> = {
-    ...(profile.runtimeConfig?.properties || {})
+    ...existingProps
   };
   EXECUTOR_AND_DRIVER_PROPERTY_KEYS.forEach(key => {
     delete nextProps[key];
@@ -419,8 +432,11 @@ export const applyExecutorAndDriverUpdateToTemplate = (
     delete nextProps[`dataproc:${key}`];
   });
 
-  const tier = updated.tier || 'Premium';
-  nextProps[DATAPROC_TIER_PROPERTY] = tier.toLowerCase();
+  const defaultTier = getDefaultTierForVersion(profile.runtimeConfig?.version);
+  const tier = updated.tier || defaultTier;
+  if (existingRawTier || tier !== defaultTier) {
+    nextProps[DATAPROC_TIER_PROPERTY] = tier.toLowerCase();
+  }
 
   if (tier === 'Premium' && updated.lightningEngineEnabled) {
     nextProps[DATAPROC_LIGHTNING_ENGINE_PROPERTY] = 'lightningEngine';
@@ -430,7 +446,9 @@ export const applyExecutorAndDriverUpdateToTemplate = (
   const driverMachine = parseMachineTypeSpec(driverMachineName);
   if (driverMachine) {
     nextProps['spark.driver.cores'] = String(driverMachine.cores);
-    nextProps['spark.driver.memory'] = driverMachine.memory;
+    if (!driverMachine.acceleratorType) {
+      nextProps['spark.driver.memory'] = driverMachine.memory;
+    }
     if (
       driverMachineName?.toLowerCase().includes('highmem') ||
       driverMachine.acceleratorType
@@ -459,7 +477,9 @@ export const applyExecutorAndDriverUpdateToTemplate = (
   const executorMachine = parseMachineTypeSpec(executorMachineName);
   if (executorMachine) {
     nextProps['spark.executor.cores'] = String(executorMachine.cores);
-    nextProps['spark.executor.memory'] = executorMachine.memory;
+    if (!executorMachine.acceleratorType) {
+      nextProps['spark.executor.memory'] = executorMachine.memory;
+    }
     if (
       executorMachineName?.toLowerCase().includes('highmem') ||
       executorMachine.acceleratorType
@@ -582,7 +602,7 @@ export default function RuntimeProfileDetails({
 }: IRuntimeProfileDetailsProps) {
   const [currentProfile, setCurrentProfile] =
     useState<IRuntimeProfileTemplate>(profile);
-  const [isConfigExpanded, setIsConfigExpanded] = useState(true);
+  const [isConfigExpanded, setIsConfigExpanded] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [isSavingSection, setIsSavingSection] = useState(false);
@@ -614,6 +634,13 @@ export default function RuntimeProfileDetails({
   const encryptionType = executionConfig?.kmsKey
     ? 'Customer-managed'
     : 'Google-managed';
+  const rawTier = getProp(DATAPROC_TIER_PROPERTY).trim().toLowerCase();
+  const isPremiumTier =
+    rawTier === 'premium' ||
+    (!rawTier &&
+      getDefaultTierForVersion(currentProfile.runtimeConfig?.version) ===
+        'Premium');
+  const tierDisplay = isPremiumTier ? 'Accelerated' : 'Standard';
   const lightningEngine =
     getProp(DATAPROC_LIGHTNING_ENGINE_PROPERTY).trim() === 'lightningEngine'
       ? 'Enabled'
@@ -825,6 +852,7 @@ export default function RuntimeProfileDetails({
       title: 'Executor and driver configuration',
       onEdit: () => setIsExecutorDriverDrawerOpen(true),
       rows: [
+        { label: 'Tier', value: tierDisplay },
         { label: 'Lightning Engine', value: lightningEngine },
         { label: 'Driver disk', value: driverDisk },
         { label: 'Executor disk', value: executorDisk }

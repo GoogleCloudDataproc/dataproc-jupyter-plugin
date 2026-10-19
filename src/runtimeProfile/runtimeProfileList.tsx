@@ -206,7 +206,7 @@ export default function RuntimeProfileList({ app }: { app?: JupyterLab }) {
 
       <div className="settings-header">
         <div className="settings-header-title">
-          Serverless
+          Runtime Profiles
           <div className="settings-header-actions">
             <button
               className="secondary-action-btn"
@@ -242,10 +242,12 @@ export default function RuntimeProfileList({ app }: { app?: JupyterLab }) {
                 <tr>
                   <th>Runtime profile name</th>
                   <th>Region</th>
-                  <th>Description</th>
                   <th>Runtime version</th>
-                  <th>Creator</th>
+                  <th>Tier</th>
+                  <th>Engine</th>
                   <th>Last used</th>
+                  <th>Creator</th>
+                  <th>Description</th>
                   <th>Actions</th>
                 </tr>
               </thead>
@@ -268,15 +270,17 @@ export default function RuntimeProfileList({ app }: { app?: JupyterLab }) {
                       </button>
                     </td>
                     <td>{profile.region}</td>
+                    <td>{profile.runtimeVersion}</td>
+                    <td>{profile.tier}</td>
+                    <td>{profile.engine}</td>
+                    <td>{profile.lastUsed}</td>
+                    <td>{profile.creator}</td>
                     <td
                       className="description-cell"
                       title={profile.description}
                     >
                       {profile.description}
                     </td>
-                    <td>{profile.runtimeVersion}</td>
-                    <td>{profile.creator}</td>
-                    <td>{profile.lastUsed}</td>
                     <td className="actions-cell">
                       <div className="dropdown">
                         <span onClick={e => toggleDropdown(e, profile.id)}>

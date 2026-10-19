@@ -57,7 +57,11 @@ describe('RuntimeProfileList Component', () => {
         }
       },
       runtimeConfig: {
-        version: '2.2'
+        version: '2.2',
+        properties: {
+          'dataproc.tier': 'premium',
+          'spark.dataproc.engine': 'lightningEngine'
+        }
       },
       creator: 'alice@example.com',
       updateTime: '2025-01-15T10:00:00Z'
@@ -106,9 +110,30 @@ describe('RuntimeProfileList Component', () => {
     });
 
     expect(RuntimeProfileService.fetchRuntimeProfiles).toHaveBeenCalledWith('');
+    expect(
+      container.querySelector('.settings-header-title')?.textContent
+    ).toContain('Runtime Profiles');
+    const headers = Array.from(
+      container.querySelectorAll('.runtime-profile-table thead th')
+    ).map(th => th.textContent);
+    expect(headers).toEqual([
+      'Runtime profile name',
+      'Region',
+      'Runtime version',
+      'Tier',
+      'Engine',
+      'Last used',
+      'Creator',
+      'Description',
+      'Actions'
+    ]);
     expect(container.textContent).toContain('profile-1');
     expect(container.textContent).toContain('us-central1');
+    expect(container.textContent).toContain('Premium');
+    expect(container.textContent).toContain('Lightning Engine');
     expect(container.textContent).toContain('profile-2');
+    expect(container.textContent).toContain('Standard');
+    expect(container.textContent).toContain('Default');
     expect(container.textContent).toContain('Showing 1 – 2 profiles');
   });
 
