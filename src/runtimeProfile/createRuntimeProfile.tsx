@@ -42,10 +42,13 @@ import expandMoreIcon from '../../style/icons/expand_more.svg';
 import { SectionDetail, ISectionProperty } from '../controls/SectionDetail';
 import '../../style/runtimeProfile.css';
 import {
+  AutoscalingEditDrawer,
   ExecutorAndDriverEditDrawer,
+  OtherCustomizationEditDrawer,
   RuntimeEnvironmentEditDrawer,
   RUNTIME_VERSION_OPTIONS,
-  SelectBucketEditDrawer
+  SelectBucketEditDrawer,
+  SessionLifecycleEditDrawer
 } from './runtimeProfileEditDrawers';
 import {
   isAcceleratedMachine,
@@ -112,11 +115,16 @@ import { registerSessionKernelsInLauncher } from './sessionKernelLauncher';
 import { authApi, IAuthCredentials } from '../utils/utils';
 import {
   ALL_MACHINE_TYPES,
+  calculateDcu,
   DEFAULT_INITIAL_EXECUTORS,
   DEFAULT_MAX_EXECUTORS,
   DEFAULT_MIN_EXECUTORS,
   formatCompactDiskLabel,
+  formatDcuNumber,
   getMachineTypeLabel,
+  getShapeDcu,
+  MACHINE_SHAPE_DCU,
+  MACHINE_SHAPE_RESOURCES,
   MSG_EXECUTOR_TIER_PREMIUM,
   MSG_EXECUTOR_TIER_PREMIUM_LIGHTNING,
   MSG_EXECUTOR_TIER_STANDARD,
@@ -127,6 +135,11 @@ import {
   IRuntimeProfileSummaryProps,
   RuntimeProfileSummary
 } from './runtimeProfileSummary';
+import {
+  calculateRuntimePricingEstimate,
+  IRuntimePricingEstimateProps,
+  RuntimePricingEstimate
+} from './runtimePricingEstimate';
 import { eventEmitter } from '../utils/signalEmitter';
 
 interface IRuntimeProfileFormData {
@@ -426,6 +439,7 @@ export interface ICreateRuntimeProfileComponentProps
   onBack?: () => void;
   onSuccess?: () => void;
   SummaryComponent?: React.ComponentType<IRuntimeProfileSummaryProps>;
+  PricingComponent?: React.ComponentType<IRuntimePricingEstimateProps>;
   /**
    * 'create' (default) opens an empty form that creates a new profile.
    * 'edit' pre-fills the form from `profile` and saves changes to it.
@@ -536,7 +550,8 @@ export const CreateRuntimeProfileComponent: React.FC<
     initialSessionLifecycleConfig,
     initialSparkProperties,
     initialLabels,
-    SummaryComponent = RuntimeProfileSummary
+    SummaryComponent = RuntimeProfileSummary,
+    PricingComponent = RuntimePricingEstimate
   } = { ...editInitialValues, ...props };
 
   // Options & Data State
@@ -550,6 +565,13 @@ export const CreateRuntimeProfileComponent: React.FC<
   const [isRuntimeConfigDrawerOpen, setIsRuntimeConfigDrawerOpen] =
     useState<boolean>(false);
   const [isExecutorDriverDrawerOpen, setIsExecutorDriverDrawerOpen] =
+    useState<boolean>(false);
+  const formScrollContainerRef = React.useRef<HTMLDivElement | null>(null);
+  const [isAutoscalingDrawerOpen, setIsAutoscalingDrawerOpen] =
+    useState<boolean>(false);
+  const [isSessionLifecycleDrawerOpen, setIsSessionLifecycleDrawerOpen] =
+    useState<boolean>(false);
+  const [isOtherCustomizationDrawerOpen, setIsOtherCustomizationDrawerOpen] =
     useState<boolean>(false);
 
   // Tier and Lightning Engine state
@@ -649,10 +671,10 @@ export const CreateRuntimeProfileComponent: React.FC<
     }),
     [executorAndDriverConfigState, tier, executorType, lightningEngineEnabled]
   );
-  const autoscalingConfig = useMemo<IAutoscalingConfig>(
-    () => initialAutoscalingConfig || DEFAULT_AUTOSCALING_CONFIG,
-    [initialAutoscalingConfig]
-  );
+  const [autoscalingConfig, setAutoscalingConfig] =
+    useState<IAutoscalingConfig>(
+      () => initialAutoscalingConfig || DEFAULT_AUTOSCALING_CONFIG
+    );
   const metastoreConfig = useMemo<IMetastoreConfig>(
     () => initialMetastoreConfig || DEFAULT_METASTORE_CONFIG,
     [initialMetastoreConfig]
@@ -661,18 +683,36 @@ export const CreateRuntimeProfileComponent: React.FC<
     () => initialNetworkAndSecurityConfig || DEFAULT_NETWORK_SECURITY_CONFIG,
     [initialNetworkAndSecurityConfig]
   );
-  const sessionLifecycleConfig = useMemo<ISessionLifecycleConfig>(
-    () => initialSessionLifecycleConfig || DEFAULT_SESSION_LIFECYCLE_CONFIG,
-    [initialSessionLifecycleConfig]
+  const [sessionLifecycleConfig, setSessionLifecycleConfig] =
+    useState<ISessionLifecycleConfig>(
+      () => initialSessionLifecycleConfig || DEFAULT_SESSION_LIFECYCLE_CONFIG
+    );
+  const [sparkProperties, setSparkProperties] = useState<SparkProperties>(
+    () => initialSparkProperties || DEFAULT_SPARK_PROPERTIES
   );
-  const sparkProperties = useMemo<SparkProperties>(
-    () => initialSparkProperties || DEFAULT_SPARK_PROPERTIES,
-    [initialSparkProperties]
+  const [labels, setLabels] = useState<ProfileLabels>(
+    () => initialLabels || DEFAULT_PROFILE_LABELS
   );
-  const labels = useMemo<ProfileLabels>(
-    () => initialLabels || DEFAULT_PROFILE_LABELS,
-    [initialLabels]
-  );
+
+  useEffect(() => {
+    setAutoscalingConfig(
+      initialAutoscalingConfig || DEFAULT_AUTOSCALING_CONFIG
+    );
+  }, [initialAutoscalingConfig]);
+
+  useEffect(() => {
+    setSessionLifecycleConfig(
+      initialSessionLifecycleConfig || DEFAULT_SESSION_LIFECYCLE_CONFIG
+    );
+  }, [initialSessionLifecycleConfig]);
+
+  useEffect(() => {
+    setSparkProperties(initialSparkProperties || DEFAULT_SPARK_PROPERTIES);
+  }, [initialSparkProperties]);
+
+  useEffect(() => {
+    setLabels(initialLabels || DEFAULT_PROFILE_LABELS);
+  }, [initialLabels]);
 
   const additionalConfigSections = useMemo(
     () => [
@@ -693,8 +733,8 @@ export const CreateRuntimeProfileComponent: React.FC<
       {
         title: 'Autoscaling',
         properties: formatAutoscalingProperties(autoscalingConfig),
-        isEditDisabled: true,
-        onEdit: undefined
+        isEditDisabled: false,
+        onEdit: () => setIsAutoscalingDrawerOpen(true)
       },
       {
         title: 'Metastore configuration',
@@ -711,14 +751,14 @@ export const CreateRuntimeProfileComponent: React.FC<
       {
         title: 'Session lifecycle',
         properties: formatSessionLifecycleProperties(sessionLifecycleConfig),
-        isEditDisabled: true,
-        onEdit: undefined
+        isEditDisabled: false,
+        onEdit: () => setIsSessionLifecycleDrawerOpen(true)
       },
       {
         title: 'Other customizations',
         properties: formatOtherCustomizationProperties(sparkProperties, labels),
-        isEditDisabled: true,
-        onEdit: undefined
+        isEditDisabled: false,
+        onEdit: () => setIsOtherCustomizationDrawerOpen(true)
       }
     ],
     [
@@ -854,6 +894,28 @@ export const CreateRuntimeProfileComponent: React.FC<
       metastoreConfig.metastore,
       metastoreConfig.projectId,
       projectId
+    ]
+  );
+
+  const pricingInput = React.useMemo(
+    () => ({
+      executorMachineType: executorType,
+      driverMachineType: executorAndDriverConfig.driverMachineType,
+      useDifferentDriverConfig:
+        executorAndDriverConfig.useDifferentDriverConfig,
+      autoscalingEnabled: autoscalingConfig.autoscalingEnabled,
+      initialExecutors: autoscalingConfig.initialExecutors,
+      minExecutors: autoscalingConfig.minExecutors,
+      maxExecutors: autoscalingConfig.maxExecutors
+    }),
+    [
+      executorType,
+      executorAndDriverConfig.driverMachineType,
+      executorAndDriverConfig.useDifferentDriverConfig,
+      autoscalingConfig.autoscalingEnabled,
+      autoscalingConfig.initialExecutors,
+      autoscalingConfig.minExecutors,
+      autoscalingConfig.maxExecutors
     ]
   );
   // Load Regions from service
@@ -997,8 +1059,39 @@ export const CreateRuntimeProfileComponent: React.FC<
       ? [{ name: initialRegion, displayName: initialRegion }]
       : regions;
 
+  const handleMainWrapperWheel = (event: React.WheelEvent<HTMLDivElement>) => {
+    const target = event.target as HTMLElement | null;
+    if (!target || !formScrollContainerRef.current) {
+      return;
+    }
+    // When scrolling inside an open EditDrawer, modal, or portaled popup outside the wrapper DOM, do not scroll the create form
+    if (
+      !event.currentTarget.contains(target) ||
+      target.closest(
+        '.edit-drawer-paper, .edit-drawer-container, .MuiDrawer-root, .MuiModal-root'
+      )
+    ) {
+      return;
+    }
+    // When scrolling over the Summary and Pricing Estimate card, let the right panel scroll itself
+    if (
+      target.closest('[data-testid="runtime-profile-summary-pricing-card"]')
+    ) {
+      return;
+    }
+    // When scrolling directly inside the form container, let native scrolling handle it
+    if (formScrollContainerRef.current.contains(target)) {
+      return;
+    }
+    // Otherwise (scrolling anywhere outside Summary & Pricing Estimate), scroll the create form container
+    formScrollContainerRef.current.scrollTop += event.deltaY;
+  };
+
   return (
-    <div className="runtime-profile-main-wrapper">
+    <div
+      className="runtime-profile-main-wrapper"
+      onWheel={handleMainWrapperWheel}
+    >
       <div className="cluster-details-header">
         <div
           className="back-arrow-icon"
@@ -1024,412 +1117,421 @@ export const CreateRuntimeProfileComponent: React.FC<
       </div>
 
       <div className="runtime-profile-content-layout">
-        <div className="runtime-profile-container">
+        <div ref={formScrollContainerRef} className="runtime-profile-container">
           <div className="runtime-profile-intro-text">
             {RUNTIME_PROFILE_INTRO_TEXT}
           </div>
 
-        <form
-          className="runtime-profile-form"
-          onSubmit={handleSubmit(onSubmit)}
-        >
-          {/* Row 1: Display name & Region */}
-          <div className="runtime-profile-row">
-            <div className="runtime-profile-col">
-              {/* TODO: Full validation on runtime-id / displayName field will be added in upcoming PRs */}
+          <form
+            className="runtime-profile-form"
+            onSubmit={handleSubmit(onSubmit)}
+          >
+            {/* Row 1: Display name & Region */}
+            <div className="runtime-profile-row">
+              <div className="runtime-profile-col">
+                {/* TODO: Full validation on runtime-id / displayName field will be added in upcoming PRs */}
+                <Controller
+                  name="displayName"
+                  control={control}
+                  rules={{
+                    required: 'Display name is required',
+                    validate: value =>
+                      value.trim().length > 0 || 'Display name is required'
+                  }}
+                  render={({ field }) => (
+                    <TextField
+                      {...field}
+                      id="runtime-profile-display-name"
+                      label="Display name *"
+                      placeholder="e.g. my-runtime-profile"
+                      variant="outlined"
+                      size="small"
+                      fullWidth
+                      error={Boolean(errors.displayName)}
+                      helperText={errors.displayName?.message}
+                      InputLabelProps={{ shrink: true }}
+                    />
+                  )}
+                />
+              </div>
+              <div className="runtime-profile-col">
+                <FormControl size="small" fullWidth variant="outlined">
+                  <InputLabel id="runtime-profile-region-label" shrink>
+                    Region *
+                  </InputLabel>
+                  <Controller
+                    name="region"
+                    control={control}
+                    rules={{ required: 'Region is required' }}
+                    render={({ field }) => (
+                      <Select
+                        {...field}
+                        labelId="runtime-profile-region-label"
+                        id="runtime-profile-region"
+                        label="Region *"
+                        notched
+                        disabled={isLoadingOptions || isEditMode}
+                      >
+                        {regionOptions.map(r => (
+                          <MenuItem key={r.name} value={r.name}>
+                            {r.displayName}
+                          </MenuItem>
+                        ))}
+                      </Select>
+                    )}
+                  />
+                </FormControl>
+              </div>
+            </div>
+
+            {/* Row 2: Description */}
+            <div className="runtime-profile-full-row">
               <Controller
-                name="displayName"
+                name="description"
                 control={control}
-                rules={{
-                  required: 'Display name is required',
-                  validate: value =>
-                    value.trim().length > 0 || 'Display name is required'
-                }}
                 render={({ field }) => (
                   <TextField
                     {...field}
-                    id="runtime-profile-display-name"
-                    label="Display name *"
-                    placeholder="e.g. my-runtime-profile"
+                    id="runtime-profile-description"
+                    label="Description"
+                    placeholder="Optional description"
                     variant="outlined"
                     size="small"
                     fullWidth
-                    error={Boolean(errors.displayName)}
-                    helperText={errors.displayName?.message}
                     InputLabelProps={{ shrink: true }}
                   />
                 )}
               />
             </div>
-            <div className="runtime-profile-col">
-              <FormControl size="small" fullWidth variant="outlined">
-                <InputLabel id="runtime-profile-region-label" shrink>
-                  Region *
-                </InputLabel>
-                <Controller
-                  name="region"
-                  control={control}
-                  rules={{ required: 'Region is required' }}
-                  render={({ field }) => (
-                    <Select
-                      {...field}
-                      labelId="runtime-profile-region-label"
-                      id="runtime-profile-region"
-                      label="Region *"
-                      notched
-                      disabled={isLoadingOptions || isEditMode}
-                    >
-                      {regionOptions.map(r => (
-                        <MenuItem key={r.name} value={r.name}>
-                          {r.displayName}
-                        </MenuItem>
-                      ))}
-                    </Select>
-                  )}
-                />
-              </FormControl>
-            </div>
-          </div>
 
-          {/* Row 2: Description */}
-          <div className="runtime-profile-full-row">
-            <Controller
-              name="description"
-              control={control}
-              render={({ field }) => (
-                <TextField
-                  {...field}
-                  id="runtime-profile-description"
-                  label="Description"
-                  placeholder="Optional description"
-                  variant="outlined"
-                  size="small"
-                  fullWidth
-                  InputLabelProps={{ shrink: true }}
-                />
-              )}
-            />
-          </div>
-
-          {/* Section: Tier */}
-          <div className="runtime-profile-section">
-            <div className="runtime-profile-section-title">
-              {TIER_SECTION_TITLE}
-            </div>
-            <div className="runtime-profile-section-subtitle">
-              {TIER_SECTION_SUBTITLE}{' '}
-              <span
-                role="button"
-                tabIndex={0}
-                className="runtime-profile-learn-more"
-                onClick={() => window.open(DATAPROC_TIER_DOC, '_blank')}
-                onKeyDown={e => {
-                  if (e.key === 'Enter' || e.key === ' ') {
-                    window.open(DATAPROC_TIER_DOC, '_blank');
-                  }
-                }}
-              >
-                Learn more
-              </span>
-            </div>
-
-            {/* Tier Cards: Premium & Standard */}
-            <div className="node-config-cards-container">
-              <div
-                className={`node-config-card ${
-                  tier === 'Premium' ? 'selected' : ''
-                }`}
-                onClick={() => handleTierChange('Premium')}
-                role="button"
-                tabIndex={0}
-                aria-pressed={tier === 'Premium'}
-                onKeyDown={e => {
-                  if (e.key === 'Enter' || e.key === ' ') {
-                    handleTierChange('Premium');
-                  }
-                }}
-              >
-                <div className="node-config-card-title">
-                  {TIER_PREMIUM_TITLE}
-                </div>
-                <div className="node-config-card-desc">{TIER_PREMIUM_DESC}</div>
+            {/* Section: Tier */}
+            <div className="runtime-profile-section">
+              <div className="runtime-profile-section-title">
+                {TIER_SECTION_TITLE}
               </div>
-
-              <div
-                className={`node-config-card ${
-                  tier === 'Standard' ? 'selected' : ''
-                }`}
-                onClick={() => handleTierChange('Standard')}
-                role="button"
-                tabIndex={0}
-                aria-pressed={tier === 'Standard'}
-                onKeyDown={e => {
-                  if (e.key === 'Enter' || e.key === ' ') {
-                    handleTierChange('Standard');
-                  }
-                }}
-              >
-                <div className="node-config-card-title">
-                  {TIER_STANDARD_TITLE}
-                </div>
-                <div className="node-config-card-desc">
-                  {TIER_STANDARD_DESC}
-                </div>
-              </div>
-            </div>
-
-            {/* Premium: Enable Lightning Engine Checkbox / Standard: Info Banner */}
-            {tier === 'Premium' ? (
-              <div className="runtime-profile-checkbox-section">
-                <FormControlLabel
-                  control={
-                    <Checkbox
-                      size="small"
-                      checked={lightningEngineEnabled}
-                      onChange={e =>
-                        setLightningEngineEnabled(e.target.checked)
-                      }
-                      name="lightningEngine"
-                      color="primary"
-                    />
-                  }
-                  label={
-                    <span className="runtime-profile-checkbox-title">
-                      {LIGHTNING_ENGINE_CHECKBOX_LABEL}
-                    </span>
-                  }
-                />
-                <div className="runtime-profile-checkbox-desc">
-                  {LIGHTNING_ENGINE_CHECKBOX_DESC}{' '}
-                  <span
-                    className="runtime-profile-learn-more"
-                    onClick={e => {
-                      e.preventDefault();
-                      window.open(LIGHTNING_ENGINE_DOC, '_blank');
-                    }}
-                    role="button"
-                    tabIndex={0}
-                    onKeyDown={e => {
-                      if (e.key === 'Enter' || e.key === ' ') {
-                        window.open(LIGHTNING_ENGINE_DOC, '_blank');
-                      }
-                    }}
-                  >
-                    Learn more
-                  </span>
-                </div>
-              </div>
-            ) : (
-              <div className="runtime-profile-tier-info-banner">
-                <div className="runtime-profile-tier-info-icon" />
-                <div className="runtime-profile-tier-info-text">
-                  {TIER_STANDARD_INFO_BANNER}
-                </div>
-              </div>
-            )}
-          </div>
-
-          {/* Section: Executor configuration */}
-          <div className="runtime-profile-section">
-            <div className="runtime-profile-section-title">
-              {EXECUTOR_CONFIG_SECTION_TITLE}
-            </div>
-            <div className="runtime-profile-section-subtitle">
-              {EXECUTOR_CONFIG_SECTION_SUBTITLE}
-            </div>
-
-            {/* Executor Category Cards: General & Accelerated */}
-            <div className="node-config-cards-container">
-              <div
-                className={`node-config-card ${
-                  executorCategory === 'general' ? 'selected' : ''
-                }`}
-                onClick={() => handleExecutorCategoryChange('general')}
-                role="button"
-                tabIndex={0}
-                aria-pressed={executorCategory === 'general'}
-                onKeyDown={e => {
-                  if (e.key === 'Enter' || e.key === ' ') {
-                    e.preventDefault();
-                    handleExecutorCategoryChange('general');
-                  }
-                }}
-              >
-                <div className="node-config-card-title">
-                  {EXECUTOR_CATEGORY_GENERAL_TITLE}
-                </div>
-                <div className="node-config-card-sub1">
-                  {EXECUTOR_CATEGORY_GENERAL_SUB1}
-                </div>
-                <div className="node-config-card-sub2">
-                  {EXECUTOR_CATEGORY_GENERAL_SUB2}
-                </div>
-              </div>
-
-              <div
-                className={`node-config-card ${
-                  executorCategory === 'accelerated' ? 'selected' : ''
-                } ${tier === 'Standard' ? 'disabled' : ''}`}
-                onClick={() => handleExecutorCategoryChange('accelerated')}
-                role="button"
-                tabIndex={tier === 'Standard' ? -1 : 0}
-                aria-disabled={tier === 'Standard'}
-                aria-pressed={executorCategory === 'accelerated'}
-                onKeyDown={e => {
-                  if (e.key === 'Enter' || e.key === ' ') {
-                    e.preventDefault();
-                    handleExecutorCategoryChange('accelerated');
-                  }
-                }}
-              >
-                <div className="node-config-card-title">
-                  {EXECUTOR_CATEGORY_ACCELERATED_TITLE}
-                </div>
-                <div className="node-config-card-sub1">
-                  {EXECUTOR_CATEGORY_ACCELERATED_SUB1}
-                </div>
-                <div className="node-config-card-sub2">
-                  {EXECUTOR_CATEGORY_ACCELERATED_SUB2}
-                </div>
-                <div className="node-config-card-sub3">
-                  {EXECUTOR_CATEGORY_ACCELERATED_SUB3}
-                </div>
-              </div>
-            </div>
-
-            {/* Machine Type Subheading & Select */}
-            <div className="machine-type-subheading">
-              {executorCategory === 'accelerated'
-                ? EXECUTOR_ACCELERATED_SHAPES_SUBHEADING
-                : EXECUTOR_SHAPES_SUBHEADING}
-            </div>
-            <div className="machine-type-select-wrapper">
-              <FormControl size="small" fullWidth variant="outlined">
-                <InputLabel id="runtime-profile-executor-type-label" shrink>
-                  Executor type
-                </InputLabel>
-                <Select
-                  labelId="runtime-profile-executor-type-label"
-                  id="runtime-profile-executor-type"
-                  value={executorType}
-                  label="Executor type"
-                  onChange={(e: SelectChangeEvent) => {
-                    const newType = e.target.value as string;
-                    setExecutorType(newType);
-                    const match = ALL_MACHINE_TYPES.find(
-                      m => m.name === newType
-                    );
-                    const isAcc =
-                      match?.category === 'accelerated' ||
-                      Boolean(match?.acceleratorType);
-                    setExecutorAndDriverConfigState(prev => {
-                      const nextDiskTier = isAcc
-                        ? DISK_TIER_SSD
-                        : prev.executorDiskTier || DISK_TIER_HDD;
-                      const nextDiskSize = isAcc
-                        ? DEFAULT_SSD_DISK_SIZE
-                        : prev.executorDiskSize || DEFAULT_HDD_DISK_SIZE;
-                      return {
-                        ...prev,
-                        executorType: newType,
-                        executorMachineType: newType,
-                        ...(isAcc && {
-                          executorDiskTier: nextDiskTier,
-                          executorDiskSize: nextDiskSize,
-                          executorDisk: `${nextDiskTier}, ${nextDiskSize}`
-                        })
-                      };
-                    });
+              <div className="runtime-profile-section-subtitle">
+                {TIER_SECTION_SUBTITLE}{' '}
+                <span
+                  role="button"
+                  tabIndex={0}
+                  className="runtime-profile-learn-more"
+                  onClick={() => window.open(DATAPROC_TIER_DOC, '_blank')}
+                  onKeyDown={e => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      window.open(DATAPROC_TIER_DOC, '_blank');
+                    }
                   }}
-                  notched
                 >
-                  {renderGroupedMachineOptions(machineTypes, executorCategory)}
-                </Select>
-              </FormControl>
-            </div>
-          </div>
-
-          {/* Additional configuration (70% width) */}
-          <div className="additional-config-section">
-            <div
-              className={`additional-config-header-container${
-                expandAdditionalConfig ? ' expanded' : ''
-              }`}
-              onClick={() => setExpandAdditionalConfig(!expandAdditionalConfig)}
-              onKeyDown={event => {
-                if (event.key === 'Enter' || event.key === ' ') {
-                  event.preventDefault();
-                  setExpandAdditionalConfig(!expandAdditionalConfig);
-                }
-              }}
-              role="button"
-              tabIndex={0}
-              aria-expanded={expandAdditionalConfig}
-            >
-              <div className="additional-config-header">
-                Additional configuration
+                  Learn more
+                </span>
               </div>
-              <div className="expand-icon">
-                <ExpandIconComponent
-                  tag="div"
-                  className="logo-alignment-style"
-                />
-              </div>
-            </div>
 
-            {expandAdditionalConfig && (
-              <div className="additional-config-content">
-                {/* TODO: Wire up onEdit handlers for each section in upcoming edit drawer tasks */}
-                {additionalConfigSections.map(section => (
-                  <SectionDetail
-                    key={section.title}
-                    title={section.title}
-                    properties={section.properties}
-                    isEditDisabled={section.isEditDisabled}
-                    onEdit={section.onEdit}
+              {/* Tier Cards: Premium & Standard */}
+              <div className="node-config-cards-container">
+                <div
+                  className={`node-config-card ${
+                    tier === 'Premium' ? 'selected' : ''
+                  }`}
+                  onClick={() => handleTierChange('Premium')}
+                  role="button"
+                  tabIndex={0}
+                  aria-pressed={tier === 'Premium'}
+                  onKeyDown={e => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      handleTierChange('Premium');
+                    }
+                  }}
+                >
+                  <div className="node-config-card-title">
+                    {TIER_PREMIUM_TITLE}
+                  </div>
+                  <div className="node-config-card-desc">
+                    {TIER_PREMIUM_DESC}
+                  </div>
+                </div>
+
+                <div
+                  className={`node-config-card ${
+                    tier === 'Standard' ? 'selected' : ''
+                  }`}
+                  onClick={() => handleTierChange('Standard')}
+                  role="button"
+                  tabIndex={0}
+                  aria-pressed={tier === 'Standard'}
+                  onKeyDown={e => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      handleTierChange('Standard');
+                    }
+                  }}
+                >
+                  <div className="node-config-card-title">
+                    {TIER_STANDARD_TITLE}
+                  </div>
+                  <div className="node-config-card-desc">
+                    {TIER_STANDARD_DESC}
+                  </div>
+                </div>
+              </div>
+
+              {/* Premium: Enable Lightning Engine Checkbox / Standard: Info Banner */}
+              {tier === 'Premium' ? (
+                <div className="runtime-profile-checkbox-section">
+                  <FormControlLabel
+                    control={
+                      <Checkbox
+                        size="small"
+                        checked={lightningEngineEnabled}
+                        onChange={e =>
+                          setLightningEngineEnabled(e.target.checked)
+                        }
+                        name="lightningEngine"
+                        color="primary"
+                      />
+                    }
+                    label={
+                      <span className="runtime-profile-checkbox-title">
+                        {LIGHTNING_ENGINE_CHECKBOX_LABEL}
+                      </span>
+                    }
                   />
-                ))}
-              </div>
-            )}
-          </div>
-
-          {/* Action Buttons */}
-          <div className="runtime-profile-buttons">
-            <button
-              type="submit"
-              disabled={isSubmitting}
-              className={`runtime-profile-submit-btn ${
-                isSubmitting
-                  ? 'submit-button-disable-style'
-                  : 'submit-button-style'
-              }`}
-            >
-              {isSubmitting ? (
-                <CircularProgress size={16} color="inherit" />
-              ) : isEditMode ? (
-                'Save'
+                  <div className="runtime-profile-checkbox-desc">
+                    {LIGHTNING_ENGINE_CHECKBOX_DESC}{' '}
+                    <span
+                      className="runtime-profile-learn-more"
+                      onClick={e => {
+                        e.preventDefault();
+                        window.open(LIGHTNING_ENGINE_DOC, '_blank');
+                      }}
+                      role="button"
+                      tabIndex={0}
+                      onKeyDown={e => {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                          window.open(LIGHTNING_ENGINE_DOC, '_blank');
+                        }
+                      }}
+                    >
+                      Learn more
+                    </span>
+                  </div>
+                </div>
               ) : (
-                'Create a runtime profile'
+                <div className="runtime-profile-tier-info-banner">
+                  <div className="runtime-profile-tier-info-icon" />
+                  <div className="runtime-profile-tier-info-text">
+                    {TIER_STANDARD_INFO_BANNER}
+                  </div>
+                </div>
               )}
-            </button>
-            <button
-              type="button"
-              className="runtime-profile-cancel-btn job-cancel-button-style"
-              onClick={handleBack}
-            >
-              Cancel
-            </button>
-          </div>
+            </div>
+
+            {/* Section: Executor configuration */}
+            <div className="runtime-profile-section">
+              <div className="runtime-profile-section-title">
+                {EXECUTOR_CONFIG_SECTION_TITLE}
+              </div>
+              <div className="runtime-profile-section-subtitle">
+                {EXECUTOR_CONFIG_SECTION_SUBTITLE}
+              </div>
+
+              {/* Executor Category Cards: General & Accelerated */}
+              <div className="node-config-cards-container">
+                <div
+                  className={`node-config-card ${
+                    executorCategory === 'general' ? 'selected' : ''
+                  }`}
+                  onClick={() => handleExecutorCategoryChange('general')}
+                  role="button"
+                  tabIndex={0}
+                  aria-pressed={executorCategory === 'general'}
+                  onKeyDown={e => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      handleExecutorCategoryChange('general');
+                    }
+                  }}
+                >
+                  <div className="node-config-card-title">
+                    {EXECUTOR_CATEGORY_GENERAL_TITLE}
+                  </div>
+                  <div className="node-config-card-sub1">
+                    {EXECUTOR_CATEGORY_GENERAL_SUB1}
+                  </div>
+                  <div className="node-config-card-sub2">
+                    {EXECUTOR_CATEGORY_GENERAL_SUB2}
+                  </div>
+                </div>
+
+                <div
+                  className={`node-config-card ${
+                    executorCategory === 'accelerated' ? 'selected' : ''
+                  } ${tier === 'Standard' ? 'disabled' : ''}`}
+                  onClick={() => handleExecutorCategoryChange('accelerated')}
+                  role="button"
+                  tabIndex={tier === 'Standard' ? -1 : 0}
+                  aria-disabled={tier === 'Standard'}
+                  aria-pressed={executorCategory === 'accelerated'}
+                  onKeyDown={e => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      handleExecutorCategoryChange('accelerated');
+                    }
+                  }}
+                >
+                  <div className="node-config-card-title">
+                    {EXECUTOR_CATEGORY_ACCELERATED_TITLE}
+                  </div>
+                  <div className="node-config-card-sub1">
+                    {EXECUTOR_CATEGORY_ACCELERATED_SUB1}
+                  </div>
+                  <div className="node-config-card-sub2">
+                    {EXECUTOR_CATEGORY_ACCELERATED_SUB2}
+                  </div>
+                  <div className="node-config-card-sub3">
+                    {EXECUTOR_CATEGORY_ACCELERATED_SUB3}
+                  </div>
+                </div>
+              </div>
+
+              {/* Machine Type Subheading & Select */}
+              <div className="machine-type-subheading">
+                {executorCategory === 'accelerated'
+                  ? EXECUTOR_ACCELERATED_SHAPES_SUBHEADING
+                  : EXECUTOR_SHAPES_SUBHEADING}
+              </div>
+              <div className="machine-type-select-wrapper">
+                <FormControl size="small" fullWidth variant="outlined">
+                  <InputLabel id="runtime-profile-executor-type-label" shrink>
+                    Executor type
+                  </InputLabel>
+                  <Select
+                    labelId="runtime-profile-executor-type-label"
+                    id="runtime-profile-executor-type"
+                    value={executorType}
+                    label="Executor type"
+                    onChange={(e: SelectChangeEvent) => {
+                      const newType = e.target.value as string;
+                      setExecutorType(newType);
+                      const match = ALL_MACHINE_TYPES.find(
+                        m => m.name === newType
+                      );
+                      const isAcc =
+                        match?.category === 'accelerated' ||
+                        Boolean(match?.acceleratorType);
+                      setExecutorAndDriverConfigState(prev => {
+                        const nextDiskTier = isAcc
+                          ? DISK_TIER_SSD
+                          : prev.executorDiskTier || DISK_TIER_HDD;
+                        const nextDiskSize = isAcc
+                          ? DEFAULT_SSD_DISK_SIZE
+                          : prev.executorDiskSize || DEFAULT_HDD_DISK_SIZE;
+                        return {
+                          ...prev,
+                          executorType: newType,
+                          executorMachineType: newType,
+                          ...(isAcc && {
+                            executorDiskTier: nextDiskTier,
+                            executorDiskSize: nextDiskSize,
+                            executorDisk: `${nextDiskTier}, ${nextDiskSize}`
+                          })
+                        };
+                      });
+                    }}
+                    notched
+                  >
+                    {renderGroupedMachineOptions(
+                      machineTypes,
+                      executorCategory
+                    )}
+                  </Select>
+                </FormControl>
+              </div>
+            </div>
+
+            {/* Additional configuration (70% width) */}
+            <div className="additional-config-section">
+              <div
+                className={`additional-config-header-container${
+                  expandAdditionalConfig ? ' expanded' : ''
+                }`}
+                onClick={() =>
+                  setExpandAdditionalConfig(!expandAdditionalConfig)
+                }
+                onKeyDown={event => {
+                  if (event.key === 'Enter' || event.key === ' ') {
+                    event.preventDefault();
+                    setExpandAdditionalConfig(!expandAdditionalConfig);
+                  }
+                }}
+                role="button"
+                tabIndex={0}
+                aria-expanded={expandAdditionalConfig}
+              >
+                <div className="additional-config-header">
+                  Additional configuration
+                </div>
+                <div className="expand-icon">
+                  <ExpandIconComponent
+                    tag="div"
+                    className="logo-alignment-style"
+                  />
+                </div>
+              </div>
+
+              {expandAdditionalConfig && (
+                <div className="additional-config-content">
+                  {/* TODO: Wire up onEdit handlers for each section in upcoming edit drawer tasks */}
+                  {additionalConfigSections.map(section => (
+                    <SectionDetail
+                      key={section.title}
+                      title={section.title}
+                      properties={section.properties}
+                      isEditDisabled={section.isEditDisabled}
+                      onEdit={section.onEdit}
+                    />
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Action Buttons */}
+            <div className="runtime-profile-buttons">
+              <button
+                type="submit"
+                disabled={isSubmitting}
+                className={`runtime-profile-submit-btn ${
+                  isSubmitting
+                    ? 'submit-button-disable-style'
+                    : 'submit-button-style'
+                }`}
+              >
+                {isSubmitting ? (
+                  <CircularProgress size={16} color="inherit" />
+                ) : isEditMode ? (
+                  'Save'
+                ) : (
+                  'Create a runtime profile'
+                )}
+              </button>
+              <button
+                type="button"
+                className="runtime-profile-cancel-btn job-cancel-button-style"
+                onClick={handleBack}
+              >
+                Cancel
+              </button>
+            </div>
           </form>
         </div>
 
-        {/* Right Side Panel: Display Summary by default */}
+        {/* Right Side Panel: Display Summary and Pricing Estimate by default */}
         <div className="runtime-profile-right-panel">
           <div
             className="runtime-profile-summary-pricing-card"
             data-testid="runtime-profile-summary-pricing-card"
           >
             <SummaryComponent summaryInput={summaryInput} />
+            <div className="runtime-summary-pricing-section-divider" />
+            <PricingComponent pricingInput={pricingInput} />
           </div>
         </div>
       </div>
@@ -1438,7 +1540,7 @@ export const CreateRuntimeProfileComponent: React.FC<
         open={isRuntimeConfigDrawerOpen}
         config={activeRuntimeEnvironmentConfig}
         service={service}
-        isRuntimeProfileIdReadOnly={isEditMode}
+        isProfileIdDisabled={isEditMode}
         onClose={() => setIsRuntimeConfigDrawerOpen(false)}
         onSave={(updatedConfig: IRuntimeEnvironmentConfig) => {
           setRuntimeEnvironmentConfig(updatedConfig);
@@ -1475,6 +1577,38 @@ export const CreateRuntimeProfileComponent: React.FC<
             executorMachineType: execMachineName
           });
           setIsExecutorDriverDrawerOpen(false);
+        }}
+      />
+
+      <AutoscalingEditDrawer
+        open={isAutoscalingDrawerOpen}
+        config={autoscalingConfig}
+        onClose={() => setIsAutoscalingDrawerOpen(false)}
+        onSave={updatedConfig => {
+          setAutoscalingConfig(updatedConfig);
+          setIsAutoscalingDrawerOpen(false);
+        }}
+      />
+
+      <SessionLifecycleEditDrawer
+        open={isSessionLifecycleDrawerOpen}
+        config={sessionLifecycleConfig}
+        onClose={() => setIsSessionLifecycleDrawerOpen(false)}
+        onSave={updatedConfig => {
+          setSessionLifecycleConfig(updatedConfig);
+          setIsSessionLifecycleDrawerOpen(false);
+        }}
+      />
+
+      <OtherCustomizationEditDrawer
+        open={isOtherCustomizationDrawerOpen}
+        sparkProperties={sparkProperties}
+        labels={labels}
+        onClose={() => setIsOtherCustomizationDrawerOpen(false)}
+        onSave={(updatedSparkProperties, updatedLabels) => {
+          setSparkProperties(updatedSparkProperties);
+          setLabels(updatedLabels);
+          setIsOtherCustomizationDrawerOpen(false);
         }}
       />
     </div>
@@ -1519,14 +1653,24 @@ export {
   SectionDetail,
   RuntimeEnvironmentEditDrawer,
   ExecutorAndDriverEditDrawer,
+  AutoscalingEditDrawer,
+  SessionLifecycleEditDrawer,
+  OtherCustomizationEditDrawer,
   SelectBucketEditDrawer,
   RUNTIME_VERSION_OPTIONS,
   RuntimeProfileSummary,
+  RuntimePricingEstimate,
   formatRuntimeProfileSummaryProperties,
+  calculateRuntimePricingEstimate,
   ALL_MACHINE_TYPES,
+  calculateDcu,
   getMachineTypeLabel,
+  getShapeDcu,
+  formatDcuNumber,
   formatCompactDiskLabel,
   parseExecutorCount,
+  MACHINE_SHAPE_DCU,
+  MACHINE_SHAPE_RESOURCES,
   MSG_EXECUTOR_TIER_PREMIUM,
   MSG_EXECUTOR_TIER_PREMIUM_LIGHTNING,
   MSG_EXECUTOR_TIER_STANDARD,

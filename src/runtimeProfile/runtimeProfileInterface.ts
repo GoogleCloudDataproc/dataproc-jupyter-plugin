@@ -114,6 +114,43 @@ export type IDriverAndExecutorConfiguration = IExecutorAndDriverConfig;
 export type IDriverConfig = IExecutorAndDriverConfig;
 export type IExecutorDiskConfig = IExecutorAndDriverConfig;
 
+export interface IRuntimePricingEstimateInput {
+  executorMachineType?: string | null;
+  driverMachineType?: string | null;
+  driverShape?: string | null;
+  useDifferentDriverConfig?: boolean;
+  autoscalingEnabled?: boolean;
+  initialExecutors?: string | number | null;
+  minExecutors?: string | number | null;
+  maxExecutors?: string | number | null;
+  locale?: string;
+}
+
+export interface IRuntimePricingEstimateResult {
+  executorDcu: number;
+  driverDcu: number;
+  initialExecutors: number;
+  autoscalingEnabled: boolean;
+  executorsBaselineDcu: number;
+  baselineDcu: number;
+  autoscalingBounds: {
+    min: number;
+    max: number;
+    isRange: boolean;
+  };
+  hero: string;
+  baselineCaption: string;
+  subjectToAutoscaling: boolean;
+  executorRowLabel: string;
+  executorRowValue: string;
+  driverRowLabel: string;
+  driverRowValue: string;
+  autoscalingRowLabel: string | null;
+  autoscalingRowValue: string | null;
+  totalRowLabel: string;
+  totalRowValue: string;
+}
+
 export interface IRuntimeProfileSummaryInput {
   tier?: string;
   lightningEngineEnabled?: boolean;

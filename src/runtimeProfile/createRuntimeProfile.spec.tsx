@@ -49,9 +49,18 @@ import {
   CreateRuntimeProfileComponent,
   ExecutorAndDriverEditDrawer,
   RuntimeEnvironmentEditDrawer,
+  AutoscalingEditDrawer,
+  SessionLifecycleEditDrawer,
+  OtherCustomizationEditDrawer,
   generateRandomHex,
   RuntimeProfileSummary,
   formatRuntimeProfileSummaryProperties,
+  RuntimePricingEstimate,
+  calculateRuntimePricingEstimate,
+  calculateDcu,
+  getShapeDcu,
+  MACHINE_SHAPE_DCU,
+  MACHINE_SHAPE_RESOURCES,
   renderGroupedMachineOptions
 } from './createRuntimeProfile';
 import {
@@ -165,11 +174,11 @@ describe('CreateRuntimeProfileComponent UI & Service', () => {
     expect(editButtons).toHaveLength(7);
     expect(editButtons[0].getAttribute('aria-disabled')).toBe('false');
     expect(editButtons[1].getAttribute('aria-disabled')).toBe('false');
-    Array.from(editButtons)
-      .slice(2)
-      .forEach(btn => {
-        expect(btn.getAttribute('aria-disabled')).toBe('true');
-      });
+    expect(editButtons[2].getAttribute('aria-disabled')).toBe('false');
+    expect(editButtons[3].getAttribute('aria-disabled')).toBe('true');
+    expect(editButtons[4].getAttribute('aria-disabled')).toBe('true');
+    expect(editButtons[5].getAttribute('aria-disabled')).toBe('false');
+    expect(editButtons[6].getAttribute('aria-disabled')).toBe('false');
 
     const displayNameInput = container.querySelector(
       '#runtime-profile-display-name'
@@ -1405,7 +1414,7 @@ describe('CreateRuntimeProfileComponent UI & Service', () => {
     expect(getDrawerCheckbox()?.checked).toBe(false);
   });
 
-  it('should format runtime profile summary rows matching the screenshot', () => {
+  it('should format default runtime profile summary rows', () => {
     const rows: ISectionProperty[] = formatRuntimeProfileSummaryProperties({
       tier: 'Premium',
       lightningEngineEnabled: true,
@@ -1434,7 +1443,7 @@ describe('CreateRuntimeProfileComponent UI & Service', () => {
     ).toBe('2.3 LTS (Spark 3.5.1, Python 3.12)');
     expect(
       rows.find((r: ISectionProperty) => r.label === 'Executor node')?.value
-    ).toBe('Min: 2, Max: 300 x highmem-4 (4 vCPU, 32 GB), 375 GB SSD');
+    ).toBe('highmem-4 (4 vCPU, 32 GB), 375 GB SSD');
     expect(
       rows.find((r: ISectionProperty) => r.label === 'Driver node')?.value
     ).toBe('Same as executor');
@@ -1446,7 +1455,7 @@ describe('CreateRuntimeProfileComponent UI & Service', () => {
     ).toBe('Lakehouse runtime catalog (frontrow-team)');
   });
 
-  it('should render standalone RuntimeProfileSummary component with edit-drawer styling and inject it into CreateRuntimeProfileComponent by default when EditDrawer is closed', () => {
+  it('should render standalone RuntimeProfileSummary component with edit-drawer styling and inject it into CreateRuntimeProfileComponent by default when EditDrawer is closed', async () => {
     expect(RuntimeProfileSummary).toBeDefined();
 
     const summaryMarkup = ReactDOMServer.renderToStaticMarkup(
@@ -1473,14 +1482,18 @@ describe('CreateRuntimeProfileComponent UI & Service', () => {
     expect(summaryMarkup).toContain('Premium (Lightning Engine enabled)');
     expect(summaryMarkup).toContain('Same as executor');
 
-    const injectedCreateMarkup = ReactDOMServer.renderToStaticMarkup(
-      <CreateRuntimeProfileComponent
-        SummaryComponent={RuntimeProfileSummary}
-      />
-    );
-    expect(injectedCreateMarkup).toContain(
+    await act(async () => {
+      root.render(
+        <CreateRuntimeProfileComponent
+          service={mockService}
+          SummaryComponent={RuntimeProfileSummary}
+        />
+      );
+    });
+    expect(container.innerHTML).toContain(
       'data-testid="runtime-profile-summary-section"'
     );
+    expect(container.innerHTML).toContain('Same as executor');
   });
 
   it('should handle Standard tier, disabled autoscaling, separate driver config, and empty fallbacks in summary', async () => {
@@ -1522,7 +1535,7 @@ describe('CreateRuntimeProfileComponent UI & Service', () => {
       useDifferentDriverConfig: false
     });
     expect(acceleratedRows.find(r => r.label === 'Executor node')?.value).toBe(
-      'Min: 2, Max: 1000 x L4 (4 cores), 375 GB SSD'
+      'L4 (4 cores), 375 GB SSD'
     );
 
     const emptyRows = formatRuntimeProfileSummaryProperties({
@@ -1535,9 +1548,7 @@ describe('CreateRuntimeProfileComponent UI & Service', () => {
     );
     expect(emptyRows.find(r => r.label === 'Region')?.value).toBe('—');
     expect(emptyRows.find(r => r.label === 'Version')?.value).toBe('—');
-    expect(emptyRows.find(r => r.label === 'Executor node')?.value).toBe(
-      'Min: 2, Max: 1000'
-    );
+    expect(emptyRows.find(r => r.label === 'Executor node')?.value).toBe('—');
     expect(emptyRows.find(r => r.label === 'Driver node')?.value).toBe('—');
     expect(emptyRows.find(r => r.label === 'Metastore')?.value).toBe('—');
   });
@@ -1577,7 +1588,7 @@ describe('CreateRuntimeProfileComponent UI & Service', () => {
     };
 
     expect(getSummaryRowValue('Executor node')).toBe(
-      'Min: 2, Max: 10 x highmem-4 (4 vCPU, 32 GB), 200 GB HDD'
+      'highmem-4 (4 vCPU, 32 GB), 200 GB HDD'
     );
     expect(getSummaryRowValue('Driver node')).toBe(
       'standard-8 (8 vCPU, 32 GB), 400 GB HDD'
@@ -1838,5 +1849,467 @@ describe('CreateRuntimeProfileComponent UI & Service', () => {
       expect(saveBtn.disabled).toBe(false);
     });
   });
-});
 
+  it('validates Autoscaling, SessionLifecycle, and OtherCustomization edit drawers', async () => {
+    expect(AutoscalingEditDrawer).toBeDefined();
+    expect(SessionLifecycleEditDrawer).toBeDefined();
+    expect(OtherCustomizationEditDrawer).toBeDefined();
+
+    await act(async () => {
+      root.render(<CreateRuntimeProfileComponent service={mockService} />);
+    });
+
+    const editButtons = container.querySelectorAll(
+      '.section-detail-edit-button'
+    );
+    const nativeInputValueSetter = Object.getOwnPropertyDescriptor(
+      window.HTMLInputElement.prototype,
+      'value'
+    )?.set;
+    const getSaveBtn = () =>
+      Array.from(document.body.querySelectorAll('.edit-drawer-footer button'))
+        .filter(b => b.textContent?.trim() === 'Save')
+        .pop() as HTMLButtonElement;
+
+    // 1. Autoscaling drawer validation
+    await act(async () => {
+      (editButtons[2] as HTMLButtonElement).click();
+    });
+    const initExecInput = document.body.querySelector(
+      '#edit-initial-executors'
+    ) as HTMLInputElement;
+    const minExecInput = document.body.querySelector(
+      '#edit-minimum-executors'
+    ) as HTMLInputElement;
+    const maxExecInput = document.body.querySelector(
+      '#edit-maximum-executors'
+    ) as HTMLInputElement;
+    const enabledCheckbox = document.body.querySelector(
+      '#edit-autoscaling-enabled'
+    ) as HTMLInputElement;
+
+    await act(async () => {
+      nativeInputValueSetter?.call(initExecInput, '****');
+      initExecInput.dispatchEvent(new Event('input', { bubbles: true }));
+    });
+    expect(
+      document.body.querySelector('#initial-executors-error-text')?.textContent
+    ).toBe('Initial executors must be an integer.');
+    expect(getSaveBtn()?.disabled).toBe(true);
+
+    await act(async () => {
+      nativeInputValueSetter?.call(initExecInput, '-2');
+      initExecInput.dispatchEvent(new Event('input', { bubbles: true }));
+    });
+    expect(
+      document.body.querySelector('#initial-executors-error-text')?.textContent
+    ).toBe('Initial executors must be greater than or equal to 2.');
+
+    // Cross-field range validation: Initial < Minimum
+    await act(async () => {
+      nativeInputValueSetter?.call(initExecInput, '2');
+      initExecInput.dispatchEvent(new Event('input', { bubbles: true }));
+      nativeInputValueSetter?.call(minExecInput, '4');
+      minExecInput.dispatchEvent(new Event('input', { bubbles: true }));
+    });
+    expect(
+      document.body.querySelector('#initial-executors-error-text')?.textContent
+    ).toBe('Initial executors must be between minimum and maximum executors.');
+    expect(getSaveBtn()?.disabled).toBe(true);
+
+    // Cross-field range validation: Minimum > Maximum
+    await act(async () => {
+      nativeInputValueSetter?.call(minExecInput, '10');
+      minExecInput.dispatchEvent(new Event('input', { bubbles: true }));
+      nativeInputValueSetter?.call(maxExecInput, '5');
+      maxExecInput.dispatchEvent(new Event('input', { bubbles: true }));
+    });
+    expect(
+      document.body.querySelector('#minimum-executors-error-text')?.textContent
+    ).toBe('Minimum executors must not exceed maximum executors.');
+    expect(getSaveBtn()?.disabled).toBe(true);
+
+    // Unchecking Enabled disables fields and bypasses validation
+    await act(async () => {
+      enabledCheckbox.click();
+    });
+    expect(initExecInput.disabled).toBe(true);
+    expect(minExecInput.disabled).toBe(true);
+    expect(maxExecInput.disabled).toBe(true);
+    expect(
+      document.body.querySelector('#initial-executors-error-text')
+    ).toBeNull();
+    expect(
+      document.body.querySelector('#minimum-executors-error-text')
+    ).toBeNull();
+    expect(getSaveBtn()?.disabled).toBe(false);
+
+    // Re-checking Enabled restores validation until valid range is entered
+    await act(async () => {
+      enabledCheckbox.click();
+    });
+    expect(getSaveBtn()?.disabled).toBe(true);
+
+    await act(async () => {
+      nativeInputValueSetter?.call(minExecInput, '2');
+      minExecInput.dispatchEvent(new Event('input', { bubbles: true }));
+      nativeInputValueSetter?.call(maxExecInput, '1000');
+      maxExecInput.dispatchEvent(new Event('input', { bubbles: true }));
+      nativeInputValueSetter?.call(initExecInput, '4');
+      initExecInput.dispatchEvent(new Event('input', { bubbles: true }));
+    });
+    expect(
+      document.body.querySelector('#initial-executors-error-text')
+    ).toBeNull();
+    expect(
+      document.body.querySelector('#minimum-executors-error-text')
+    ).toBeNull();
+    expect(getSaveBtn()?.disabled).toBe(false);
+    await act(async () => {
+      getSaveBtn().click();
+    });
+
+    // 2. Session lifecycle drawer validation
+    await act(async () => {
+      (editButtons[5] as HTMLButtonElement).click();
+    });
+    const idleQtyInput = document.body.querySelector(
+      '#edit-max-idle-time-quantity'
+    ) as HTMLInputElement;
+    const sessionQtyInput = document.body.querySelector(
+      '#edit-max-session-time-quantity'
+    ) as HTMLInputElement;
+
+    await act(async () => {
+      nativeInputValueSetter?.call(idleQtyInput, '0');
+      idleQtyInput.dispatchEvent(new Event('input', { bubbles: true }));
+    });
+    expect(
+      document.body.querySelector('#max-idle-time-quantity-error-text')
+        ?.textContent
+    ).toBe('Max idle time must be between 10 minutes and 330 hours.');
+    expect(getSaveBtn()?.disabled).toBe(true);
+
+    await act(async () => {
+      nativeInputValueSetter?.call(idleQtyInput, '30');
+      idleQtyInput.dispatchEvent(new Event('input', { bubbles: true }));
+      nativeInputValueSetter?.call(sessionQtyInput, '15');
+      sessionQtyInput.dispatchEvent(new Event('input', { bubbles: true }));
+    });
+    expect(
+      document.body.querySelector('#max-session-time-quantity-error-text')
+        ?.textContent
+    ).toBe('Max session time must be between 10 minutes and 14 days.');
+    expect(getSaveBtn()?.disabled).toBe(true);
+
+    await act(async () => {
+      nativeInputValueSetter?.call(sessionQtyInput, '3');
+      sessionQtyInput.dispatchEvent(new Event('input', { bubbles: true }));
+    });
+    expect(getSaveBtn()?.disabled).toBe(false);
+    await act(async () => {
+      getSaveBtn().click();
+    });
+
+    // 3. Other customizations drawer validation
+    await act(async () => {
+      (editButtons[6] as HTMLButtonElement).click();
+    });
+    const addBtns = Array.from(
+      document.body.querySelectorAll('.edit-drawer-add-btn')
+    ) as HTMLButtonElement[];
+    await act(async () => {
+      addBtns[0].click();
+      addBtns[1].click();
+    });
+    expect(document.body.querySelector('#spark-key-error-0')?.textContent).toBe(
+      'Key is required'
+    );
+    expect(document.body.querySelector('#label-key-error-0')?.textContent).toBe(
+      'Key is required'
+    );
+    expect(getSaveBtn()?.disabled).toBe(true);
+  });
+
+  it('syncs autoscaling, session lifecycle, spark properties, and labels when initial* props update', async () => {
+    await act(async () => {
+      root.render(<CreateRuntimeProfileComponent service={mockService} />);
+    });
+
+    await act(async () => {
+      root.render(
+        <CreateRuntimeProfileComponent
+          service={mockService}
+          initialAutoscalingConfig={{
+            autoscalingEnabled: false,
+            initialExecutors: 6,
+            minExecutors: 3,
+            maxExecutors: 50
+          }}
+          initialSessionLifecycleConfig={{
+            maxIdleTime: '45 minutes',
+            maxSessionTime: '5 days'
+          }}
+          initialSparkProperties={{ 'spark.sql.shuffle.partitions': '200' }}
+          initialLabels={{ env: 'staging' }}
+        />
+      );
+    });
+
+    expect(getFieldValue('Autoscaling')).toBe('Disabled');
+    expect(getFieldValue('Initial executors')).toBe('6');
+    expect(getFieldValue('Maximum idle time')).toBe('45 minutes');
+    expect(getFieldValue('Maximum session time')).toBe('5 days');
+    expect(getFieldValue('Spark properties')).toBe(
+      'spark.sql.shuffle.partitions: 200'
+    );
+    expect(getFieldValue('Labels')).toBe('env: staging');
+  });
+
+  it('should calculate runtime pricing estimate DCU values across machine shapes and autoscaling configurations', () => {
+    expect(MACHINE_SHAPE_RESOURCES['highmem-4']).toEqual({
+      vcpus: 4,
+      memoryGib: 32
+    });
+    expect(calculateDcu(4, 32)).toBe(5.6);
+    expect(calculateDcu(12, 170)).toBe(31.6);
+    expect(MACHINE_SHAPE_DCU['highmem-4']).toBe(5.6);
+    expect(MACHINE_SHAPE_DCU['standard-4']).toBe(4);
+    expect(MACHINE_SHAPE_DCU['l4-4']).toBe(4);
+    expect(MACHINE_SHAPE_DCU['a100-40']).toBe(15.7);
+    expect(MACHINE_SHAPE_DCU['a100-80']).toBe(31.6);
+    expect(getShapeDcu('highmem-4 (4 vCPU, 32 GB)')).toBe(5.6);
+    expect(getShapeDcu('L4 (4 cores)')).toBe(4);
+    expect(getShapeDcu('A100 (80 GB)')).toBe(31.6);
+    expect(getShapeDcu('unknown-shape')).toBe(0);
+    expect(getShapeDcu('')).toBe(0);
+
+    // 1. Baseline and autoscaling range for highmem-4 (5.6 DCU, initialExecutors: 5, minExecutors: 2, maxExecutors: 1000)
+    const defaultEstimate = calculateRuntimePricingEstimate({
+      executorMachineType: 'highmem-4',
+      useDifferentDriverConfig: false,
+      autoscalingEnabled: true,
+      initialExecutors: 5,
+      minExecutors: 2,
+      maxExecutors: 1000
+    });
+    expect(defaultEstimate.hero).toBe('33.6 DCU hours / hour of usage');
+    expect(defaultEstimate.baselineCaption).toBe(
+      'Baseline for 1 driver and 5 initial executors'
+    );
+    expect(defaultEstimate.subjectToAutoscaling).toBe(true);
+    expect(defaultEstimate.executorRowLabel).toBe('Executor nodes (initial 5)');
+    expect(defaultEstimate.executorRowValue).toBe(
+      '28 DCU hours / hour of usage'
+    );
+    expect(defaultEstimate.driverRowLabel).toBe('Driver node');
+    expect(defaultEstimate.driverRowValue).toBe(
+      '5.6 DCU hours / hour of usage'
+    );
+    expect(defaultEstimate.autoscalingRowLabel).toBe(
+      'Autoscaling range (2–1,000 executors)'
+    );
+    expect(defaultEstimate.autoscalingRowValue).toBe(
+      '16.8 – 5,605.6 DCU hours / hour of usage'
+    );
+    expect(defaultEstimate.totalRowLabel).toBe('Total (baseline)');
+    expect(defaultEstimate.totalRowValue).toBe(
+      '33.6 DCU hours / hour of usage'
+    );
+
+    // 2. Executor shape changed to standard-4 (4 DCU) -> 5 * 4 + 4 = 24
+    const standard4Estimate = calculateRuntimePricingEstimate({
+      executorMachineType: 'standard-4',
+      useDifferentDriverConfig: false,
+      autoscalingEnabled: true,
+      initialExecutors: 5,
+      minExecutors: 2,
+      maxExecutors: 300
+    });
+    expect(standard4Estimate.hero).toBe('24 DCU hours / hour of usage');
+    expect(standard4Estimate.executorRowLabel).toBe(
+      'Executor nodes (initial 5)'
+    );
+    expect(standard4Estimate.executorRowValue).toBe(
+      '20 DCU hours / hour of usage'
+    );
+    expect(standard4Estimate.driverRowValue).toBe(
+      '4 DCU hours / hour of usage'
+    );
+    expect(standard4Estimate.totalRowValue).toBe(
+      '24 DCU hours / hour of usage'
+    );
+
+    // 3. Initial executors changed to 10 (with highmem-4 -> 10 * 5.6 + 5.6 = 61.6)
+    const tenExecutorsEstimate = calculateRuntimePricingEstimate({
+      executorMachineType: 'highmem-4',
+      useDifferentDriverConfig: false,
+      autoscalingEnabled: true,
+      initialExecutors: 10,
+      minExecutors: 2,
+      maxExecutors: 300
+    });
+    expect(tenExecutorsEstimate.hero).toBe('61.6 DCU hours / hour of usage');
+    expect(tenExecutorsEstimate.baselineCaption).toBe(
+      'Baseline for 1 driver and 10 initial executors'
+    );
+    expect(tenExecutorsEstimate.executorRowLabel).toBe(
+      'Executor nodes (initial 10)'
+    );
+    expect(tenExecutorsEstimate.executorRowValue).toBe(
+      '56 DCU hours / hour of usage'
+    );
+    expect(tenExecutorsEstimate.totalRowValue).toBe(
+      '61.6 DCU hours / hour of usage'
+    );
+
+    // 4. Separate driver enabled with standard-4 (5 * 5.6 + 4 = 32)
+    const separateDriverEstimate = calculateRuntimePricingEstimate({
+      executorMachineType: 'highmem-4',
+      driverMachineType: 'standard-4',
+      useDifferentDriverConfig: true,
+      autoscalingEnabled: true,
+      initialExecutors: 5,
+      minExecutors: 2,
+      maxExecutors: 300
+    });
+    expect(separateDriverEstimate.hero).toBe('32 DCU hours / hour of usage');
+    expect(separateDriverEstimate.driverRowLabel).toBe('Driver node');
+    expect(separateDriverEstimate.driverRowValue).toBe(
+      '4 DCU hours / hour of usage'
+    );
+    expect(separateDriverEstimate.autoscalingRowValue).toBe(
+      '15.2 – 1,684 DCU hours / hour of usage'
+    );
+    expect(separateDriverEstimate.totalRowValue).toBe(
+      '32 DCU hours / hour of usage'
+    );
+
+    // 5. Autoscaling disabled -> hides Subject to autoscaling and autoscaling range row
+    const noAutoscalingEstimate = calculateRuntimePricingEstimate({
+      executorMachineType: 'highmem-4',
+      useDifferentDriverConfig: false,
+      autoscalingEnabled: false,
+      initialExecutors: 5
+    });
+    expect(noAutoscalingEstimate.subjectToAutoscaling).toBe(false);
+    expect(noAutoscalingEstimate.autoscalingRowLabel).toBeNull();
+    expect(noAutoscalingEstimate.autoscalingRowValue).toBeNull();
+
+    // 6. Null / empty input, driverShape fallback, prototype keys, & min >= max single-value autoscaling fallback
+    expect(getShapeDcu('toString')).toBe(0);
+    expect(getShapeDcu('valueOf')).toBe(0);
+
+    const nullEstimate = calculateRuntimePricingEstimate(null);
+    expect(nullEstimate.hero).toBe('0 DCU hours / hour of usage');
+    expect(nullEstimate.totalRowValue).toBe('0 DCU hours / hour of usage');
+
+    const driverShapeFallbackEstimate = calculateRuntimePricingEstimate({
+      executorMachineType: 'highmem-4',
+      driverMachineType: '   ',
+      driverShape: 'standard-4',
+      useDifferentDriverConfig: true,
+      initialExecutors: 5
+    });
+    expect(driverShapeFallbackEstimate.driverDcu).toBe(4);
+    expect(driverShapeFallbackEstimate.hero).toBe(
+      '32 DCU hours / hour of usage'
+    );
+
+    const equalBoundsEstimate = calculateRuntimePricingEstimate({
+      executorMachineType: 'highmem-4',
+      autoscalingEnabled: true,
+      initialExecutors: 5,
+      minExecutors: 10,
+      maxExecutors: 10
+    });
+    expect(equalBoundsEstimate.autoscalingRowLabel).toBe(
+      'Autoscaling range (10 executors)'
+    );
+    expect(equalBoundsEstimate.autoscalingRowValue).toBe(
+      '61.6 DCU hours / hour of usage'
+    );
+  });
+
+  it('should render RuntimePricingEstimate and update dynamically in CreateRuntimeProfileComponent when executor shape changes', async () => {
+    expect(RuntimePricingEstimate).toBeDefined();
+
+    const staticMarkup = ReactDOMServer.renderToStaticMarkup(
+      <RuntimePricingEstimate
+        pricingInput={{
+          executorMachineType: 'highmem-4',
+          useDifferentDriverConfig: false,
+          autoscalingEnabled: true,
+          initialExecutors: 5,
+          minExecutors: 2,
+          maxExecutors: 1000
+        }}
+      />
+    );
+    expect(staticMarkup).toContain('Pricing estimate');
+    expect(staticMarkup).toContain('33.6 DCU hours / hour of usage');
+    expect(staticMarkup).toContain(
+      'Baseline for 1 driver and 5 initial executors'
+    );
+    expect(staticMarkup).toContain('Subject to autoscaling');
+    expect(staticMarkup).toContain('16.8 – 5,605.6 DCU hours / hour of usage');
+    expect(staticMarkup).toContain('Total (baseline)');
+
+    await act(async () => {
+      root.render(<CreateRuntimeProfileComponent service={mockService} />);
+    });
+
+    const pricingSection = container.querySelector(
+      '[data-testid="runtime-pricing-estimate-section"]'
+    );
+    expect(pricingSection).not.toBeNull();
+    // 2 initial executors * 5.6 DCU + 5.6 DCU driver = 16.8 DCU hours
+    expect(
+      pricingSection?.querySelector('.runtime-pricing-hero')?.textContent
+    ).toBe('16.8 DCU hours / hour of usage');
+
+    // Change executor machine shape to standard-4 (2 initial executors * 4 DCU + 4 DCU driver = 12 DCU hours)
+    await selectExecutorType('standard-4');
+    expect(
+      pricingSection?.querySelector('.runtime-pricing-hero')?.textContent
+    ).toBe('12 DCU hours / hour of usage');
+
+    // Render a fresh instance with separate driver config and disabled autoscaling
+    await act(async () => {
+      root.render(
+        <CreateRuntimeProfileComponent
+          key="custom-driver-no-autoscaling"
+          service={mockService}
+          initialExecutorType="highmem-4"
+          initialExecutorAndDriverConfig={{
+            tier: 'Premium',
+            executorType: 'highmem-4',
+            useDifferentDriverConfig: true,
+            driverMachineType: 'standard-4'
+          }}
+          initialAutoscalingConfig={{
+            autoscalingEnabled: false,
+            initialExecutors: 5
+          }}
+        />
+      );
+    });
+
+    const updatedPricingSection = container.querySelector(
+      '[data-testid="runtime-pricing-estimate-section"]'
+    );
+    expect(
+      updatedPricingSection?.querySelector('.runtime-pricing-hero')?.textContent
+    ).toBe('32 DCU hours / hour of usage');
+    expect(
+      updatedPricingSection?.querySelector(
+        '[data-testid="pricing-autoscaling-caption"]'
+      )
+    ).toBeNull();
+    expect(
+      updatedPricingSection?.querySelector(
+        '[data-testid="pricing-autoscaling-row"]'
+      )
+    ).toBeNull();
+  });
+});

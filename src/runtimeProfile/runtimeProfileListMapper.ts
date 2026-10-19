@@ -15,13 +15,22 @@
  * limitations under the License.
  */
 
+import {
+  DATAPROC_LIGHTNING_ENGINE_PROPERTY,
+  DATAPROC_TIER_PROPERTY,
+  LightningEngineDisplayNameMap,
+  TierDisplayNameMap
+} from '../utils/const';
+
 export interface IRuntimeProfileRow {
   name: string;
   region: string;
-  description: string;
   runtimeVersion: string;
-  creator: string;
+  tier: string;
+  engine: string;
   lastUsed: string;
+  creator: string;
+  description: string;
   id: string;
 }
 
@@ -142,22 +151,59 @@ export const parseRuntimeProfileResourceName = (
   };
 };
 
+export const getDefaultTierForVersion = (
+  version?: string
+): 'Premium' | 'Standard' => {
+  if (!version) {
+    return 'Standard';
+  }
+  const match = version.trim().match(/^(\d+)\.(\d+)/);
+  if (!match) {
+    return 'Standard';
+  }
+  const major = Number(match[1]);
+  const minor = Number(match[2]);
+  return major > 3 || (major === 3 && minor >= 1) ? 'Premium' : 'Standard';
+};
+
 export const runtimeProfileListMapper = (
   templates: IRuntimeProfileTemplate[]
 ): IRuntimeProfileRow[] => {
   return templates.map((t: IRuntimeProfileTemplate) => {
     const { region, profileId } = parseRuntimeProfileResourceName(t.name);
+    const properties = t.runtimeConfig?.properties || {};
+    const rawTier = (
+      properties[DATAPROC_TIER_PROPERTY] ??
+      properties[`dataproc:${DATAPROC_TIER_PROPERTY}`] ??
+      properties[`spark:${DATAPROC_TIER_PROPERTY}`] ??
+      ''
+    )
+      .trim()
+      .toLowerCase();
+    const tier =
+      TierDisplayNameMap.get(rawTier) ??
+      getDefaultTierForVersion(t.runtimeConfig?.version);
+
+    const rawEngine = (
+      properties[DATAPROC_LIGHTNING_ENGINE_PROPERTY] ??
+      properties[`spark:${DATAPROC_LIGHTNING_ENGINE_PROPERTY}`] ??
+      properties[`dataproc:${DATAPROC_LIGHTNING_ENGINE_PROPERTY}`] ??
+      'default'
+    ).trim();
+    const engine = LightningEngineDisplayNameMap.get(rawEngine) ?? 'Default';
 
     return {
       name: t.jupyterSession?.displayName || profileId || t.name,
       region: region,
-      description: t.description || '',
       runtimeVersion: t.runtimeConfig?.version || '',
+      tier,
+      engine,
+      lastUsed: formatLastUsed(t.updateTime || ''),
       creator:
         (t.creator && t.creator.includes('@')
           ? t.creator.split('@')[0]
           : t.creator) || '',
-      lastUsed: formatLastUsed(t.updateTime || ''),
+      description: t.description || '',
       id: t.name // To use for deletion
     };
   });

@@ -236,6 +236,88 @@ describe('RuntimeProfileService', () => {
     });
   });
 
+  describe('updateRuntimeProfile', () => {
+    const sampleTemplate = {
+      name: 'projects/test-project/locations/us-central1/sessionTemplates/profile1',
+      jupyterSession: { displayName: 'Profile 1', kernel: 'PYTHON' }
+    };
+
+    it('updates profile successfully via loggedFetch PATCH and returns server response', async () => {
+      const updatedResponse = {
+        ...sampleTemplate,
+        description: 'Updated description'
+      };
+      (authApi as jest.Mock).mockResolvedValue({ access_token: 'test-token' });
+      (loggedFetch as jest.Mock).mockResolvedValue({
+        ok: true,
+        json: jest.fn().mockResolvedValue(updatedResponse)
+      });
+
+      const result = await RuntimeProfileService.updateRuntimeProfile(
+        sampleTemplate.name,
+        sampleTemplate,
+        'Profile 1'
+      );
+
+      expect(loggedFetch).toHaveBeenCalledWith(
+        expect.stringContaining(sampleTemplate.name),
+        expect.objectContaining({
+          method: 'PATCH',
+          headers: expect.objectContaining({
+            Authorization: 'Bearer test-token'
+          }),
+          body: JSON.stringify(sampleTemplate)
+        })
+      );
+      expect(result).toEqual(updatedResponse);
+    });
+
+    it('falls back to payload when PATCH response is ok with non-JSON body', async () => {
+      (authApi as jest.Mock).mockResolvedValue({ access_token: 'test-token' });
+      (loggedFetch as jest.Mock).mockResolvedValue({
+        ok: true,
+        json: jest
+          .fn()
+          .mockRejectedValue(new SyntaxError('Unexpected end of input'))
+      });
+
+      const result = await RuntimeProfileService.updateRuntimeProfile(
+        sampleTemplate.name,
+        sampleTemplate,
+        'Profile 1'
+      );
+      expect(result).toEqual(sampleTemplate);
+    });
+
+    it('throws error when credentials are missing or PATCH fails', async () => {
+      (authApi as jest.Mock).mockResolvedValueOnce(undefined);
+      await expect(
+        RuntimeProfileService.updateRuntimeProfile(
+          sampleTemplate.name,
+          sampleTemplate
+        )
+      ).rejects.toThrow('Authentication failed');
+
+      (authApi as jest.Mock).mockResolvedValueOnce({
+        access_token: 'test-token'
+      });
+      (loggedFetch as jest.Mock).mockResolvedValueOnce({
+        ok: false,
+        json: jest
+          .fn()
+          .mockResolvedValue({ error: { message: 'Update failed' } })
+      });
+
+      await expect(
+        RuntimeProfileService.updateRuntimeProfile(
+          sampleTemplate.name,
+          sampleTemplate,
+          'Profile 1'
+        )
+      ).rejects.toThrow('Update failed');
+    });
+  });
+
   describe('getRegions', () => {
     it('returns regions from the API in live mode', async () => {
       (authApi as jest.Mock).mockResolvedValue({
