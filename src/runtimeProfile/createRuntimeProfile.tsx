@@ -228,8 +228,8 @@ export const DEFAULT_NETWORK_SECURITY_CONFIG: INetworkAndSecurityConfig = {
 };
 
 export const DEFAULT_SESSION_LIFECYCLE_CONFIG: ISessionLifecycleConfig = {
-  maxIdleTime: '60 minutes',
-  maxSessionTime: '3 days'
+  maxIdleTime: 'None',
+  maxSessionTime: 'None'
 };
 
 export const DEFAULT_SPARK_PROPERTIES: SparkProperties = {};
