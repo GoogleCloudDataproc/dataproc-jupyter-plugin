@@ -488,13 +488,13 @@ export function mapRuntimeProfileToSessionTemplate(
       ? payload.runtimeEnvironmentConfig.customSparkImage
       : undefined;
 
+  const pythonPackageRepository =
+    payload.runtimeEnvironmentConfig?.pythonPackageRepository;
   const pythonRepo =
-    payload.runtimeEnvironmentConfig?.pythonPackageRepository &&
-    payload.runtimeEnvironmentConfig.pythonPackageRepository !==
-      'Google managed PyPI pull-through cache' &&
-    payload.runtimeEnvironmentConfig.pythonPackageRepository !==
-      'Google Managed PyPI pull through cache'
-      ? payload.runtimeEnvironmentConfig.pythonPackageRepository
+    pythonPackageRepository &&
+    pythonPackageRepository !== 'Google managed PyPI pull-through cache' &&
+    pythonPackageRepository !== 'Google Managed PyPI pull through cache'
+      ? pythonPackageRepository
       : undefined;
 
   const runtimeConfig: ISessionTemplateApiPayload['runtimeConfig'] = {
