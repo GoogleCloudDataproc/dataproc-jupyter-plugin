@@ -87,12 +87,14 @@ import {
 } from '../utils/const';
 
 export const RUNTIME_VERSION_OPTIONS: string[] = [
+  '3.0 (Spark 4.0, Java 21, Scala 2.13)',
   '2.3 LTS (Spark 3.5, Java 17, Scala 2.13)',
   '2.2 LTS (Spark 3.5, Java 17, Scala 2.13)',
   '1.2 LTS (Spark 3.5, Java 17, Scala 2.12)',
-  '1.1 LTS (Spark 3.3, Java 11, Scala 2.12)',
-  '3.0 (Spark 4.0, Java 21, Scala 2.13)'
+  '1.1 LTS (Spark 3.3, Java 11, Scala 2.12)'
 ];
+
+const DEFAULT_RUNTIME_VERSION = '2.3 LTS (Spark 3.5, Java 17, Scala 2.13)';
 
 export const RUNTIME_PROFILE_ID_REGEX = /^[a-z0-9][a-z0-9-]{2,61}[a-z0-9]$/;
 export const VALID_BUCKET_NAME_REGEX = /^[a-z0-9][a-z0-9._-]{1,61}[a-z0-9]$/;
@@ -111,11 +113,7 @@ const BucketItemIcon: React.FC = () => (
     fill="currentColor"
     aria-hidden="true"
   >
-    <path
-      fillRule="evenodd"
-      clipRule="evenodd"
-      d="M3 6h18v2h-1l-1.5 11h-13L4 8H3V6zm6 4l.5 2.5h5L15 10H9z"
-    />
+    <path d="M3 6h18v2l-2 12H5L3 8V6zM7 3h10v2H7V3z" />
   </svg>
 );
 
@@ -820,7 +818,7 @@ export const RuntimeEnvironmentEditDrawer: React.FC<
     const normalizedVersion =
       !config.runtimeVersion ||
       config.runtimeVersion === '2.3 LTS (Spark 3.5.1, Python 3.12)'
-        ? RUNTIME_VERSION_OPTIONS[0]
+        ? DEFAULT_RUNTIME_VERSION
         : matchedVersionOption || config.runtimeVersion;
     setDraftConfig({
       ...config,
@@ -958,7 +956,7 @@ export const RuntimeEnvironmentEditDrawer: React.FC<
             id="edit-dataproc-runtime-version"
             label="Spark runtime version *"
             notched
-            value={draftConfig.runtimeVersion || RUNTIME_VERSION_OPTIONS[0]}
+            value={draftConfig.runtimeVersion || DEFAULT_RUNTIME_VERSION}
             onChange={e =>
               handleFieldChange('runtimeVersion', e.target.value as string)
             }
