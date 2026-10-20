@@ -172,7 +172,10 @@ const ENCRYPTION_DISPLAY_MAP: Record<string, string> = {
 };
 
 const RUNTIME_VERSION_DISPLAY_MAP: Record<string, string> = {
-  '2.3': '2.3 LTS (Spark 3.5.1, Python 3.12)'
+  '2.3': '2.3 LTS (Spark 3.5, Java 17, Scala 2.13)',
+  '2.3 LTS (Spark 3.5.1, Python 3.12)':
+    '2.3 LTS (Spark 3.5, Java 17, Scala 2.13)',
+  '3.0': '3.0 (Spark 4.0, Java 21, Scala 2.13)'
 };
 
 export const generateRandomHex = (): string => {
@@ -194,7 +197,7 @@ export const generateRandomHex = (): string => {
  */
 export const DEFAULT_RUNTIME_ENVIRONMENT_CONFIG: IRuntimeEnvironmentConfig = {
   runtimeProfileId: '',
-  runtimeVersion: '2.3 LTS (Spark 3.5.1, Python 3.12)',
+  runtimeVersion: '2.3 LTS (Spark 3.5, Java 17, Scala 2.13)',
   customSparkImage: '',
   stagingBucket: '',
   pythonPackageRepository: ''
@@ -250,11 +253,11 @@ export const formatRuntimeEnvironmentProperties = (
     '';
   return [
     {
-      label: 'Runtime Profile ID',
+      label: 'Runtime profile ID',
       value: config.runtimeProfileId || '-'
     },
     {
-      label: 'Dataproc Runtime Version',
+      label: 'Spark runtime version',
       value: RUNTIME_VERSION_DISPLAY_MAP[versionKey] || versionKey
     },
     {
@@ -262,14 +265,14 @@ export const formatRuntimeEnvironmentProperties = (
       value: config.customSparkImage || 'None'
     },
     {
-      label: 'Cloud Storage Staging bucket',
+      label: 'Cloud storage staging bucket',
       value: config.stagingBucket || 'Auto'
     },
     {
       label: 'Python package repository',
       value:
         config.pythonPackageRepository ||
-        'Google Managed PyPI pull through cache'
+        'Google managed PyPI pull-through cache'
     }
   ];
 };

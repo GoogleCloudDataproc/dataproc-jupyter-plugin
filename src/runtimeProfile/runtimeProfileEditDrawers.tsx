@@ -104,11 +104,14 @@ import {
 import { authApi } from '../utils/utils';
 
 export const RUNTIME_VERSION_OPTIONS: string[] = [
-  '2.3 LTS (Spark 3.5.1, Python 3.12)',
+  '3.0 (Spark 4.0, Java 21, Scala 2.13)',
+  '2.3 LTS (Spark 3.5, Java 17, Scala 2.13)',
   '2.2 LTS (Spark 3.5, Java 17, Scala 2.13)',
   '1.2 LTS (Spark 3.5, Java 17, Scala 2.12)',
   '1.1 LTS (Spark 3.3, Java 11, Scala 2.12)'
 ];
+
+const DEFAULT_RUNTIME_VERSION = '2.3 LTS (Spark 3.5, Java 17, Scala 2.13)';
 
 export const RUNTIME_PROFILE_ID_REGEX = /^[a-z0-9][a-z0-9-]{2,61}[a-z0-9]$/;
 export const VALID_BUCKET_NAME_REGEX = /^[a-z0-9][a-z0-9._-]{1,61}[a-z0-9]$/;
@@ -127,7 +130,7 @@ const BucketItemIcon: React.FC = () => (
     fill="currentColor"
     aria-hidden="true"
   >
-    <path d="M3 6h18v2l-2 12H5L3 8V6zm3.5 4l1 3h9l1-3h-11z" />
+    <path d="M3 6h18v2l-2 12H5L3 8V6zM7 3h10v2H7V3z" />
   </svg>
 );
 
@@ -829,9 +832,11 @@ export const RuntimeEnvironmentEditDrawer: React.FC<
             opt.startsWith(`${config.runtimeVersion} `)
         )
       : undefined;
-    const normalizedVersion = !config.runtimeVersion
-      ? RUNTIME_VERSION_OPTIONS[0]
-      : matchedVersionOption || config.runtimeVersion;
+    const normalizedVersion =
+      !config.runtimeVersion ||
+      config.runtimeVersion === '2.3 LTS (Spark 3.5.1, Python 3.12)'
+        ? DEFAULT_RUNTIME_VERSION
+        : matchedVersionOption || config.runtimeVersion;
     setDraftConfig({
       ...config,
       runtimeVersion: normalizedVersion
@@ -934,7 +939,7 @@ export const RuntimeEnvironmentEditDrawer: React.FC<
         <div className="edit-drawer-field-group">
           <TextField
             id="edit-runtime-profile-id"
-            label="Runtime Profile ID"
+            label="Runtime profile ID *"
             value={draftConfig.runtimeProfileId ?? ''}
             disabled={isProfileIdDisabled}
             onChange={e =>
@@ -961,14 +966,14 @@ export const RuntimeEnvironmentEditDrawer: React.FC<
 
         <FormControl size="small" fullWidth variant="outlined">
           <InputLabel id="edit-dataproc-runtime-version-label" shrink>
-            Dataproc Runtime Version
+            Spark runtime version *
           </InputLabel>
           <Select
             labelId="edit-dataproc-runtime-version-label"
             id="edit-dataproc-runtime-version"
-            label="Dataproc Runtime Version"
+            label="Spark runtime version *"
             notched
-            value={draftConfig.runtimeVersion || RUNTIME_VERSION_OPTIONS[0]}
+            value={draftConfig.runtimeVersion || DEFAULT_RUNTIME_VERSION}
             onChange={e =>
               handleFieldChange('runtimeVersion', e.target.value as string)
             }
@@ -1016,50 +1021,55 @@ export const RuntimeEnvironmentEditDrawer: React.FC<
         </div>
 
         <div className="edit-drawer-field-group">
-          <div className="edit-drawer-input-with-button">
-            <TextField
-              id="edit-cloud-storage-staging-bucket"
-              label="Cloud Storage Staging bucket"
-              placeholder="Auto"
-              value={draftConfig.stagingBucket ?? ''}
-              onChange={e => handleFieldChange('stagingBucket', e.target.value)}
-              variant="outlined"
-              size="small"
-              fullWidth
-              error={Boolean(stagingBucketError)}
-              InputLabelProps={{ shrink: true }}
-              InputProps={{
-                startAdornment: (
-                  <InputAdornment position="start">
-                    <span
-                      className={`bucket-input-adornment-icon${
-                        isBucketValid
-                          ? ' valid'
-                          : stagingBucketError
-                          ? ' invalid'
-                          : ''
-                      }`}
-                    >
-                      {isBucketValid ? (
-                        <BucketValidIcon />
-                      ) : stagingBucketError ? (
-                        <BucketErrorIcon />
-                      ) : (
-                        <BucketItemIcon />
-                      )}
-                    </span>
-                  </InputAdornment>
-                )
-              }}
-            />
-            <button
-              type="button"
-              className="edit-drawer-browse-btn"
-              onClick={() => setIsSelectBucketOpen(true)}
-            >
-              Browse
-            </button>
+          <div className="edit-drawer-section-heading">
+            Cloud storage staging bucket
           </div>
+          <TextField
+            id="edit-cloud-storage-staging-bucket"
+            label="Staging bucket"
+            placeholder="Auto"
+            value={draftConfig.stagingBucket ?? ''}
+            onChange={e => handleFieldChange('stagingBucket', e.target.value)}
+            variant="outlined"
+            size="small"
+            fullWidth
+            error={Boolean(stagingBucketError)}
+            InputLabelProps={{ shrink: true }}
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <span
+                    className={`bucket-input-adornment-icon${
+                      isBucketValid
+                        ? ' valid'
+                        : stagingBucketError
+                        ? ' invalid'
+                        : ''
+                    }`}
+                  >
+                    {isBucketValid ? (
+                      <BucketValidIcon />
+                    ) : stagingBucketError ? (
+                      <BucketErrorIcon />
+                    ) : (
+                      <BucketItemIcon />
+                    )}
+                  </span>
+                </InputAdornment>
+              ),
+              endAdornment: (
+                <InputAdornment position="end">
+                  <button
+                    type="button"
+                    className="edit-drawer-browse-btn"
+                    onClick={() => setIsSelectBucketOpen(true)}
+                  >
+                    Browse
+                  </button>
+                </InputAdornment>
+              )
+            }}
+          />
           {stagingBucketError ? (
             <div
               className="edit-drawer-error-text"
@@ -1082,7 +1092,7 @@ export const RuntimeEnvironmentEditDrawer: React.FC<
           <TextField
             id="edit-python-package-repository"
             label="Python package repository"
-            placeholder="Google Managed PyPI pull through cache"
+            placeholder="Google managed PyPI pull-through cache"
             value={draftConfig.pythonPackageRepository ?? ''}
             onChange={e =>
               handleFieldChange('pythonPackageRepository', e.target.value)
@@ -1094,8 +1104,8 @@ export const RuntimeEnvironmentEditDrawer: React.FC<
           />
           <div className="edit-drawer-helper-text">
             Enter the URI for the repository to install Python packages. By
-            default packages are installed to PyPI pull-through cache on Google
-            Cloud.
+            default, packages are installed from PyPI pull-through cache on
+            Google Cloud.
           </div>
         </div>
       </EditDrawer>
