@@ -191,6 +191,8 @@ describe('CreateRuntimeProfileComponent UI & Service', () => {
     expect(getFieldValue('Autoscaling')).toBe('Enabled');
     expect(getFieldValue('Metastore')).toBe('Lakehouse runtime catalog');
     expect(getFieldValue('Hive endpoint')).toBe('Disabled');
+    expect(getFieldValue('Maximum idle time')).toBe('None');
+    expect(getFieldValue('Maximum session time')).toBe('None');
   });
 
   it('collapses and re-expands Additional configuration on click and keyboard Enter/Space', async () => {
@@ -1758,6 +1760,8 @@ describe('CreateRuntimeProfileComponent UI & Service', () => {
     });
 
     // 2. Session lifecycle drawer validation
+    expect(getFieldValue('Maximum idle time')).toBe('None');
+    expect(getFieldValue('Maximum session time')).toBe('None');
     await act(async () => {
       (editButtons[5] as HTMLButtonElement).click();
     });
@@ -1767,6 +1771,8 @@ describe('CreateRuntimeProfileComponent UI & Service', () => {
     const sessionQtyInput = document.body.querySelector(
       '#edit-max-session-time-quantity'
     ) as HTMLInputElement;
+    expect(idleQtyInput.value).toBe('60');
+    expect(sessionQtyInput.value).toBe('3');
 
     await act(async () => {
       nativeInputValueSetter?.call(idleQtyInput, '0');
@@ -1798,6 +1804,8 @@ describe('CreateRuntimeProfileComponent UI & Service', () => {
     await act(async () => {
       getSaveBtn().click();
     });
+    expect(getFieldValue('Maximum idle time')).toBe('30 minutes');
+    expect(getFieldValue('Maximum session time')).toBe('3 days');
 
     // 3. Other customizations drawer validation
     await act(async () => {

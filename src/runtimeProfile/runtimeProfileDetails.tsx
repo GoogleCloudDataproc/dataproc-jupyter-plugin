@@ -564,8 +564,10 @@ export const applyAutoscalingUpdateToTemplate = (
   profile: IRuntimeProfileTemplate,
   updated: IAutoscalingConfig
 ): IRuntimeProfileTemplate => {
+  const existingProps = profile.runtimeConfig?.properties || {};
+  const initial = buildAutoscalingConfigFromTemplate(profile);
   const nextProps: Record<string, string> = {
-    ...(profile.runtimeConfig?.properties || {})
+    ...existingProps
   };
   AUTOSCALING_PROPERTY_KEYS.forEach(key => {
     delete nextProps[key];
@@ -573,20 +575,42 @@ export const applyAutoscalingUpdateToTemplate = (
     delete nextProps[`dataproc:${key}`];
   });
 
+  const hasExistingKey = (key: string): boolean =>
+    key in existingProps ||
+    `spark:${key}` in existingProps ||
+    `dataproc:${key}` in existingProps;
+
   const enabled = updated.autoscalingEnabled ?? true;
-  nextProps['spark.dynamicAllocation.enabled'] = String(enabled);
+  if (
+    hasExistingKey('spark.dynamicAllocation.enabled') ||
+    enabled !== initial.autoscalingEnabled
+  ) {
+    nextProps['spark.dynamicAllocation.enabled'] = String(enabled);
+  }
   if (enabled) {
-    if (updated.initialExecutors !== undefined) {
+    if (
+      updated.initialExecutors !== undefined &&
+      (hasExistingKey('spark.dynamicAllocation.initialExecutors') ||
+        updated.initialExecutors !== initial.initialExecutors)
+    ) {
       nextProps['spark.dynamicAllocation.initialExecutors'] = String(
         updated.initialExecutors
       );
     }
-    if (updated.minExecutors !== undefined) {
+    if (
+      updated.minExecutors !== undefined &&
+      (hasExistingKey('spark.dynamicAllocation.minExecutors') ||
+        updated.minExecutors !== initial.minExecutors)
+    ) {
       nextProps['spark.dynamicAllocation.minExecutors'] = String(
         updated.minExecutors
       );
     }
-    if (updated.maxExecutors !== undefined) {
+    if (
+      updated.maxExecutors !== undefined &&
+      (hasExistingKey('spark.dynamicAllocation.maxExecutors') ||
+        updated.maxExecutors !== initial.maxExecutors)
+    ) {
       nextProps['spark.dynamicAllocation.maxExecutors'] = String(
         updated.maxExecutors
       );
@@ -687,19 +711,25 @@ export const buildSessionLifecycleConfigFromTemplate = (
   profile: IRuntimeProfileTemplate
 ): ISessionLifecycleConfig => {
   const executionConfig = profile.environmentConfig?.executionConfig;
-  const idle = parseTtlToQuantityAndUnit(
-    executionConfig?.idleTtl,
-    60,
-    'minutes'
-  );
-  const session = parseTtlToQuantityAndUnit(executionConfig?.ttl, 3, 'days');
+  const hasIdleTtl = Boolean(executionConfig?.idleTtl?.trim());
+  const hasSessionTtl = Boolean(executionConfig?.ttl?.trim());
+  const idle = hasIdleTtl
+    ? parseTtlToQuantityAndUnit(executionConfig?.idleTtl, 60, 'minutes')
+    : undefined;
+  const session = hasSessionTtl
+    ? parseTtlToQuantityAndUnit(executionConfig?.ttl, 3, 'days')
+    : undefined;
   return {
-    maxIdleTimeQuantity: idle.quantity,
-    maxIdleTimeUnit: idle.unit,
-    maxIdleTime: `${idle.quantity} ${idle.unit}`,
-    maxSessionTimeQuantity: session.quantity,
-    maxSessionTimeUnit: session.unit,
-    maxSessionTime: `${session.quantity} ${session.unit}`
+    ...(idle && {
+      maxIdleTimeQuantity: idle.quantity,
+      maxIdleTimeUnit: idle.unit
+    }),
+    maxIdleTime: idle ? `${idle.quantity} ${idle.unit}` : 'None',
+    ...(session && {
+      maxSessionTimeQuantity: session.quantity,
+      maxSessionTimeUnit: session.unit
+    }),
+    maxSessionTime: session ? `${session.quantity} ${session.unit}` : 'None'
   };
 };
 

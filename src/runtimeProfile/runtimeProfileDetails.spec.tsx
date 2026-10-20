@@ -774,6 +774,41 @@ describe('RuntimeProfileDetails Component', () => {
       minExecutors: 5,
       maxExecutors: 1000
     });
+    const unchangedEmptyAuto = applyAutoscalingUpdateToTemplate(
+      {
+        name: 'projects/p/locations/l/sessionTemplates/t',
+        runtimeConfig: { properties: {} }
+      },
+      {
+        autoscalingEnabled: true,
+        initialExecutors: 2,
+        minExecutors: 2,
+        maxExecutors: 1000
+      }
+    );
+    expect(unchangedEmptyAuto.runtimeConfig?.properties).toEqual({});
+
+    const partiallyChangedAuto = applyAutoscalingUpdateToTemplate(
+      {
+        name: 'projects/p/locations/l/sessionTemplates/t',
+        runtimeConfig: {
+          properties: {
+            'spark.dynamicAllocation.minExecutors': '2'
+          }
+        }
+      },
+      {
+        autoscalingEnabled: true,
+        initialExecutors: 2,
+        minExecutors: 2,
+        maxExecutors: 50
+      }
+    );
+    expect(partiallyChangedAuto.runtimeConfig?.properties).toEqual({
+      'spark.dynamicAllocation.minExecutors': '2',
+      'spark.dynamicAllocation.maxExecutors': '50'
+    });
+
     const updatedAutoOn = applyAutoscalingUpdateToTemplate(mockProfile, {
       autoscalingEnabled: true,
       initialExecutors: 4,
@@ -808,7 +843,15 @@ describe('RuntimeProfileDetails Component', () => {
       ]
     ).toBeUndefined();
 
-    // Session lifecycle builder & updater (including seconds/minutes/generic units and clearing)
+    // Session lifecycle builder & updater (including unset 'None' defaults, seconds/minutes/generic units, and clearing)
+    expect(
+      buildSessionLifecycleConfigFromTemplate({
+        name: 'projects/p/locations/l/sessionTemplates/t'
+      })
+    ).toEqual({
+      maxIdleTime: 'None',
+      maxSessionTime: 'None'
+    });
     const lifecycleCfg = buildSessionLifecycleConfigFromTemplate(mockProfile);
     expect(lifecycleCfg).toEqual({
       maxIdleTimeQuantity: 1,
