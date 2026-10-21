@@ -115,6 +115,7 @@ export interface IRuntimeProfileTemplate {
       networkUri?: string;
       subnetworkUri?: string;
       networkTags?: string[];
+      serviceAccount?: string;
       kmsKey?: string;
       serviceAccount?: string;
       stagingBucket?: string;
@@ -139,22 +140,24 @@ export interface IRuntimeProfileTemplate {
 }
 
 const SESSION_TEMPLATE_RESOURCE_PATTERN =
-  /^projects\/[^/]+\/(?:locations|regions)\/([^/]+)\/sessionTemplates\/([^/]+)$/;
+  /^projects\/([^/]+)\/(?:locations|regions)\/([^/]+)\/sessionTemplates\/([^/]+)$/;
 
 export const parseRuntimeProfileResourceName = (
   resourceName?: string
-): { region: string; profileId: string } => {
+): { projectId: string; region: string; profileId: string } => {
   if (!resourceName) {
-    return { region: '', profileId: '' };
+    return { projectId: '', region: '', profileId: '' };
   }
   const match = SESSION_TEMPLATE_RESOURCE_PATTERN.exec(resourceName.trim());
   if (match) {
     return {
-      region: match[1] || '',
-      profileId: match[2] || ''
+      projectId: match[1] || '',
+      region: match[2] || '',
+      profileId: match[3] || ''
     };
   }
   return {
+    projectId: '',
     region: '',
     profileId: resourceName
   };
