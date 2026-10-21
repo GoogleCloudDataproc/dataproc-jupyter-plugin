@@ -1571,6 +1571,33 @@ describe('runtimeProfileMapper', () => {
       ).toThrow('Subnetwork is required when a project network is selected.');
     });
 
+    it('saves security edits on a profile that uses the default network without requiring a subnetwork', () => {
+      const defaultNetworkProfile: IRuntimeProfileTemplate = {
+        name: 'projects/test-project/locations/us-central1/sessionTemplates/default-net',
+        jupyterSession: { displayName: 'Default network', kernel: 'PYTHON' }
+      };
+
+      const body = saveEdits(defaultNetworkProfile, payload => {
+        payload.networkAndSecurityConfig = {
+          ...payload.networkAndSecurityConfig,
+          networkTags: ['new-tag'],
+          encryption: 'customer_managed_key',
+          kmsKeySelectionMode: 'manual',
+          kmsKeyName:
+            'projects/kms-project/locations/global/keyRings/kr/cryptoKeys/k'
+        };
+      });
+
+      expect(body.environmentConfig?.executionConfig).toEqual({
+        networkTags: ['new-tag'],
+        kmsKey:
+          'projects/kms-project/locations/global/keyRings/kr/cryptoKeys/k',
+        authenticationConfig: {
+          userWorkloadAuthenticationType: 'SERVICE_ACCOUNT'
+        }
+      });
+    });
+
     it('clears the staging bucket when it is set back to Auto', () => {
       const body = saveEdits(savedProfile, payload => {
         payload.runtimeEnvironmentConfig = {

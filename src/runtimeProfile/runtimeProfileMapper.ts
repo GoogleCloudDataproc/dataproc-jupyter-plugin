@@ -519,10 +519,9 @@ export const buildNetworkExecutionConfig = (
     const selectedNetwork = (
       networkConfig.primaryNetwork || networkConfig.networkInThisProject
     )?.trim();
-    if (
-      !subnetworkUri &&
-      (networkConfig.networkSource === 'project' || selectedNetwork)
-    ) {
+    // Without a selected network the service uses the default network, so a
+    // subnetwork is only required once a network is chosen.
+    if (!subnetworkUri && selectedNetwork) {
       throw new Error(
         'Subnetwork is required when a project network is selected.'
       );
