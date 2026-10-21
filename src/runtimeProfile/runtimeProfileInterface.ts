@@ -328,6 +328,11 @@ export interface IRuntimeProfileService {
     category?: ExecutorCategoryType
   ): Promise<IMachineTypeOption[]>;
   getNetworks?(projectId?: string): Promise<string[]>;
+  getNetworkFromSubnetwork?(
+    subnetwork: string,
+    projectId?: string,
+    region?: string
+  ): Promise<string>;
   getSubnetworks?(
     network: string,
     projectId?: string,
