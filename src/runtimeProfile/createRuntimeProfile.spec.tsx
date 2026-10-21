@@ -1976,7 +1976,7 @@ describe('CreateRuntimeProfileComponent UI & Service', () => {
       expect(saveBtn.disabled).toBe(false);
     });
 
-    it('keeps Metastore read-only until the update saves it', async () => {
+    it('lets every section be edited', async () => {
       await renderEditForm();
 
       const sectionEditButtons = Array.from(
@@ -1985,12 +1985,8 @@ describe('CreateRuntimeProfileComponent UI & Service', () => {
         )
       );
       expect(sectionEditButtons).toHaveLength(7);
-      // Metastore (3) stays read-only; the other sections are saved.
-      const expectedDisabled = [false, false, false, true, false, false, false];
-      sectionEditButtons.forEach((btn, idx) =>
-        expect(btn.getAttribute('aria-disabled')).toBe(
-          String(expectedDisabled[idx])
-        )
+      sectionEditButtons.forEach(btn =>
+        expect(btn.getAttribute('aria-disabled')).toBe('false')
       );
     });
 

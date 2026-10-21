@@ -112,7 +112,7 @@ export class RuntimeProfileService implements IRuntimeProfileService {
         });
         throw new Error(
           errorData?.error?.message ||
-          `Failed to fetch runtime profiles: ${response.statusText}`
+            `Failed to fetch runtime profiles: ${response.statusText}`
         );
       }
 
@@ -170,7 +170,7 @@ export class RuntimeProfileService implements IRuntimeProfileService {
     if (!response.ok || data?.error) {
       throw new Error(
         data?.error?.message ||
-        `Failed to delete runtime profile ${displayName}`
+          `Failed to delete runtime profile ${displayName}`
       );
     }
   }
@@ -247,7 +247,7 @@ export class RuntimeProfileService implements IRuntimeProfileService {
     if (!response.ok || result?.error) {
       throw new Error(
         result?.error?.message ||
-        `Failed to fetch regions: ${response.statusText}`
+          `Failed to fetch regions: ${response.statusText}`
       );
     }
 
@@ -290,7 +290,7 @@ export class RuntimeProfileService implements IRuntimeProfileService {
     if (!response.ok || result?.error) {
       throw new Error(
         result?.error?.message ||
-        `Failed to fetch buckets: ${response.statusText}`
+          `Failed to fetch buckets: ${response.statusText}`
       );
     }
 
@@ -327,7 +327,7 @@ export class RuntimeProfileService implements IRuntimeProfileService {
     if (!response.ok || result?.error) {
       throw new Error(
         result?.error?.message ||
-        `Failed to fetch objects for bucket ${bucketName}: ${response.statusText}`
+          `Failed to fetch objects for bucket ${bucketName}: ${response.statusText}`
       );
     }
 
@@ -372,7 +372,7 @@ export class RuntimeProfileService implements IRuntimeProfileService {
     if (!response.ok || result?.error) {
       throw new Error(
         result?.error?.message ||
-        `Failed to create bucket ${trimmedName}: ${response.statusText}`
+          `Failed to create bucket ${trimmedName}: ${response.statusText}`
       );
     }
 
@@ -1018,7 +1018,7 @@ export class RuntimeProfileService implements IRuntimeProfileService {
       if (!response.ok || result?.error) {
         throw new Error(
           result?.error?.message ||
-          `Failed to create runtime profile (${response.status}: ${response.statusText})`
+            `Failed to create runtime profile (${response.status}: ${response.statusText})`
         );
       }
       return result as IRuntimeProfile;

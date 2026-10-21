@@ -39,6 +39,7 @@ import {
   IExecutorAndDriverConfig,
   IExecutorAndDriverDraftConfig,
   IMachineTypeOption,
+  IMetastoreConfig,
   INetworkAndSecurityConfig,
   IRuntimeProfileFormInitialValues,
   ISessionLifecycleConfig,
@@ -402,6 +403,89 @@ const normalizeStagingBucket = (bucket?: string): string | undefined => {
   return name && name.toLowerCase() !== 'auto' ? name : undefined;
 };
 
+/**
+ * Lakehouse runtime catalog properties for the metastore settings, in the
+ * order they are applied. Empty unless the Lakehouse runtime catalog is
+ * selected; the untouched default config sends nothing, so the service uses
+ * the Lakehouse runtime catalog in the profile's project.
+ */
+export const buildLakehouseProperties = (
+  metastoreConfig: IMetastoreConfig | undefined,
+  projectId: string,
+  region: string
+): Record<string, string> => {
+  const lakehouseProperties: Record<string, string> = {};
+  if (metastoreConfig?.metastoreType !== 'lakehouse') {
+    return lakehouseProperties;
+  }
+  // When two rules produce the same key, the first one wins.
+  const add = (key: string, value: string): void => {
+    if (lakehouseProperties[key] === undefined) {
+      lakehouseProperties[key] = value;
+    }
+  };
+  const isIcebergEnabled = metastoreConfig.icebergRestEndpointEnabled ?? true;
+  const isHiveEnabled = Boolean(metastoreConfig.hiveEndpointEnabled);
+  const hiveProject = metastoreConfig.hiveProjectId || projectId;
+
+  if (isIcebergEnabled) {
+    const icebergProject = metastoreConfig.projectId || projectId;
+    add(LAKEHOUSE_PROJECT_PROPERTY, icebergProject);
+
+    if (metastoreConfig.catalogSelectionMode === 'existing') {
+      // An existing catalog becomes the default catalog.
+      if (metastoreConfig.catalogId) {
+        const catalogResource = getLakehouseCatalogResource(
+          icebergProject,
+          metastoreConfig.catalogId
+        );
+        add(
+          LAKEHOUSE_CATALOG_PROPERTY_PREFIX + metastoreConfig.catalogId,
+          catalogResource
+        );
+        add(LAKEHOUSE_DEFAULT_CATALOG_PROPERTY, catalogResource);
+      }
+    } else {
+      // New default catalog, created by the service in the project above.
+      const catalogName =
+        metastoreConfig.catalogName || getDefaultLakehouseCatalogName(region);
+      if (catalogName) {
+        add(
+          LAKEHOUSE_CATALOG_PROPERTY_PREFIX + catalogName,
+          getLakehouseCatalogResource(icebergProject, catalogName)
+        );
+        add(LAKEHOUSE_DEFAULT_CATALOG_PROPERTY, catalogName);
+      }
+    }
+  } else if (isHiveEnabled) {
+    // Hive only: the Lakehouse project is the Hive endpoint's project.
+    add(LAKEHOUSE_PROJECT_PROPERTY, hiveProject);
+  }
+
+  // The Hive endpoint registers its catalog but never sets the default
+  // catalog, which belongs to the Iceberg REST endpoint.
+  if (isHiveEnabled && metastoreConfig.hiveCatalogName) {
+    add(
+      LAKEHOUSE_CATALOG_PROPERTY_PREFIX + metastoreConfig.hiveCatalogName,
+      getLakehouseCatalogResource(
+        hiveProject,
+        metastoreConfig.hiveCatalogId || metastoreConfig.hiveCatalogName
+      )
+    );
+  }
+  return lakehouseProperties;
+};
+
+/** Dataproc Metastore service for peripheralsConfig, when one is selected. */
+export const getDataprocMetastoreService = (
+  metastoreConfig?: IMetastoreConfig
+): string | undefined =>
+  metastoreConfig?.metastoreType === 'dataproc' &&
+  metastoreConfig.dataprocMetastoreService &&
+  metastoreConfig.dataprocMetastoreService !== METASTORE_NONE
+    ? metastoreConfig.dataprocMetastoreService
+    : undefined;
+
 type ExecutionConfigPayload = NonNullable<
   NonNullable<
     ISessionTemplateApiPayload['environmentConfig']
@@ -668,62 +752,10 @@ export function mapRuntimeProfileToSessionTemplate(
     setIfEmpty('spark.dataproc.executor.disk.size', executorDisk.size);
   }
 
-  // Lakehouse runtime catalog. The untouched default config sends nothing, so
-  // the service uses the Lakehouse runtime catalog in the profile's project.
-  // Derived values never override the user's sparkProperties.
-  const metastoreConfig = payload.metastoreConfig;
-  if (metastoreConfig?.metastoreType === 'lakehouse') {
-    const isIcebergEnabled = metastoreConfig.icebergRestEndpointEnabled ?? true;
-    const isHiveEnabled = Boolean(metastoreConfig.hiveEndpointEnabled);
-    const hiveProject = metastoreConfig.hiveProjectId || projectId;
-
-    if (isIcebergEnabled) {
-      const icebergProject = metastoreConfig.projectId || projectId;
-      setIfAbsent(LAKEHOUSE_PROJECT_PROPERTY, icebergProject);
-
-      if (metastoreConfig.catalogSelectionMode === 'existing') {
-        // An existing catalog becomes the default catalog.
-        if (metastoreConfig.catalogId) {
-          const catalogResource = getLakehouseCatalogResource(
-            icebergProject,
-            metastoreConfig.catalogId
-          );
-          setIfAbsent(
-            LAKEHOUSE_CATALOG_PROPERTY_PREFIX + metastoreConfig.catalogId,
-            catalogResource
-          );
-          setIfAbsent(LAKEHOUSE_DEFAULT_CATALOG_PROPERTY, catalogResource);
-        }
-      } else {
-        // New default catalog, created by the service in the project above.
-        const catalogName =
-          metastoreConfig.catalogName ||
-          getDefaultLakehouseCatalogName(targetRegion);
-        if (catalogName) {
-          setIfAbsent(
-            LAKEHOUSE_CATALOG_PROPERTY_PREFIX + catalogName,
-            getLakehouseCatalogResource(icebergProject, catalogName)
-          );
-          setIfAbsent(LAKEHOUSE_DEFAULT_CATALOG_PROPERTY, catalogName);
-        }
-      }
-    } else if (isHiveEnabled) {
-      // Hive only: the Lakehouse project is the Hive endpoint's project.
-      setIfAbsent(LAKEHOUSE_PROJECT_PROPERTY, hiveProject);
-    }
-
-    // The Hive endpoint registers its catalog but never sets the default
-    // catalog, which belongs to the Iceberg REST endpoint.
-    if (isHiveEnabled && metastoreConfig.hiveCatalogName) {
-      setIfAbsent(
-        LAKEHOUSE_CATALOG_PROPERTY_PREFIX + metastoreConfig.hiveCatalogName,
-        getLakehouseCatalogResource(
-          hiveProject,
-          metastoreConfig.hiveCatalogId || metastoreConfig.hiveCatalogName
-        )
-      );
-    }
-  }
+  // Lakehouse runtime catalog
+  Object.entries(
+    buildLakehouseProperties(payload.metastoreConfig, projectId, targetRegion)
+  ).forEach(([key, value]) => setIfAbsent(key, value));
 
   // Runtime Config
   const runtimeVersion = extractRuntimeVersion(
@@ -758,12 +790,7 @@ export function mapRuntimeProfileToSessionTemplate(
   };
 
   // Dataproc Metastore service
-  const metastoreService =
-    metastoreConfig?.metastoreType === 'dataproc' &&
-    metastoreConfig.dataprocMetastoreService &&
-    metastoreConfig.dataprocMetastoreService !== METASTORE_NONE
-      ? metastoreConfig.dataprocMetastoreService
-      : undefined;
+  const metastoreService = getDataprocMetastoreService(payload.metastoreConfig);
 
   // Execution Config (Network & Security, staging bucket, session lifecycle)
   const stagingBucket = normalizeStagingBucket(
@@ -1350,13 +1377,128 @@ const parseDuration = (
   return { quantity, unit, label: `${quantity} ${unitLabel}` };
 };
 
+/** Catalog resource, e.g. 'projects/p/catalogs/c' or 'projects/p/locations/l/catalogs/c'. */
+const LAKEHOUSE_CATALOG_RESOURCE_PATTERN =
+  /^projects\/([^/]+)\/(?:locations\/[^/]+\/)?catalogs\/([^/]+)$/;
+
 /** Subnetwork resource name or URL, e.g. 'projects/p/regions/r/subnetworks/s'. */
 const SUBNETWORK_RESOURCE_PATTERN =
   /(?:^|\/)projects\/([^/]+)\/regions\/[^/]+\/subnetworks\/([^/]+)$/;
 
+/** Project of a Dataproc Metastore service, e.g. 'projects/p/locations/l/services/s'. */
+const METASTORE_SERVICE_PROJECT_PATTERN = /^projects\/([^/]+)\//;
+
 type TemplateExecutionConfig = NonNullable<
   IRuntimeProfileTemplate['environmentConfig']
 >['executionConfig'];
+
+/**
+ * Metastore settings of a session template, and the Lakehouse properties they
+ * represent (the form shows those in the Metastore section, not as Spark
+ * properties). `catalogs` holds the 'dataproc.lakehouse.catalog.*' properties
+ * as [catalog name, value].
+ */
+const mapMetastoreConfig = (
+  template: IRuntimeProfileTemplate,
+  getProperty: (key: string) => string | undefined,
+  catalogs: Array<[string, string]>,
+  projectId: string,
+  region: string
+): { metastoreConfig: IMetastoreConfig; mappedKeys: string[] } => {
+  const metastoreService =
+    template.environmentConfig?.peripheralsConfig?.metastoreService?.trim();
+  if (metastoreService) {
+    const serviceProject =
+      METASTORE_SERVICE_PROJECT_PATTERN.exec(metastoreService)?.[1];
+    return {
+      metastoreConfig: {
+        metastore: metastoreService,
+        metastoreType: 'dataproc',
+        // Unset means the profile's own project.
+        projectId:
+          serviceProject && serviceProject !== projectId
+            ? serviceProject
+            : undefined,
+        dataprocMetastoreService: metastoreService,
+        hiveEndpointEnabled: false
+      },
+      mappedKeys: []
+    };
+  }
+
+  const lakehouseProject = getProperty(LAKEHOUSE_PROJECT_PROPERTY);
+  const defaultCatalog = getProperty(LAKEHOUSE_DEFAULT_CATALOG_PROPERTY);
+  if (!lakehouseProject && !defaultCatalog && catalogs.length === 0) {
+    // Nothing set: the service's default Lakehouse runtime catalog.
+    return { metastoreConfig: { hiveEndpointEnabled: false }, mappedKeys: [] };
+  }
+
+  // An existing default catalog is stored by resource, a new one by name.
+  const existingCatalog = defaultCatalog
+    ? LAKEHOUSE_CATALOG_RESOURCE_PATTERN.exec(defaultCatalog)
+    : null;
+  const defaultCatalogName = existingCatalog
+    ? existingCatalog[2]
+    : defaultCatalog;
+  // Any other registered catalog is the Hive endpoint's.
+  const hiveCatalog = catalogs.find(
+    ([name, value]) => name !== defaultCatalogName && value !== defaultCatalog
+  );
+  const hiveResource = hiveCatalog
+    ? LAKEHOUSE_CATALOG_RESOURCE_PATTERN.exec(hiveCatalog[1])
+    : null;
+  const isIcebergEnabled = Boolean(defaultCatalog) || !hiveCatalog;
+  const icebergProject = existingCatalog?.[1] ?? lakehouseProject;
+
+  const mappedKeys = [
+    LAKEHOUSE_PROJECT_PROPERTY,
+    LAKEHOUSE_DEFAULT_CATALOG_PROPERTY
+  ];
+  if (
+    defaultCatalogName &&
+    catalogs.some(([name]) => name === defaultCatalogName)
+  ) {
+    mappedKeys.push(LAKEHOUSE_CATALOG_PROPERTY_PREFIX + defaultCatalogName);
+  }
+  if (hiveCatalog) {
+    mappedKeys.push(LAKEHOUSE_CATALOG_PROPERTY_PREFIX + hiveCatalog[0]);
+  }
+
+  return {
+    metastoreConfig: {
+      metastore: LAKEHOUSE_RUNTIME_CATALOG,
+      metastoreType: 'lakehouse',
+      // Unset means the profile's own project.
+      projectId:
+        isIcebergEnabled && icebergProject && icebergProject !== projectId
+          ? icebergProject
+          : undefined,
+      icebergRestEndpointEnabled: isIcebergEnabled,
+      catalogSelectionMode: isIcebergEnabled
+        ? existingCatalog
+          ? 'existing'
+          : 'new'
+        : undefined,
+      catalogId: existingCatalog?.[2],
+      // The region's default name isn't saved, so it follows region changes.
+      catalogName:
+        !existingCatalog &&
+        defaultCatalog &&
+        defaultCatalog !== getDefaultLakehouseCatalogName(region)
+          ? defaultCatalog
+          : undefined,
+      hiveEndpointEnabled: Boolean(hiveCatalog),
+      hiveProjectId:
+        hiveResource?.[1] ??
+        (hiveCatalog && !isIcebergEnabled ? lakehouseProject : undefined),
+      hiveCatalogId: hiveCatalog
+        ? hiveResource?.[2] ?? hiveCatalog[0]
+        : undefined,
+      hiveCatalogName: hiveCatalog?.[0]
+    },
+    mappedKeys
+  };
+};
 
 /** Network and security settings of a session template's execution config. */
 const mapNetworkAndSecurityConfig = (
@@ -1409,10 +1551,10 @@ const mapNetworkAndSecurityConfig = (
  * open in edit mode pre-filled with the profile's settings.
  *
  * Spark properties that a form control owns (tier, Lightning Engine, executor
- * and driver shape, disks, autoscaling) are mapped into that control's config.
- * All other properties stay in initialSparkProperties under their original
- * keys. A derived property that its control can't represent also stays there,
- * so it is saved unchanged.
+ * and driver shape, disks, autoscaling, Lakehouse runtime catalog) are mapped
+ * into that control's config. All other properties stay in
+ * initialSparkProperties under their original keys. A derived property that
+ * its control can't represent also stays there, so it is saved unchanged.
  */
 export function mapSessionTemplateToFormValues(
   template: IRuntimeProfileTemplate
@@ -1517,6 +1659,22 @@ export function mapSessionTemplateToFormValues(
     }
   });
 
+  // The Metastore section shows the Lakehouse properties it represents.
+  const lakehouseCatalogs = Object.entries(properties)
+    .filter(([key]) => key.startsWith(LAKEHOUSE_CATALOG_PROPERTY_PREFIX))
+    .map(([key, value]): [string, string] => [
+      key.slice(LAKEHOUSE_CATALOG_PROPERTY_PREFIX.length),
+      value.trim()
+    ]);
+  const metastore = mapMetastoreConfig(
+    template,
+    getProperty,
+    lakehouseCatalogs,
+    projectId,
+    region
+  );
+  markMapped(...metastore.mappedKeys);
+
   // Derived keys that weren't mapped keep their unprefixed name, so the create
   // mapping finds them and doesn't add a second, conflicting value.
   const sparkProperties: SparkProperties = {};
@@ -1535,21 +1693,6 @@ export function mapSessionTemplateToFormValues(
   const executionConfig = template.environmentConfig?.executionConfig;
   const idleTtl = parseDuration(executionConfig?.idleTtl);
   const sessionTtl = parseDuration(executionConfig?.ttl);
-  // The default catalog is stored by name (new catalog) or by resource
-  // (existing catalog); any other registered catalog is the Hive endpoint's.
-  const defaultCatalog = getProperty(LAKEHOUSE_DEFAULT_CATALOG_PROPERTY);
-  const hiveEndpointEnabled = Object.entries(properties).some(
-    ([key, value]) => {
-      const catalog = key.startsWith(LAKEHOUSE_CATALOG_PROPERTY_PREFIX)
-        ? key.slice(LAKEHOUSE_CATALOG_PROPERTY_PREFIX.length)
-        : '';
-      return (
-        Boolean(catalog) &&
-        catalog !== defaultCatalog &&
-        value.trim() !== defaultCatalog
-      );
-    }
-  );
 
   return {
     initialDisplayName: template.jupyterSession?.displayName || profileId,
@@ -1577,12 +1720,7 @@ export function mapSessionTemplateToFormValues(
       executorDisk
     },
     initialAutoscalingConfig: autoscalingConfig,
-    initialMetastoreConfig: {
-      metastore:
-        template.environmentConfig?.peripheralsConfig?.metastoreService,
-      hiveEndpointEnabled,
-      projectId: getProperty(LAKEHOUSE_PROJECT_PROPERTY)
-    },
+    initialMetastoreConfig: metastore.metastoreConfig,
     initialNetworkAndSecurityConfig: mapNetworkAndSecurityConfig(
       executionConfig,
       projectId,
@@ -1804,7 +1942,21 @@ export function mapRuntimeProfileToSessionTemplateUpdate(
   );
 
   // Spark properties: find the controls whose derived properties changed.
-  const groups = CONTROL_PROPERTY_GROUPS;
+  const metastoreGroup = propertyGroup([
+    LAKEHOUSE_PROJECT_PROPERTY,
+    LAKEHOUSE_DEFAULT_CATALOG_PROPERTY,
+    ...Object.keys(
+      buildLakehouseProperties(
+        initialPayload.metastoreConfig,
+        projectId,
+        region
+      )
+    ),
+    ...Object.keys(
+      buildLakehouseProperties(payload.metastoreConfig, projectId, region)
+    )
+  ]);
+  const groups = [...CONTROL_PROPERTY_GROUPS, metastoreGroup];
   const findGroup = (key: string): IPropertyGroup | undefined => {
     const normalizedKey = normalizePropertyKey(key);
     return groups.find(group => group.owns(normalizedKey));
@@ -1822,6 +1974,15 @@ export function mapRuntimeProfileToSessionTemplateUpdate(
         )
     )
   );
+  const editedMetastoreService =
+    editedControls.environmentConfig?.peripheralsConfig?.metastoreService;
+  if (
+    initialControls.environmentConfig?.peripheralsConfig?.metastoreService !==
+    editedMetastoreService
+  ) {
+    changedGroups.add(metastoreGroup);
+  }
+
   // A changed control replaces the values of its properties that were kept as
   // Spark properties because it couldn't show them, unless the user edited them.
   const initialSparkProperties = initialPayload.sparkProperties ?? {};
@@ -1899,14 +2060,16 @@ export function mapRuntimeProfileToSessionTemplateUpdate(
   setUnlessEmpty(runtimeConfig, 'properties', properties);
   setUnlessEmpty(result, 'runtimeConfig', runtimeConfig);
 
-  // Environment: network and security, staging bucket and session lifecycle.
-  // Fields the form doesn't manage (e.g. the Dataproc Metastore service) are
-  // kept.
+  // Environment: network and security, staging bucket, session lifecycle and
+  // Dataproc Metastore. Fields the form doesn't manage are kept.
   const environmentConfig: Record<string, any> = {
     ...result.environmentConfig
   };
   const executionConfig: Record<string, any> = {
     ...environmentConfig.executionConfig
+  };
+  const peripheralsConfig: Record<string, any> = {
+    ...environmentConfig.peripheralsConfig
   };
 
   const initialNetwork = tryBuildNetworkExecutionConfig(
@@ -1959,7 +2122,12 @@ export function mapRuntimeProfileToSessionTemplateUpdate(
     }
   });
 
+  if (changedGroups.has(metastoreGroup)) {
+    setOrDelete(peripheralsConfig, 'metastoreService', editedMetastoreService);
+  }
+
   setUnlessEmpty(environmentConfig, 'executionConfig', executionConfig);
+  setUnlessEmpty(environmentConfig, 'peripheralsConfig', peripheralsConfig);
   setUnlessEmpty(result, 'environmentConfig', environmentConfig);
 
   return result as ISessionTemplateUpdatePayload;

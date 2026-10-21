@@ -134,6 +134,26 @@ const unusualProfile: IRuntimeProfileTemplate = {
   }
 };
 
+// Lakehouse runtime catalog: an existing default catalog in another project,
+// a Hive endpoint catalog, and one more catalog added as a Spark property.
+const lakehouseProfile: IRuntimeProfileTemplate = {
+  name: 'projects/test-project/locations/us-central1/sessionTemplates/lakehouse',
+  jupyterSession: { displayName: 'Lakehouse', kernel: 'PYTHON' },
+  runtimeConfig: {
+    properties: {
+      [LAKEHOUSE_PROJECT_PROPERTY]: 'data-project',
+      [LAKEHOUSE_DEFAULT_CATALOG_PROPERTY]:
+        'projects/data-project/catalogs/sales',
+      [`${LAKEHOUSE_CATALOG_PROPERTY_PREFIX}sales`]:
+        'projects/data-project/catalogs/sales',
+      [`${LAKEHOUSE_CATALOG_PROPERTY_PREFIX}hive_cat`]:
+        'projects/hive-project/catalogs/hive_cat',
+      [`${LAKEHOUSE_CATALOG_PROPERTY_PREFIX}extra`]:
+        'projects/other/catalogs/extra'
+    }
+  }
+};
+
 // A Shared VPC subnetwork, a key from another project entered by hand, and
 // runtime 3.0 without an authentication type (end-user credentials).
 const sharedVpcProfile: IRuntimeProfileTemplate = {
@@ -832,6 +852,50 @@ describe('runtimeProfileMapper', () => {
   });
 
   describe('mapSessionTemplateToFormValues', () => {
+    it('maps the Lakehouse runtime catalog settings and keeps other catalogs as Spark properties', () => {
+      const values = mapSessionTemplateToFormValues(lakehouseProfile);
+      expect(values.initialMetastoreConfig).toEqual({
+        metastore: LAKEHOUSE_RUNTIME_CATALOG,
+        metastoreType: 'lakehouse',
+        projectId: 'data-project',
+        icebergRestEndpointEnabled: true,
+        catalogSelectionMode: 'existing',
+        catalogId: 'sales',
+        hiveEndpointEnabled: true,
+        hiveProjectId: 'hive-project',
+        hiveCatalogId: 'hive_cat',
+        hiveCatalogName: 'hive_cat'
+      });
+      expect(values.initialSparkProperties).toEqual({
+        [`${LAKEHOUSE_CATALOG_PROPERTY_PREFIX}extra`]:
+          'projects/other/catalogs/extra'
+      });
+
+      // A new catalog with the region's default name in the profile's project
+      expect(
+        mapSessionTemplateToFormValues(
+          mapRuntimeProfileToSessionTemplate(
+            {
+              displayName: 'default-catalog',
+              region: 'us-central1',
+              metastoreConfig: {
+                metastoreType: 'lakehouse',
+                catalogSelectionMode: 'new'
+              }
+            },
+            'test-project',
+            'us-central1'
+          )
+        ).initialMetastoreConfig
+      ).toEqual({
+        metastore: LAKEHOUSE_RUNTIME_CATALOG,
+        metastoreType: 'lakehouse',
+        icebergRestEndpointEnabled: true,
+        catalogSelectionMode: 'new',
+        hiveEndpointEnabled: false
+      });
+    });
+
     it('maps a Shared VPC subnetwork, a key entered by hand, and the default identity of runtime 3.0', () => {
       expect(
         mapSessionTemplateToFormValues(sharedVpcProfile)
@@ -942,9 +1006,15 @@ describe('runtimeProfileMapper', () => {
           minExecutors: 2,
           maxExecutors: 20
         },
+        // The Dataproc Metastore service is the metastore; the Lakehouse
+        // properties stay Spark properties
         initialMetastoreConfig: {
           metastore: 'projects/p/locations/l/services/my-metastore',
-          hiveEndpointEnabled: true
+          metastoreType: 'dataproc',
+          projectId: 'p',
+          dataprocMetastoreService:
+            'projects/p/locations/l/services/my-metastore',
+          hiveEndpointEnabled: false
         },
         initialNetworkAndSecurityConfig: {
           networkSource: 'project',
@@ -1251,6 +1321,7 @@ describe('runtimeProfileMapper', () => {
       ['a profile created by the form', savedProfile],
       ['a profile created in the Console', consoleProfile],
       ['values the form cannot show', unusualProfile],
+      ['a Lakehouse runtime catalog', lakehouseProfile],
       [
         'a Shared VPC subnetwork and a key from another project',
         sharedVpcProfile
@@ -1295,6 +1366,12 @@ describe('runtimeProfileMapper', () => {
           maxSessionTimeQuantity: 2,
           maxSessionTimeUnit: 'days'
         };
+        payload.metastoreConfig = {
+          metastore: 'Dataproc Metastore',
+          metastoreType: 'dataproc',
+          dataprocMetastoreService:
+            'projects/test-project/locations/us-central1/services/new-metastore'
+        };
       });
 
       expect(body).toEqual({
@@ -1330,8 +1407,13 @@ describe('runtimeProfileMapper', () => {
             idleTtl: '1800s',
             ttl: '172800s'
           },
-          // Not editable in this form yet, so kept as saved
-          peripheralsConfig: savedProfile.environmentConfig?.peripheralsConfig
+          peripheralsConfig: {
+            metastoreService:
+              'projects/test-project/locations/us-central1/services/new-metastore',
+            sparkHistoryServerConfig:
+              savedProfile.environmentConfig?.peripheralsConfig
+                ?.sparkHistoryServerConfig
+          }
         }
       });
     });
@@ -1406,6 +1488,46 @@ describe('runtimeProfileMapper', () => {
       expect(properties?.[DATAPROC_LIGHTNING_ENGINE_PROPERTY]).toBe(
         'lightningEngine'
       );
+    });
+
+    it('replaces the Lakehouse settings when the metastore changes and keeps catalogs added by hand', () => {
+      const newCatalog = saveEdits(lakehouseProfile, payload => {
+        payload.metastoreConfig = {
+          metastore: LAKEHOUSE_RUNTIME_CATALOG,
+          metastoreType: 'lakehouse',
+          icebergRestEndpointEnabled: true,
+          catalogSelectionMode: 'new',
+          catalogName: 'analytics',
+          hiveEndpointEnabled: false
+        };
+      });
+      expect(newCatalog.runtimeConfig?.properties).toEqual({
+        [LAKEHOUSE_PROJECT_PROPERTY]: 'test-project',
+        [`${LAKEHOUSE_CATALOG_PROPERTY_PREFIX}analytics`]:
+          'projects/test-project/catalogs/analytics',
+        [LAKEHOUSE_DEFAULT_CATALOG_PROPERTY]: 'analytics',
+        [`${LAKEHOUSE_CATALOG_PROPERTY_PREFIX}extra`]:
+          'projects/other/catalogs/extra'
+      });
+
+      const dataprocMetastore = saveEdits(lakehouseProfile, payload => {
+        payload.metastoreConfig = {
+          metastore: 'Dataproc Metastore',
+          metastoreType: 'dataproc',
+          dataprocMetastoreService:
+            'projects/test-project/locations/us-central1/services/dpms'
+        };
+      });
+      expect(dataprocMetastore.runtimeConfig?.properties).toEqual({
+        [`${LAKEHOUSE_CATALOG_PROPERTY_PREFIX}extra`]:
+          'projects/other/catalogs/extra'
+      });
+      expect(dataprocMetastore.environmentConfig).toEqual({
+        peripheralsConfig: {
+          metastoreService:
+            'projects/test-project/locations/us-central1/services/dpms'
+        }
+      });
     });
 
     it('saves network edits with an explicit execution identity and keeps the Shared VPC subnetwork', () => {
@@ -1491,6 +1613,69 @@ describe('runtimeProfileMapper', () => {
       expect(renamed.sparkConnectSession).toEqual({});
       expect(renamed).not.toHaveProperty('jupyterSession');
       expect(onlySessionKeys(renamed)).toEqual(['sparkConnectSession']);
+    });
+
+    it('keeps changes saved since the form opened in settings the user did not edit', () => {
+      const latest = {
+        ...savedProfile,
+        labels: { env: 'dev', owner: 'data-team' },
+        environmentConfig: {
+          ...savedProfile.environmentConfig,
+          executionConfig: {
+            ...savedProfile.environmentConfig?.executionConfig,
+            idleTtl: '7200s'
+          }
+        },
+        runtimeConfig: {
+          ...savedProfile.runtimeConfig,
+          properties: {
+            ...savedProfile.runtimeConfig?.properties,
+            'spark.sql.shuffle.partitions': '400'
+          }
+        }
+      } as IRuntimeProfileTemplate;
+
+      const body = saveEdits(
+        savedProfile,
+        payload => {
+          payload.description = 'new description';
+        },
+        latest
+      );
+
+      expect(body).toEqual({
+        ...withoutOutputOnlyFields(latest),
+        description: 'new description'
+      });
+    });
+
+    it("applies the user's edit over a change saved since the form opened", () => {
+      const latest = {
+        ...savedProfile,
+        environmentConfig: {
+          ...savedProfile.environmentConfig,
+          executionConfig: {
+            ...savedProfile.environmentConfig?.executionConfig,
+            idleTtl: '7200s'
+          }
+        }
+      } as IRuntimeProfileTemplate;
+
+      const body = saveEdits(
+        savedProfile,
+        payload => {
+          payload.sessionLifecycleConfig = {
+            ...payload.sessionLifecycleConfig,
+            maxIdleTime: '30 minutes',
+            maxIdleTimeQuantity: 30,
+            maxIdleTimeUnit: 'minutes'
+          };
+        },
+        latest
+      );
+
+      expect(body.environmentConfig?.executionConfig?.idleTtl).toBe('1800s');
+      expect(body.environmentConfig?.executionConfig?.ttl).toBe('259200s');
     });
   });
 });

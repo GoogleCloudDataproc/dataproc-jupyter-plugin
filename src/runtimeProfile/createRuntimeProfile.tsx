@@ -795,11 +795,6 @@ export const CreateRuntimeProfileComponent: React.FC<
     setLabels(initialLabels || DEFAULT_PROFILE_LABELS);
   }, [initialLabels]);
 
-  // TODO(runtime-profile edit): the update doesn't save the metastore settings
-  // yet (Lakehouse runtime catalog properties and the Dataproc Metastore
-  // service), so keep the section read-only in edit mode until it does.
-  const isMetastoreEditDisabled = isEditMode;
-
   const additionalConfigSections = useMemo(
     () => [
       {
@@ -825,7 +820,7 @@ export const CreateRuntimeProfileComponent: React.FC<
       {
         title: 'Metastore configuration',
         properties: formatMetastoreProperties(metastoreConfig),
-        isEditDisabled: isMetastoreEditDisabled,
+        isEditDisabled: false,
         onEdit: () => setIsMetastoreDrawerOpen(true)
       },
       {
@@ -855,8 +850,7 @@ export const CreateRuntimeProfileComponent: React.FC<
       networkAndSecurityConfig,
       sessionLifecycleConfig,
       sparkProperties,
-      labels,
-      isMetastoreEditDisabled
+      labels
     ]
   );
 
