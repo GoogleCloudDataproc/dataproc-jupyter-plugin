@@ -797,7 +797,7 @@ export const buildMetastoreConfigFromTemplate = (
         seenAliases.add(alias);
         catalogEntries.push({
           alias,
-          resource: getPropertyValue(properties, normalized).trim()
+          resource: properties[rawKey].trim()
         });
       }
     }
@@ -1539,7 +1539,7 @@ export default function RuntimeProfileDetails({
   const metastore = metastoreService
     ? metastoreService
     : hasLakehouseConfig
-      ? lakehouseProject && projectId && lakehouseProject !== projectId
+      ? lakehouseProject && (!projectId || lakehouseProject !== projectId)
         ? `${LAKEHOUSE_RUNTIME_CATALOG} (project: ${lakehouseProject})`
         : LAKEHOUSE_RUNTIME_CATALOG
       : METASTORE_NONE;
@@ -1550,7 +1550,7 @@ export default function RuntimeProfileDetails({
       return false;
     }
     const catalogName = key.slice(LAKEHOUSE_CATALOG_PROPERTY_PREFIX.length);
-    const catalogResource = getProp(key).trim();
+    const catalogResource = properties[rawKey].trim();
     const isDefaultIcebergCatalog =
       Boolean(defaultLakehouseCatalog) &&
       (catalogName === defaultLakehouseCatalog ||
