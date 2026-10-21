@@ -32,14 +32,22 @@ import {
   parseRuntimeProfileResourceName
 } from './runtimeProfileListMapper';
 import {
+  AutoscalingEditDrawer,
   ExecutorAndDriverEditDrawer,
-  RuntimeEnvironmentEditDrawer
+  OtherCustomizationEditDrawer,
+  RuntimeEnvironmentEditDrawer,
+  SessionLifecycleEditDrawer
 } from './runtimeProfileEditDrawers';
 import {
   DISK_TIER_HDD,
   DISK_TIER_SSD,
+  IAutoscalingConfig,
   IExecutorAndDriverConfig,
-  IRuntimeEnvironmentConfig
+  IRuntimeEnvironmentConfig,
+  ISessionLifecycleConfig,
+  ProfileLabels,
+  SparkProperties,
+  TimeUnit
 } from './runtimeProfileInterface';
 import {
   DEFAULT_DISK_SIZE,
@@ -509,6 +517,320 @@ export const applyExecutorAndDriverUpdateToTemplate = (
   };
 };
 
+const AUTOSCALING_PROPERTY_KEYS = [
+  'spark.dynamicAllocation.enabled',
+  'spark.dynamicAllocation.initialExecutors',
+  'spark.dynamicAllocation.minExecutors',
+  'spark.dynamicAllocation.maxExecutors'
+];
+
+const parseAutoscalingCount = (raw: string, fallback: number): number => {
+  const parsed = parseInt(raw.trim(), 10);
+  return Number.isNaN(parsed) ? fallback : parsed;
+};
+
+export const buildAutoscalingConfigFromTemplate = (
+  profile: IRuntimeProfileTemplate
+): IAutoscalingConfig => {
+  const properties = profile.runtimeConfig?.properties || {};
+  const rawEnabled = getPropertyValue(
+    properties,
+    'spark.dynamicAllocation.enabled'
+  )
+    .trim()
+    .toLowerCase();
+  const autoscalingEnabled = rawEnabled !== 'false';
+  const minExecutors = parseAutoscalingCount(
+    getPropertyValue(properties, 'spark.dynamicAllocation.minExecutors'),
+    2
+  );
+  const initialExecutors = parseAutoscalingCount(
+    getPropertyValue(properties, 'spark.dynamicAllocation.initialExecutors'),
+    Math.max(2, minExecutors)
+  );
+  const maxExecutors = parseAutoscalingCount(
+    getPropertyValue(properties, 'spark.dynamicAllocation.maxExecutors'),
+    Math.max(1000, minExecutors, initialExecutors)
+  );
+  return {
+    autoscalingEnabled,
+    initialExecutors,
+    minExecutors,
+    maxExecutors
+  };
+};
+
+export const applyAutoscalingUpdateToTemplate = (
+  profile: IRuntimeProfileTemplate,
+  updated: IAutoscalingConfig
+): IRuntimeProfileTemplate => {
+  const existingProps = profile.runtimeConfig?.properties || {};
+  const initial = buildAutoscalingConfigFromTemplate(profile);
+  const nextProps: Record<string, string> = {
+    ...existingProps
+  };
+  AUTOSCALING_PROPERTY_KEYS.forEach(key => {
+    delete nextProps[key];
+    delete nextProps[`spark:${key}`];
+    delete nextProps[`dataproc:${key}`];
+  });
+
+  const hasExistingKey = (key: string): boolean =>
+    key in existingProps ||
+    `spark:${key}` in existingProps ||
+    `dataproc:${key}` in existingProps;
+
+  const enabled = updated.autoscalingEnabled ?? true;
+  if (
+    hasExistingKey('spark.dynamicAllocation.enabled') ||
+    enabled !== initial.autoscalingEnabled
+  ) {
+    nextProps['spark.dynamicAllocation.enabled'] = String(enabled);
+  }
+  if (enabled) {
+    if (
+      updated.initialExecutors !== undefined &&
+      (hasExistingKey('spark.dynamicAllocation.initialExecutors') ||
+        updated.initialExecutors !== initial.initialExecutors)
+    ) {
+      nextProps['spark.dynamicAllocation.initialExecutors'] = String(
+        updated.initialExecutors
+      );
+    }
+    if (
+      updated.minExecutors !== undefined &&
+      (hasExistingKey('spark.dynamicAllocation.minExecutors') ||
+        updated.minExecutors !== initial.minExecutors)
+    ) {
+      nextProps['spark.dynamicAllocation.minExecutors'] = String(
+        updated.minExecutors
+      );
+    }
+    if (
+      updated.maxExecutors !== undefined &&
+      (hasExistingKey('spark.dynamicAllocation.maxExecutors') ||
+        updated.maxExecutors !== initial.maxExecutors)
+    ) {
+      nextProps['spark.dynamicAllocation.maxExecutors'] = String(
+        updated.maxExecutors
+      );
+    }
+  }
+
+  return {
+    ...profile,
+    runtimeConfig: {
+      ...(profile.runtimeConfig || {}),
+      properties: nextProps
+    }
+  };
+};
+
+const UNIT_SECONDS_MAP: Record<TimeUnit, number> = {
+  seconds: 1,
+  s: 1,
+  minutes: 60,
+  m: 60,
+  hours: 3600,
+  h: 3600,
+  days: 86400,
+  d: 86400
+};
+
+const parseTtlToQuantityAndUnit = (
+  ttl: string | undefined,
+  defaultQty: number,
+  defaultUnit: TimeUnit
+): { quantity: number; unit: TimeUnit } => {
+  const trimmed = ttl?.trim() || '';
+  if (!trimmed) {
+    return { quantity: defaultQty, unit: defaultUnit };
+  }
+  const secMatch = /^(\d+)\s*s$/i.exec(trimmed);
+  if (secMatch) {
+    const secs = Number(secMatch[1]);
+    if (secs > 0) {
+      if (secs % 86400 === 0) {
+        return { quantity: secs / 86400, unit: 'days' };
+      }
+      if (secs % 3600 === 0) {
+        return { quantity: secs / 3600, unit: 'hours' };
+      }
+      if (secs % 60 === 0) {
+        return { quantity: secs / 60, unit: 'minutes' };
+      }
+      return { quantity: secs, unit: 'seconds' };
+    }
+  }
+  const genericMatch = /^(\d+)\s*([a-zA-Z]+)$/.exec(trimmed);
+  if (genericMatch) {
+    const qty = parseInt(genericMatch[1], 10);
+    const rawUnit = genericMatch[2].toLowerCase();
+    if (!Number.isNaN(qty) && qty > 0) {
+      if (rawUnit.startsWith('d')) {
+        return { quantity: qty, unit: 'days' };
+      }
+      if (rawUnit.startsWith('h')) {
+        return { quantity: qty, unit: 'hours' };
+      }
+      if (rawUnit.startsWith('m')) {
+        return { quantity: qty, unit: 'minutes' };
+      }
+      if (rawUnit.startsWith('s')) {
+        return { quantity: qty, unit: 'seconds' };
+      }
+    }
+  }
+  return { quantity: defaultQty, unit: defaultUnit };
+};
+
+const toTtlDurationString = (
+  quantity?: number,
+  unit?: TimeUnit,
+  fallbackText?: string
+): string | undefined => {
+  if (
+    typeof quantity === 'number' &&
+    !Number.isNaN(quantity) &&
+    quantity > 0 &&
+    unit
+  ) {
+    const multiplier = UNIT_SECONDS_MAP[unit] ?? 60;
+    return `${quantity * multiplier}s`;
+  }
+  if (fallbackText && fallbackText.trim()) {
+    const parsed = parseTtlToQuantityAndUnit(fallbackText, 0, 'seconds');
+    if (parsed.quantity > 0) {
+      return `${parsed.quantity * UNIT_SECONDS_MAP[parsed.unit]}s`;
+    }
+  }
+  return undefined;
+};
+
+export const buildSessionLifecycleConfigFromTemplate = (
+  profile: IRuntimeProfileTemplate
+): ISessionLifecycleConfig => {
+  const executionConfig = profile.environmentConfig?.executionConfig;
+  const hasIdleTtl = Boolean(executionConfig?.idleTtl?.trim());
+  const hasSessionTtl = Boolean(executionConfig?.ttl?.trim());
+  const idle = hasIdleTtl
+    ? parseTtlToQuantityAndUnit(executionConfig?.idleTtl, 60, 'minutes')
+    : undefined;
+  const session = hasSessionTtl
+    ? parseTtlToQuantityAndUnit(executionConfig?.ttl, 3, 'days')
+    : undefined;
+  return {
+    ...(idle && {
+      maxIdleTimeQuantity: idle.quantity,
+      maxIdleTimeUnit: idle.unit
+    }),
+    maxIdleTime: idle ? `${idle.quantity} ${idle.unit}` : 'None',
+    ...(session && {
+      maxSessionTimeQuantity: session.quantity,
+      maxSessionTimeUnit: session.unit
+    }),
+    maxSessionTime: session ? `${session.quantity} ${session.unit}` : 'None'
+  };
+};
+
+export const applySessionLifecycleUpdateToTemplate = (
+  profile: IRuntimeProfileTemplate,
+  updated: ISessionLifecycleConfig
+): IRuntimeProfileTemplate => {
+  const nextExecutionConfig = {
+    ...(profile.environmentConfig?.executionConfig || {})
+  };
+  const idleTtl = toTtlDurationString(
+    updated.maxIdleTimeQuantity,
+    updated.maxIdleTimeUnit,
+    updated.maxIdleTime
+  );
+  const ttl = toTtlDurationString(
+    updated.maxSessionTimeQuantity,
+    updated.maxSessionTimeUnit,
+    updated.maxSessionTime
+  );
+
+  if (idleTtl) {
+    nextExecutionConfig.idleTtl = idleTtl;
+  } else {
+    delete nextExecutionConfig.idleTtl;
+  }
+
+  if (ttl) {
+    nextExecutionConfig.ttl = ttl;
+  } else {
+    delete nextExecutionConfig.ttl;
+  }
+
+  return {
+    ...profile,
+    environmentConfig: {
+      ...(profile.environmentConfig || {}),
+      executionConfig: nextExecutionConfig
+    }
+  };
+};
+
+export const buildOtherCustomizationSparkPropertiesFromTemplate = (
+  profile: IRuntimeProfileTemplate
+): SparkProperties => {
+  const properties = profile.runtimeConfig?.properties || {};
+  const result: SparkProperties = {};
+  Object.keys(properties).forEach(rawKey => {
+    const normalizedKey = stripPropertyPrefix(rawKey);
+    if (
+      !HANDLED_SPARK_PROPERTY_KEYS.has(normalizedKey) &&
+      !normalizedKey.startsWith(LAKEHOUSE_CATALOG_PREFIX) &&
+      !(normalizedKey in result)
+    ) {
+      result[normalizedKey] = getPropertyValue(properties, normalizedKey);
+    }
+  });
+  return result;
+};
+
+export const applyOtherCustomizationUpdateToTemplate = (
+  profile: IRuntimeProfileTemplate,
+  updatedSparkProperties: SparkProperties,
+  updatedLabels: ProfileLabels
+): IRuntimeProfileTemplate => {
+  const existingProps = profile.runtimeConfig?.properties || {};
+  const nextProps: Record<string, string> = {};
+
+  Object.entries(existingProps).forEach(([rawKey, value]) => {
+    const normalizedKey = stripPropertyPrefix(rawKey);
+    if (
+      HANDLED_SPARK_PROPERTY_KEYS.has(normalizedKey) ||
+      normalizedKey.startsWith(LAKEHOUSE_CATALOG_PREFIX)
+    ) {
+      nextProps[rawKey] = value;
+    }
+  });
+
+  Object.entries(updatedSparkProperties).forEach(([key, value]) => {
+    const trimmedKey = key.trim();
+    if (trimmedKey) {
+      const normalizedKey = stripPropertyPrefix(trimmedKey);
+      delete nextProps[normalizedKey];
+      delete nextProps[`spark:${normalizedKey}`];
+      delete nextProps[`dataproc:${normalizedKey}`];
+      nextProps[trimmedKey] = value;
+    }
+  });
+
+  return {
+    ...profile,
+    labels: { ...updatedLabels },
+    runtimeConfig: {
+      ...(profile.runtimeConfig || {}),
+      properties: nextProps
+    }
+  };
+};
+
+const EMPTY_LABELS: ProfileLabels = Object.freeze({});
+
 export interface IDeleteConfirmationModalProps {
   profileName: string;
   isDeleting: boolean;
@@ -613,6 +935,11 @@ export default function RuntimeProfileDetails({
     useState(false);
   const [isExecutorDriverDrawerOpen, setIsExecutorDriverDrawerOpen] =
     useState(false);
+  const [isAutoscalingDrawerOpen, setIsAutoscalingDrawerOpen] = useState(false);
+  const [isSessionLifecycleDrawerOpen, setIsSessionLifecycleDrawerOpen] =
+    useState(false);
+  const [isOtherCustomizationDrawerOpen, setIsOtherCustomizationDrawerOpen] =
+    useState(false);
   const isMountedRef = useRef(true);
 
   useEffect(() => {
@@ -661,20 +988,30 @@ export default function RuntimeProfileDetails({
       ? 'Off'
       : 'On';
 
-  const sparkPropertyMap = new Map<string, string>();
-  Object.keys(properties).forEach(rawKey => {
-    const normalizedKey = stripPropertyPrefix(rawKey);
-    if (
-      !HANDLED_SPARK_PROPERTY_KEYS.has(normalizedKey) &&
-      !normalizedKey.startsWith(LAKEHOUSE_CATALOG_PREFIX) &&
-      !sparkPropertyMap.has(normalizedKey)
-    ) {
-      sparkPropertyMap.set(
-        normalizedKey,
-        getPropertyValue(properties, normalizedKey)
-      );
-    }
-  });
+  const runtimeEnvironmentDrawerConfig = useMemo(
+    () => buildRuntimeEnvironmentConfigFromTemplate(currentProfile, shortName),
+    [currentProfile, shortName]
+  );
+  const executorAndDriverDrawerConfig = useMemo(
+    () => buildExecutorAndDriverConfigFromTemplate(currentProfile),
+    [currentProfile]
+  );
+  const autoscalingDrawerConfig = useMemo(
+    () => buildAutoscalingConfigFromTemplate(currentProfile),
+    [currentProfile]
+  );
+  const sessionLifecycleDrawerConfig = useMemo(
+    () => buildSessionLifecycleConfigFromTemplate(currentProfile),
+    [currentProfile]
+  );
+  const otherCustomizationSparkProperties = useMemo(
+    () => buildOtherCustomizationSparkPropertiesFromTemplate(currentProfile),
+    [currentProfile]
+  );
+  const otherCustomizationLabels = currentProfile.labels ?? EMPTY_LABELS;
+  const sparkPropertyEntries = Object.entries(
+    otherCustomizationSparkProperties
+  );
 
   const handleCopyName = async () => {
     if (!shortName) {
@@ -779,6 +1116,10 @@ export default function RuntimeProfileDetails({
     : iconExpandMore.react;
 
   const basicInfoRows = [
+    {
+      label: 'Display name',
+      value: currentProfile.jupyterSession?.displayName || ''
+    },
     { label: 'Name', value: shortName },
     { label: 'Region', value: region },
     { label: 'Create time', value: formatCreateTime(currentProfile.createTime) },
@@ -788,10 +1129,6 @@ export default function RuntimeProfileDetails({
       value: formatLastUsed(currentProfile.updateTime, true)
     },
     { label: 'Description', value: currentProfile.description || '' },
-    {
-      label: 'Display name',
-      value: currentProfile.jupyterSession?.displayName || ''
-    },
     {
       label: 'Jupyter kernel',
       value: currentProfile.jupyterSession?.kernel || ''
@@ -863,6 +1200,7 @@ export default function RuntimeProfileDetails({
     },
     {
       title: 'Autoscaling',
+      onEdit: () => setIsAutoscalingDrawerOpen(true),
       rows:
         autoscalingStatus === 'Off'
           ? [{ label: 'Autoscaling', value: autoscalingStatus }]
@@ -886,16 +1224,18 @@ export default function RuntimeProfileDetails({
     },
     {
       title: 'Session lifecycle',
+      onEdit: () => setIsSessionLifecycleDrawerOpen(true),
       rows: sessionLifecycleRows
     },
     {
       title: 'Other customizations',
+      onEdit: () => setIsOtherCustomizationDrawerOpen(true),
       rows: [
         {
           label: 'Spark properties',
           value:
-            sparkPropertyMap.size > 0
-              ? Array.from(sparkPropertyMap.entries()).map(([key, value]) => (
+            sparkPropertyEntries.length > 0
+              ? sparkPropertyEntries.map(([key, value]) => (
                   <div
                     key={key}
                     className="runtime-profile-details-spark-prop-line"
@@ -924,15 +1264,6 @@ export default function RuntimeProfileDetails({
       ]
     }
   ];
-
-  const runtimeEnvironmentDrawerConfig = useMemo(
-    () => buildRuntimeEnvironmentConfigFromTemplate(currentProfile, shortName),
-    [currentProfile, shortName]
-  );
-  const executorAndDriverDrawerConfig = useMemo(
-    () => buildExecutorAndDriverConfigFromTemplate(currentProfile),
-    [currentProfile]
-  );
 
   return (
     <div className="runtime-profile-details-wrapper">
@@ -1091,6 +1422,53 @@ export default function RuntimeProfileDetails({
           );
           void handleSaveTemplateUpdate(nextTemplate, () =>
             setIsExecutorDriverDrawerOpen(false)
+          );
+        }}
+      />
+
+      <AutoscalingEditDrawer
+        open={isAutoscalingDrawerOpen}
+        config={autoscalingDrawerConfig}
+        onClose={() => setIsAutoscalingDrawerOpen(false)}
+        onSave={updatedConfig => {
+          const nextTemplate = applyAutoscalingUpdateToTemplate(
+            currentProfile,
+            updatedConfig
+          );
+          void handleSaveTemplateUpdate(nextTemplate, () =>
+            setIsAutoscalingDrawerOpen(false)
+          );
+        }}
+      />
+
+      <SessionLifecycleEditDrawer
+        open={isSessionLifecycleDrawerOpen}
+        config={sessionLifecycleDrawerConfig}
+        onClose={() => setIsSessionLifecycleDrawerOpen(false)}
+        onSave={updatedConfig => {
+          const nextTemplate = applySessionLifecycleUpdateToTemplate(
+            currentProfile,
+            updatedConfig
+          );
+          void handleSaveTemplateUpdate(nextTemplate, () =>
+            setIsSessionLifecycleDrawerOpen(false)
+          );
+        }}
+      />
+
+      <OtherCustomizationEditDrawer
+        open={isOtherCustomizationDrawerOpen}
+        sparkProperties={otherCustomizationSparkProperties}
+        labels={otherCustomizationLabels}
+        onClose={() => setIsOtherCustomizationDrawerOpen(false)}
+        onSave={(updatedSparkProperties, updatedLabels) => {
+          const nextTemplate = applyOtherCustomizationUpdateToTemplate(
+            currentProfile,
+            updatedSparkProperties,
+            updatedLabels
+          );
+          void handleSaveTemplateUpdate(nextTemplate, () =>
+            setIsOtherCustomizationDrawerOpen(false)
           );
         }}
       />

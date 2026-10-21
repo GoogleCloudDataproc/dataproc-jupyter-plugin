@@ -40,20 +40,24 @@ import LeftArrowIcon from '../../style/icons/left_arrow_icon.svg';
 import expandLessIcon from '../../style/icons/expand_less.svg';
 import expandMoreIcon from '../../style/icons/expand_more.svg';
 import { SectionDetail, ISectionProperty } from '../controls/SectionDetail';
+import {
+  LAKEHOUSE_RUNTIME_CATALOG,
+  METASTORE_NONE,
+  isAcceleratedMachine,
+  normalizeMachineTypeName
+} from './runtimeProfileMapper';
 import '../../style/runtimeProfile.css';
 import {
   AutoscalingEditDrawer,
   ExecutorAndDriverEditDrawer,
+  NetworkSecurityEditDrawer,
   OtherCustomizationEditDrawer,
   RuntimeEnvironmentEditDrawer,
   RUNTIME_VERSION_OPTIONS,
   SelectBucketEditDrawer,
   SessionLifecycleEditDrawer
 } from './runtimeProfileEditDrawers';
-import {
-  isAcceleratedMachine,
-  normalizeMachineTypeName
-} from './runtimeProfileMapper';
+import { MetastoreEditDrawer } from './metastoreEditDrawer';
 import {
   DATAPROC_TIER_DOC,
   LIGHTNING_ENGINE_DOC,
@@ -174,7 +178,10 @@ const ENCRYPTION_DISPLAY_MAP: Record<string, string> = {
 };
 
 const RUNTIME_VERSION_DISPLAY_MAP: Record<string, string> = {
-  '2.3': '2.3 LTS (Spark 3.5.1, Python 3.12)'
+  '2.3': '2.3 LTS (Spark 3.5, Java 17, Scala 2.13)',
+  '2.3 LTS (Spark 3.5.1, Python 3.12)':
+    '2.3 LTS (Spark 3.5, Java 17, Scala 2.13)',
+  '3.0': '3.0 (Spark 4.0, Java 21, Scala 2.13)'
 };
 
 export const generateRandomHex = (): string => {
@@ -196,7 +203,7 @@ export const generateRandomHex = (): string => {
  */
 export const DEFAULT_RUNTIME_ENVIRONMENT_CONFIG: IRuntimeEnvironmentConfig = {
   runtimeProfileId: '',
-  runtimeVersion: '2.3 LTS (Spark 3.5.1, Python 3.12)',
+  runtimeVersion: '2.3 LTS (Spark 3.5, Java 17, Scala 2.13)',
   customSparkImage: '',
   stagingBucket: '',
   pythonPackageRepository: ''
@@ -217,6 +224,8 @@ export const DEFAULT_AUTOSCALING_CONFIG: IAutoscalingConfig = {
   maxExecutors: 10
 };
 
+// No metastoreType: nothing is sent until the user saves the Metastore drawer,
+// so the service uses the Lakehouse runtime catalog by default.
 export const DEFAULT_METASTORE_CONFIG: IMetastoreConfig = {
   metastore: '',
   hiveEndpointEnabled: false
@@ -225,12 +234,13 @@ export const DEFAULT_METASTORE_CONFIG: IMetastoreConfig = {
 export const DEFAULT_NETWORK_SECURITY_CONFIG: INetworkAndSecurityConfig = {
   executionIdentity: 'service_account',
   networkInThisProject: 'default',
+  subnetwork: 'default',
   encryption: 'google_managed'
 };
 
 export const DEFAULT_SESSION_LIFECYCLE_CONFIG: ISessionLifecycleConfig = {
-  maxIdleTime: '60 minutes',
-  maxSessionTime: '3 days'
+  maxIdleTime: 'None',
+  maxSessionTime: 'None'
 };
 
 export const DEFAULT_SPARK_PROPERTIES: SparkProperties = {};
@@ -249,11 +259,11 @@ export const formatRuntimeEnvironmentProperties = (
     '';
   return [
     {
-      label: 'Runtime Profile ID',
+      label: 'Runtime profile ID',
       value: config.runtimeProfileId || '-'
     },
     {
-      label: 'Dataproc Runtime Version',
+      label: 'Spark runtime version',
       value: RUNTIME_VERSION_DISPLAY_MAP[versionKey] || versionKey
     },
     {
@@ -261,14 +271,14 @@ export const formatRuntimeEnvironmentProperties = (
       value: config.customSparkImage || 'None'
     },
     {
-      label: 'Cloud Storage Staging bucket',
+      label: 'Cloud storage staging bucket',
       value: config.stagingBucket || 'Auto'
     },
     {
       label: 'Python package repository',
       value:
         config.pythonPackageRepository ||
-        'Google Managed PyPI pull through cache'
+        'Google managed PyPI pull-through cache'
     }
   ];
 };
@@ -343,18 +353,34 @@ export const formatMetastoreProperties = (
   if (!config) {
     return [];
   }
-  const isHiveEnabled =
-    config.hiveEndpointEnabled ?? DEFAULT_METASTORE_CONFIG.hiveEndpointEnabled;
-  return [
+  const isDataprocMetastore = config.metastoreType === 'dataproc';
+  const lakehouseLabel = config.metastore || LAKEHOUSE_RUNTIME_CATALOG;
+  const metastoreLabel = isDataprocMetastore
+    ? config.dataprocMetastoreService || METASTORE_NONE
+    : config.projectId
+    ? `${lakehouseLabel} (project: ${config.projectId})`
+    : lakehouseLabel;
+
+  const properties: ISectionProperty[] = [
     {
       label: 'Metastore',
-      value: config.metastore || 'Lakehouse runtime catalog'
-    },
-    {
-      label: 'Hive endpoint',
-      value: isHiveEnabled ? 'Enabled' : 'Disabled'
+      value: metastoreLabel
     }
   ];
+
+  // Hive endpoint is a Lakehouse runtime catalog option; it does not apply to
+  // Dataproc Metastore.
+  if (!isDataprocMetastore) {
+    const isHiveEnabled =
+      config.hiveEndpointEnabled ??
+      DEFAULT_METASTORE_CONFIG.hiveEndpointEnabled;
+    properties.push({
+      label: 'Hive endpoint',
+      value: isHiveEnabled ? 'Enabled' : 'Disabled'
+    });
+  }
+
+  return properties;
 };
 
 export const formatNetworkSecurityProperties = (
@@ -369,16 +395,21 @@ export const formatNetworkSecurityProperties = (
     '';
   const encryptionKey =
     config.encryption || DEFAULT_NETWORK_SECURITY_CONFIG.encryption || '';
+  const isSharedNetwork = config.networkSource === 'shared_from_host';
   return [
     {
       label: 'Execution identity',
       value: EXECUTION_IDENTITY_DISPLAY_MAP[identityKey] || identityKey
     },
     {
-      label: 'Network in this project',
-      value:
-        config.networkInThisProject ||
-        DEFAULT_NETWORK_SECURITY_CONFIG.networkInThisProject
+      label: isSharedNetwork
+        ? 'Network shared from host'
+        : 'Network in this project',
+      value: isSharedNetwork
+        ? config.sharedSubnetwork || 'default'
+        : config.primaryNetwork ||
+          config.networkInThisProject ||
+          DEFAULT_NETWORK_SECURITY_CONFIG.networkInThisProject
     },
     {
       label: 'Encryption',
@@ -564,9 +595,13 @@ export const CreateRuntimeProfileComponent: React.FC<
     useState<boolean>(true);
   const [isRuntimeConfigDrawerOpen, setIsRuntimeConfigDrawerOpen] =
     useState<boolean>(false);
+  const [isMetastoreDrawerOpen, setIsMetastoreDrawerOpen] =
+    useState<boolean>(false);
   const [isExecutorDriverDrawerOpen, setIsExecutorDriverDrawerOpen] =
     useState<boolean>(false);
   const formScrollContainerRef = React.useRef<HTMLDivElement | null>(null);
+  const [isNetworkSecurityDrawerOpen, setIsNetworkSecurityDrawerOpen] =
+    useState<boolean>(false);
   const [isAutoscalingDrawerOpen, setIsAutoscalingDrawerOpen] =
     useState<boolean>(false);
   const [isSessionLifecycleDrawerOpen, setIsSessionLifecycleDrawerOpen] =
@@ -631,6 +666,8 @@ export const CreateRuntimeProfileComponent: React.FC<
     }
   });
 
+  const selectedRegion = watch('region');
+
   // Configuration values derived from initial props or defaults.
   // TODO: Validation on runtimeProfileId / displayName field will be handled in upcoming PRs.
   const [runtimeEnvironmentConfig, setRuntimeEnvironmentConfig] =
@@ -675,14 +712,13 @@ export const CreateRuntimeProfileComponent: React.FC<
     useState<IAutoscalingConfig>(
       () => initialAutoscalingConfig || DEFAULT_AUTOSCALING_CONFIG
     );
-  const metastoreConfig = useMemo<IMetastoreConfig>(
-    () => initialMetastoreConfig || DEFAULT_METASTORE_CONFIG,
-    [initialMetastoreConfig]
+  const [metastoreConfig, setMetastoreConfig] = useState<IMetastoreConfig>(
+    () => initialMetastoreConfig || DEFAULT_METASTORE_CONFIG
   );
-  const networkAndSecurityConfig = useMemo<INetworkAndSecurityConfig>(
-    () => initialNetworkAndSecurityConfig || DEFAULT_NETWORK_SECURITY_CONFIG,
-    [initialNetworkAndSecurityConfig]
-  );
+  const [networkAndSecurityConfig, setNetworkAndSecurityConfig] =
+    useState<INetworkAndSecurityConfig>(
+      () => initialNetworkAndSecurityConfig || DEFAULT_NETWORK_SECURITY_CONFIG
+    );
   const [sessionLifecycleConfig, setSessionLifecycleConfig] =
     useState<ISessionLifecycleConfig>(
       () => initialSessionLifecycleConfig || DEFAULT_SESSION_LIFECYCLE_CONFIG
@@ -699,6 +735,10 @@ export const CreateRuntimeProfileComponent: React.FC<
       initialAutoscalingConfig || DEFAULT_AUTOSCALING_CONFIG
     );
   }, [initialAutoscalingConfig]);
+
+  useEffect(() => {
+    setMetastoreConfig(initialMetastoreConfig || DEFAULT_METASTORE_CONFIG);
+  }, [initialMetastoreConfig]);
 
   useEffect(() => {
     setSessionLifecycleConfig(
@@ -739,14 +779,14 @@ export const CreateRuntimeProfileComponent: React.FC<
       {
         title: 'Metastore configuration',
         properties: formatMetastoreProperties(metastoreConfig),
-        isEditDisabled: true,
-        onEdit: undefined
+        isEditDisabled: false,
+        onEdit: () => setIsMetastoreDrawerOpen(true)
       },
       {
         title: 'Network and security',
         properties: formatNetworkSecurityProperties(networkAndSecurityConfig),
-        isEditDisabled: true,
-        onEdit: undefined
+        isEditDisabled: false,
+        onEdit: () => setIsNetworkSecurityDrawerOpen(true)
       },
       {
         title: 'Session lifecycle',
@@ -1547,7 +1587,16 @@ export const CreateRuntimeProfileComponent: React.FC<
           setIsRuntimeConfigDrawerOpen(false);
         }}
       />
-
+      <MetastoreEditDrawer
+        open={isMetastoreDrawerOpen}
+        config={metastoreConfig}
+        region={watch('region')}
+        onClose={() => setIsMetastoreDrawerOpen(false)}
+        onSave={(updatedConfig: IMetastoreConfig) => {
+          setMetastoreConfig(updatedConfig);
+          setIsMetastoreDrawerOpen(false);
+        }}
+      />
       <ExecutorAndDriverEditDrawer
         open={isExecutorDriverDrawerOpen}
         config={executorAndDriverConfig}
@@ -1577,6 +1626,18 @@ export const CreateRuntimeProfileComponent: React.FC<
             executorMachineType: execMachineName
           });
           setIsExecutorDriverDrawerOpen(false);
+        }}
+      />
+
+      <NetworkSecurityEditDrawer
+        open={isNetworkSecurityDrawerOpen}
+        config={networkAndSecurityConfig}
+        region={selectedRegion}
+        service={service}
+        onClose={() => setIsNetworkSecurityDrawerOpen(false)}
+        onSave={updatedConfig => {
+          setNetworkAndSecurityConfig(updatedConfig);
+          setIsNetworkSecurityDrawerOpen(false);
         }}
       />
 
@@ -1657,6 +1718,8 @@ export {
   SessionLifecycleEditDrawer,
   OtherCustomizationEditDrawer,
   SelectBucketEditDrawer,
+  NetworkSecurityEditDrawer,
+  MetastoreEditDrawer,
   RUNTIME_VERSION_OPTIONS,
   RuntimeProfileSummary,
   RuntimePricingEstimate,

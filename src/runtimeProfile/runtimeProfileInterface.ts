@@ -206,17 +206,25 @@ export interface IMetastoreConfig {
   dataprocMetastoreService?: string;
 }
 
+export type NetworkSourceType = 'project' | 'shared_from_host';
 export type ExecutionIdentityType = 'user_account' | 'service_account';
 export type EncryptionType = 'google_managed' | 'customer_managed_key';
 
 export interface INetworkAndSecurityConfig {
+  networkSource?: NetworkSourceType;
   executionIdentity?: ExecutionIdentityType;
+  serviceAccount?: string;
   networkInThisProject?: string;
   primaryNetwork?: string;
   subnetwork?: string;
+  sharedSubnetwork?: string;
+  hostProjectId?: string;
   networkTags?: string[];
   internalIpOnly?: boolean;
   encryption?: EncryptionType;
+  keyRing?: string;
+  cryptoKey?: string;
+  kmsKeySelectionMode?: 'select' | 'manual';
   kmsKeyName?: string;
 }
 
@@ -306,11 +314,35 @@ export interface IRuntimeProfileFormInitialValues {
   initialLabels?: ProfileLabels;
 }
 
+export interface ISharedVpcSubnetworksResult {
+  hostProjectId: string;
+  subnetworks: string[];
+}
+
 export interface IRuntimeProfileService {
   getRegions(projectId?: string): Promise<IRegionOption[]>;
   getStorageBuckets?(projectId?: string): Promise<string[]>;
   getBucketObjects?(bucketName: string): Promise<string[]>;
   createStorageBucket?(bucketName: string, projectId?: string): Promise<string>;
+  getMachineTypes?(
+    category?: ExecutorCategoryType
+  ): Promise<IMachineTypeOption[]>;
+  getNetworks?(projectId?: string): Promise<string[]>;
+  getSubnetworks?(
+    network: string,
+    projectId?: string,
+    region?: string
+  ): Promise<string[]>;
+  getSharedVpcSubnetworks?(
+    projectId?: string,
+    region?: string
+  ): Promise<ISharedVpcSubnetworksResult>;
+  getKeyRings?(projectId?: string, region?: string): Promise<string[]>;
+  getCryptoKeys?(
+    keyRing: string,
+    projectId?: string,
+    region?: string
+  ): Promise<string[]>;
   createRuntimeProfile(
     payload: ICreateRuntimeProfilePayload,
     projectId?: string,

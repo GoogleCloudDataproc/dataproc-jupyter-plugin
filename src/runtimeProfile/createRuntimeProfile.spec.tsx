@@ -49,6 +49,9 @@ import {
   CreateRuntimeProfileComponent,
   ExecutorAndDriverEditDrawer,
   RuntimeEnvironmentEditDrawer,
+  MetastoreEditDrawer,
+  DEFAULT_METASTORE_CONFIG,
+  formatMetastoreProperties,
   AutoscalingEditDrawer,
   SessionLifecycleEditDrawer,
   OtherCustomizationEditDrawer,
@@ -172,30 +175,29 @@ describe('CreateRuntimeProfileComponent UI & Service', () => {
       '.section-detail-edit-button'
     );
     expect(editButtons).toHaveLength(7);
-    expect(editButtons[0].getAttribute('aria-disabled')).toBe('false');
-    expect(editButtons[1].getAttribute('aria-disabled')).toBe('false');
-    expect(editButtons[2].getAttribute('aria-disabled')).toBe('false');
-    expect(editButtons[3].getAttribute('aria-disabled')).toBe('true');
-    expect(editButtons[4].getAttribute('aria-disabled')).toBe('true');
-    expect(editButtons[5].getAttribute('aria-disabled')).toBe('false');
-    expect(editButtons[6].getAttribute('aria-disabled')).toBe('false');
+    // All 7 additional configuration sections are editable.
+    Array.from(editButtons).forEach(btn => {
+      expect(btn.getAttribute('aria-disabled')).toBe('false');
+    });
 
     const displayNameInput = container.querySelector(
       '#runtime-profile-display-name'
     ) as HTMLInputElement;
     expect(displayNameInput?.value).toMatch(/^runtime-[0-9a-f]{12}$/);
-    expect(getFieldValue('Runtime Profile ID')).toBe(displayNameInput?.value);
-    expect(getFieldValue('Dataproc Runtime Version')).toBe(
-      '2.3 LTS (Spark 3.5.1, Python 3.12)'
+    expect(getFieldValue('Runtime profile ID')).toBe(displayNameInput?.value);
+    expect(getFieldValue('Spark runtime version')).toBe(
+      '2.3 LTS (Spark 3.5, Java 17, Scala 2.13)'
     );
     expect(getFieldValue('Custom spark image')).toBe('None');
-    expect(getFieldValue('Cloud Storage Staging bucket')).toBe('Auto');
+    expect(getFieldValue('Cloud storage staging bucket')).toBe('Auto');
     expect(getFieldValue('Python package repository')).toBe(
-      'Google Managed PyPI pull through cache'
+      'Google managed PyPI pull-through cache'
     );
     expect(getFieldValue('Autoscaling')).toBe('Enabled');
     expect(getFieldValue('Metastore')).toBe('Lakehouse runtime catalog');
     expect(getFieldValue('Hive endpoint')).toBe('Disabled');
+    expect(getFieldValue('Maximum idle time')).toBe('None');
+    expect(getFieldValue('Maximum session time')).toBe('None');
   });
 
   it('collapses and re-expands Additional configuration on click and keyboard Enter/Space', async () => {
@@ -288,12 +290,12 @@ describe('CreateRuntimeProfileComponent UI & Service', () => {
       );
     });
 
-    expect(getFieldValue('Runtime Profile ID')).toBe('custom-runtime-id');
-    expect(getFieldValue('Dataproc Runtime Version')).toBe('2.2 LTS');
+    expect(getFieldValue('Runtime profile ID')).toBe('custom-runtime-id');
+    expect(getFieldValue('Spark runtime version')).toBe('2.2 LTS');
     expect(getFieldValue('Custom spark image')).toBe(
       'gcr.io/my-project/spark:latest'
     );
-    expect(getFieldValue('Cloud Storage Staging bucket')).toBe(
+    expect(getFieldValue('Cloud storage staging bucket')).toBe(
       'gs://my-staging-bucket'
     );
     expect(getFieldValue('Python package repository')).toBe(
@@ -1028,6 +1030,26 @@ describe('CreateRuntimeProfileComponent UI & Service', () => {
       '#edit-runtime-profile-id'
     ) as HTMLInputElement;
     expect(profileIdInput).not.toBeNull();
+    expect(
+      document.body.querySelector('#edit-runtime-profile-id-label')?.textContent
+    ).toBe('Runtime profile ID *');
+    expect(
+      document.body.querySelector('#edit-dataproc-runtime-version-label')
+        ?.textContent
+    ).toBe('Spark runtime version *');
+    expect(
+      document.body.querySelector('.edit-drawer-section-heading')?.textContent
+    ).toBe('Cloud storage staging bucket');
+    expect(
+      document.body.querySelector('#edit-cloud-storage-staging-bucket-label')
+        ?.textContent
+    ).toBe('Staging bucket');
+    const pypiInput = document.body.querySelector(
+      '#edit-python-package-repository'
+    ) as HTMLInputElement;
+    expect(pypiInput?.placeholder).toBe(
+      'Google managed PyPI pull-through cache'
+    );
 
     const saveBtn = document.body.querySelector(
       '.edit-drawer-footer .submit-button-style'
@@ -1037,6 +1059,105 @@ describe('CreateRuntimeProfileComponent UI & Service', () => {
     await act(async () => {
       saveBtn.click();
     });
+  });
+
+  it('formats metastore summary labels for Lakehouse and Dataproc Metastore configs and exposes MetastoreEditDrawer', () => {
+    expect(MetastoreEditDrawer).toBeDefined();
+
+    // Default config
+    const formatted = formatMetastoreProperties(DEFAULT_METASTORE_CONFIG);
+    expect(formatted).toHaveLength(2);
+    expect(formatted.find(p => p.label === 'Metastore')?.value).toBe(
+      'Lakehouse runtime catalog'
+    );
+    expect(formatted.find(p => p.label === 'Hive endpoint')?.value).toBe(
+      'Disabled'
+    );
+
+    // Lakehouse with specific project ID
+    const formattedWithProject = formatMetastoreProperties({
+      metastore: 'Lakehouse runtime catalog',
+      metastoreType: 'lakehouse',
+      projectId: 'frontrow-team',
+      hiveEndpointEnabled: true
+    });
+    expect(formattedWithProject.find(p => p.label === 'Metastore')?.value).toBe(
+      'Lakehouse runtime catalog (project: frontrow-team)'
+    );
+    expect(
+      formattedWithProject.find(p => p.label === 'Hive endpoint')?.value
+    ).toBe('Enabled');
+
+    // Dataproc Metastore: Hive endpoint is Lakehouse-only, so no Hive row,
+    // even if a stale hiveEndpointEnabled value is present.
+    const formattedDpms = formatMetastoreProperties({
+      metastoreType: 'dataproc',
+      dataprocMetastoreService:
+        'projects/test-proj/locations/us-central1/services/dpms-service',
+      hiveEndpointEnabled: true
+    });
+    expect(formattedDpms).toEqual([
+      {
+        label: 'Metastore',
+        value: 'projects/test-proj/locations/us-central1/services/dpms-service'
+      }
+    ]);
+
+    expect(formatMetastoreProperties(undefined)).toEqual([]);
+  });
+
+  it('opens the Metastore drawer from the summary and uses the saved config', async () => {
+    const createSpy = jest
+      .spyOn(mockService, 'createRuntimeProfile')
+      .mockResolvedValue({ displayName: 'created', region: 'us-central1' });
+
+    await act(async () => {
+      root.render(<CreateRuntimeProfileComponent service={mockService} />);
+    });
+
+    // Metastore configuration is the 4th section.
+    await act(async () => {
+      (
+        container.querySelectorAll(
+          '.section-detail-edit-button'
+        )[3] as HTMLButtonElement
+      ).click();
+    });
+    const dataprocCard = Array.from(
+      document.body.querySelectorAll('.node-config-card')
+    ).find(card => card.textContent?.includes('Dataproc Metastore'));
+    await act(async () => {
+      (dataprocCard as HTMLElement).click();
+    });
+    await act(async () => {
+      (
+        document.body.querySelector(
+          '.edit-drawer-footer button'
+        ) as HTMLButtonElement
+      ).click();
+    });
+
+    // The summary shows the saved Dataproc Metastore config, without a Hive row.
+    expect(getFieldValue('Metastore')).toBe('None');
+    expect(getFieldValue('Hive endpoint')).toBeUndefined();
+
+    await act(async () => {
+      (
+        container.querySelector('button[type="submit"]') as HTMLButtonElement
+      ).click();
+    });
+    expect(createSpy).toHaveBeenCalledWith(
+      expect.objectContaining({
+        metastoreConfig: {
+          metastore: 'Dataproc Metastore',
+          metastoreType: 'dataproc',
+          projectId: undefined,
+          dataprocMetastoreService: undefined
+        }
+      }),
+      undefined,
+      'us-central1'
+    );
   });
 
   it('supports browsing buckets, viewing bucket files, searching buckets, and opening create bucket placeholder drawer', async () => {
@@ -1735,8 +1856,8 @@ describe('CreateRuntimeProfileComponent UI & Service', () => {
         ).checked
       ).toBe(true);
 
-      expect(getFieldValue('Runtime Profile ID')).toBe('sample_profile');
-      expect(getFieldValue('Dataproc Runtime Version')).toBe('2.2');
+      expect(getFieldValue('Runtime profile ID')).toBe('sample_profile');
+      expect(getFieldValue('Spark runtime version')).toBe('2.2');
       expect(getFieldValue('Custom spark image')).toBe(
         'gcr.io/my-project/spark:latest'
       );
@@ -1848,6 +1969,111 @@ describe('CreateRuntimeProfileComponent UI & Service', () => {
       ).find(b => b.textContent?.trim() === 'Save') as HTMLButtonElement;
       expect(saveBtn.disabled).toBe(false);
     });
+  });
+
+  it('should provide network, subnetwork, shared VPC, keyRing, and cryptoKey methods on RuntimeProfileService', async () => {
+    const networks = await mockService.getNetworks();
+    expect(networks).toEqual(['default']);
+
+    const subnetworks = await mockService.getSubnetworks('default');
+    expect(subnetworks).toEqual(['default']);
+
+    const sharedVpc = await mockService.getSharedVpcSubnetworks();
+    expect(sharedVpc).toEqual({ hostProjectId: '', subnetworks: [] });
+
+    const keyRings = await mockService.getKeyRings();
+    expect(keyRings).toEqual([]);
+
+    const cryptoKeys = await mockService.getCryptoKeys('test-ring');
+    expect(cryptoKeys).toEqual([]);
+  });
+
+  it('disables Save in NetworkSecurityEditDrawer when shared network has no available subnetworks', async () => {
+    const sharedVpcSpy = jest
+      .spyOn(mockService, 'getSharedVpcSubnetworks')
+      .mockResolvedValue({ hostProjectId: '', subnetworks: [] });
+
+    await act(async () => {
+      root.render(<CreateRuntimeProfileComponent service={mockService} />);
+    });
+
+    // Open Network and security edit drawer (index 4)
+    const editButtons = container.querySelectorAll(
+      '.section-detail-edit-button'
+    );
+    await act(async () => {
+      (editButtons[4] as HTMLButtonElement).click();
+    });
+
+    // Should not fetch shared VPC subnetworks when 'project' network source is selected
+    expect(sharedVpcSpy).not.toHaveBeenCalled();
+
+    const getSaveBtn = () =>
+      Array.from(
+        document.body.querySelectorAll('.edit-drawer-footer button')
+      ).find(b => b.textContent?.trim() === 'Save') as HTMLButtonElement;
+
+    expect(getSaveBtn()?.disabled).toBe(false);
+
+    // Switch to 'Networks shared from host project'
+    const sharedRadio = document.body.querySelector(
+      '#edit-network-source-shared'
+    ) as HTMLInputElement;
+    expect(sharedRadio).not.toBeNull();
+    await act(async () => {
+      sharedRadio.click();
+    });
+
+    expect(sharedVpcSpy).toHaveBeenCalledTimes(1);
+    expect(
+      document.body.querySelector('.edit-drawer-info-banner-text')?.textContent
+    ).toBe('No shared subnetworks are available in this region.');
+    expect(
+      document.body.querySelector('#edit-shared-network-tags')
+    ).not.toBeNull();
+    expect(getSaveBtn()?.disabled).toBe(true);
+
+    // Open Shared subnetwork dropdown and verify 'No items to display' is shown
+    const sharedSubnetTrigger = document.body.querySelector(
+      '#edit-shared-subnetwork'
+    ) as HTMLElement;
+    expect(sharedSubnetTrigger).not.toBeNull();
+    await act(async () => {
+      sharedSubnetTrigger.dispatchEvent(
+        new MouseEvent('mousedown', { bubbles: true, button: 0 })
+      );
+    });
+    const emptyOption = document.body.querySelector(
+      'li[role="option"][data-value="__no_items__"]'
+    );
+    expect(emptyOption?.textContent).toBe('No items to display');
+
+    // Switch back to 'Networks in this project'
+    const projectRadio = document.body.querySelector(
+      '#edit-network-source-project'
+    ) as HTMLInputElement;
+    await act(async () => {
+      projectRadio.click();
+    });
+    expect(getSaveBtn()?.disabled).toBe(false);
+
+    // Selecting Cloud KMS key without a key ring / crypto key disables Save
+    const cmekRadio = document.body.querySelector(
+      '#edit-encryption-customer-managed'
+    ) as HTMLInputElement;
+    await act(async () => {
+      cmekRadio.click();
+    });
+    expect(getSaveBtn()?.disabled).toBe(true);
+
+    // Switch back to Google-managed encryption key
+    const googleManagedRadio = document.body.querySelector(
+      '#edit-encryption-google-managed'
+    ) as HTMLInputElement;
+    await act(async () => {
+      googleManagedRadio.click();
+    });
+    expect(getSaveBtn()?.disabled).toBe(false);
   });
 
   it('validates Autoscaling, SessionLifecycle, and OtherCustomization edit drawers', async () => {
@@ -1970,6 +2196,8 @@ describe('CreateRuntimeProfileComponent UI & Service', () => {
     });
 
     // 2. Session lifecycle drawer validation
+    expect(getFieldValue('Maximum idle time')).toBe('None');
+    expect(getFieldValue('Maximum session time')).toBe('None');
     await act(async () => {
       (editButtons[5] as HTMLButtonElement).click();
     });
@@ -1979,6 +2207,8 @@ describe('CreateRuntimeProfileComponent UI & Service', () => {
     const sessionQtyInput = document.body.querySelector(
       '#edit-max-session-time-quantity'
     ) as HTMLInputElement;
+    expect(idleQtyInput.value).toBe('60');
+    expect(sessionQtyInput.value).toBe('3');
 
     await act(async () => {
       nativeInputValueSetter?.call(idleQtyInput, '0');
@@ -2010,6 +2240,8 @@ describe('CreateRuntimeProfileComponent UI & Service', () => {
     await act(async () => {
       getSaveBtn().click();
     });
+    expect(getFieldValue('Maximum idle time')).toBe('30 minutes');
+    expect(getFieldValue('Maximum session time')).toBe('3 days');
 
     // 3. Other customizations drawer validation
     await act(async () => {

@@ -26,10 +26,16 @@ jest.mock('../handler/handler', () => ({
 import React, { act } from 'react';
 import { createRoot, Root } from 'react-dom/client';
 import RuntimeProfileDetails, {
+  applyAutoscalingUpdateToTemplate,
   applyExecutorAndDriverUpdateToTemplate,
+  applyOtherCustomizationUpdateToTemplate,
   applyRuntimeEnvironmentUpdateToTemplate,
+  applySessionLifecycleUpdateToTemplate,
+  buildAutoscalingConfigFromTemplate,
   buildExecutorAndDriverConfigFromTemplate,
+  buildOtherCustomizationSparkPropertiesFromTemplate,
   buildRuntimeEnvironmentConfigFromTemplate,
+  buildSessionLifecycleConfigFromTemplate,
   formatCreateTime,
   formatDiskConfig,
   formatDurationTtl,
@@ -223,9 +229,13 @@ describe('RuntimeProfileDetails Component', () => {
       container.querySelectorAll('button[aria-label^="Edit "]')
     ) as HTMLButtonElement[];
     expect(subsectionEditBtns).toHaveLength(7);
-    expect(subsectionEditBtns[0].disabled).toBe(false);
-    expect(subsectionEditBtns[1].disabled).toBe(false);
-    expect(subsectionEditBtns.slice(2).every(btn => btn.disabled)).toBe(true);
+    expect(subsectionEditBtns[0].disabled).toBe(false); // Runtime configuration
+    expect(subsectionEditBtns[1].disabled).toBe(false); // Executor and driver configuration
+    expect(subsectionEditBtns[2].disabled).toBe(false); // Autoscaling
+    expect(subsectionEditBtns[3].disabled).toBe(true); // Metastore configuration
+    expect(subsectionEditBtns[4].disabled).toBe(true); // Network and security
+    expect(subsectionEditBtns[5].disabled).toBe(false); // Session lifecycle
+    expect(subsectionEditBtns[6].disabled).toBe(false); // Other customizations
 
     // Spark properties & Labels
     expect(container.textContent).toContain('Spark properties');
@@ -368,7 +378,7 @@ describe('RuntimeProfileDetails Component', () => {
     expect(container.textContent).toContain('Runtime configuration');
   });
 
-  it('should open RuntimeEnvironmentEditDrawer and ExecutorAndDriverEditDrawer, call updateRuntimeProfile on Save, and notify user', async () => {
+  it('should open section edit drawers, call updateRuntimeProfile on Save, and notify user', async () => {
     const onUpdateSuccessMock = jest.fn();
     await renderDetails(jest.fn(), undefined, mockProfile, onUpdateSuccessMock);
 
@@ -444,6 +454,63 @@ describe('RuntimeProfileDetails Component', () => {
     });
     expect(RuntimeProfileService.updateRuntimeProfile).toHaveBeenCalledTimes(3);
     expect(onUpdateSuccessMock).toHaveBeenCalledTimes(2);
+
+    // 3. Open Autoscaling drawer and save
+    const editAutoscalingBtn = container.querySelector(
+      'button[aria-label="Edit Autoscaling"]'
+    ) as HTMLButtonElement;
+    await act(async () => {
+      editAutoscalingBtn.click();
+    });
+    expect(
+      (document.body.querySelector('#edit-initial-executors') as HTMLInputElement)
+        ?.value
+    ).toBe('2');
+    await act(async () => {
+      getDrawerSaveBtn().click();
+    });
+    expect(RuntimeProfileService.updateRuntimeProfile).toHaveBeenCalledTimes(4);
+    expect(onUpdateSuccessMock).toHaveBeenCalledTimes(3);
+
+    // 4. Open Session lifecycle drawer and save
+    const editLifecycleBtn = container.querySelector(
+      'button[aria-label="Edit Session lifecycle"]'
+    ) as HTMLButtonElement;
+    await act(async () => {
+      editLifecycleBtn.click();
+    });
+    expect(
+      (
+        document.body.querySelector(
+          '#edit-max-idle-time-quantity'
+        ) as HTMLInputElement
+      )?.value
+    ).toBe('1');
+    await act(async () => {
+      getDrawerSaveBtn().click();
+    });
+    expect(RuntimeProfileService.updateRuntimeProfile).toHaveBeenCalledTimes(5);
+    expect(onUpdateSuccessMock).toHaveBeenCalledTimes(4);
+
+    // 5. Open Other customizations drawer and save
+    const editOtherBtn = container.querySelector(
+      'button[aria-label="Edit Other customizations"]'
+    ) as HTMLButtonElement;
+    await act(async () => {
+      editOtherBtn.click();
+    });
+    expect(
+      (
+        document.body.querySelector(
+          '#edit-spark-property-key-0'
+        ) as HTMLInputElement
+      )?.value
+    ).toBe('spark.sql.catalog.biglake');
+    await act(async () => {
+      getDrawerSaveBtn().click();
+    });
+    expect(RuntimeProfileService.updateRuntimeProfile).toHaveBeenCalledTimes(6);
+    expect(onUpdateSuccessMock).toHaveBeenCalledTimes(5);
   });
 
   it('should enable the header Edit button when onEdit is provided and keep unsupported section edit icons disabled', async () => {
@@ -728,6 +795,208 @@ describe('RuntimeProfileDetails Component', () => {
     expect(buildExecutorAndDriverConfigFromTemplate(template31NoTier).tier).toBe(
       'Premium'
     );
+
+    // Autoscaling builder & updater (including minExecutors > 2 with unset initialExecutors)
+    const autoCfg = buildAutoscalingConfigFromTemplate(mockProfile);
+    expect(autoCfg).toEqual({
+      autoscalingEnabled: true,
+      initialExecutors: 2,
+      minExecutors: 2,
+      maxExecutors: 10
+    });
+    expect(
+      buildAutoscalingConfigFromTemplate({
+        name: 'projects/p/locations/l/sessionTemplates/t',
+        runtimeConfig: {
+          properties: {
+            'spark.dynamicAllocation.minExecutors': '5'
+          }
+        }
+      })
+    ).toEqual({
+      autoscalingEnabled: true,
+      initialExecutors: 5,
+      minExecutors: 5,
+      maxExecutors: 1000
+    });
+    const unchangedEmptyAuto = applyAutoscalingUpdateToTemplate(
+      {
+        name: 'projects/p/locations/l/sessionTemplates/t',
+        runtimeConfig: { properties: {} }
+      },
+      {
+        autoscalingEnabled: true,
+        initialExecutors: 2,
+        minExecutors: 2,
+        maxExecutors: 1000
+      }
+    );
+    expect(unchangedEmptyAuto.runtimeConfig?.properties).toEqual({});
+
+    const partiallyChangedAuto = applyAutoscalingUpdateToTemplate(
+      {
+        name: 'projects/p/locations/l/sessionTemplates/t',
+        runtimeConfig: {
+          properties: {
+            'spark.dynamicAllocation.minExecutors': '2'
+          }
+        }
+      },
+      {
+        autoscalingEnabled: true,
+        initialExecutors: 2,
+        minExecutors: 2,
+        maxExecutors: 50
+      }
+    );
+    expect(partiallyChangedAuto.runtimeConfig?.properties).toEqual({
+      'spark.dynamicAllocation.minExecutors': '2',
+      'spark.dynamicAllocation.maxExecutors': '50'
+    });
+
+    const updatedAutoOn = applyAutoscalingUpdateToTemplate(mockProfile, {
+      autoscalingEnabled: true,
+      initialExecutors: 4,
+      minExecutors: 2,
+      maxExecutors: 20
+    });
+    expect(
+      updatedAutoOn.runtimeConfig?.properties?.[
+        'spark.dynamicAllocation.initialExecutors'
+      ]
+    ).toBe('4');
+    expect(
+      updatedAutoOn.runtimeConfig?.properties?.[
+        'spark.dynamicAllocation.maxExecutors'
+      ]
+    ).toBe('20');
+
+    const updatedAutoOff = applyAutoscalingUpdateToTemplate(mockProfile, {
+      autoscalingEnabled: false,
+      initialExecutors: 4,
+      minExecutors: 2,
+      maxExecutors: 20
+    });
+    expect(
+      updatedAutoOff.runtimeConfig?.properties?.[
+        'spark.dynamicAllocation.enabled'
+      ]
+    ).toBe('false');
+    expect(
+      updatedAutoOff.runtimeConfig?.properties?.[
+        'spark.dynamicAllocation.initialExecutors'
+      ]
+    ).toBeUndefined();
+
+    // Session lifecycle builder & updater (including unset 'None' defaults, seconds/minutes/generic units, and clearing)
+    expect(
+      buildSessionLifecycleConfigFromTemplate({
+        name: 'projects/p/locations/l/sessionTemplates/t'
+      })
+    ).toEqual({
+      maxIdleTime: 'None',
+      maxSessionTime: 'None'
+    });
+    const lifecycleCfg = buildSessionLifecycleConfigFromTemplate(mockProfile);
+    expect(lifecycleCfg).toEqual({
+      maxIdleTimeQuantity: 1,
+      maxIdleTimeUnit: 'hours',
+      maxIdleTime: '1 hours',
+      maxSessionTimeQuantity: 3,
+      maxSessionTimeUnit: 'days',
+      maxSessionTime: '3 days'
+    });
+    expect(
+      buildSessionLifecycleConfigFromTemplate({
+        name: 'projects/p/locations/l/sessionTemplates/t',
+        environmentConfig: {
+          executionConfig: {
+            idleTtl: '1800s',
+            ttl: '45s'
+          }
+        }
+      })
+    ).toEqual({
+      maxIdleTimeQuantity: 30,
+      maxIdleTimeUnit: 'minutes',
+      maxIdleTime: '30 minutes',
+      maxSessionTimeQuantity: 45,
+      maxSessionTimeUnit: 'seconds',
+      maxSessionTime: '45 seconds'
+    });
+    const updatedLifecycle = applySessionLifecycleUpdateToTemplate(
+      mockProfile,
+      {
+        maxIdleTimeQuantity: 30,
+        maxIdleTimeUnit: 'minutes',
+        maxIdleTime: '30 minutes',
+        maxSessionTimeQuantity: 2,
+        maxSessionTimeUnit: 'days',
+        maxSessionTime: '2 days'
+      }
+    );
+    expect(
+      updatedLifecycle.environmentConfig?.executionConfig?.idleTtl
+    ).toBe('1800s');
+    expect(updatedLifecycle.environmentConfig?.executionConfig?.ttl).toBe(
+      '172800s'
+    );
+    const clearedLifecycle = applySessionLifecycleUpdateToTemplate(
+      mockProfile,
+      {
+        maxIdleTime: '2h'
+      }
+    );
+    expect(
+      clearedLifecycle.environmentConfig?.executionConfig?.idleTtl
+    ).toBe('7200s');
+    expect(
+      clearedLifecycle.environmentConfig?.executionConfig?.ttl
+    ).toBeUndefined();
+
+    // Other customizations builder & updater
+    const customSparkProps =
+      buildOtherCustomizationSparkPropertiesFromTemplate(mockProfile);
+    expect(customSparkProps).toEqual({
+      'dataproc.tier': 'premium',
+      'spark.sql.catalog.biglake': 'org.apache.iceberg.spark.SparkCatalog',
+      'spark.sql.catalog.biglake.type': 'hadoop'
+    });
+    const updatedOther = applyOtherCustomizationUpdateToTemplate(
+      {
+        ...mockProfile,
+        runtimeConfig: {
+          ...mockProfile.runtimeConfig,
+          properties: {
+            ...mockProfile.runtimeConfig?.properties,
+            'dataproc.lakehouse.catalog.hive_cat':
+              'projects/p/locations/l/catalogs/hive_cat'
+          }
+        }
+      },
+      {
+        'dataproc.tier': 'premium',
+        'spark.sql.shuffle.partitions': '200'
+      },
+      { env: 'prod' }
+    );
+    expect(
+      updatedOther.runtimeConfig?.properties?.['spark.sql.shuffle.partitions']
+    ).toBe('200');
+    expect(
+      updatedOther.runtimeConfig?.properties?.[
+        'spark:spark.sql.catalog.biglake'
+      ]
+    ).toBeUndefined();
+    expect(
+      updatedOther.runtimeConfig?.properties?.['spark:spark.dataproc.engine']
+    ).toBe('lightningEngine');
+    expect(
+      updatedOther.runtimeConfig?.properties?.[
+        'dataproc.lakehouse.catalog.hive_cat'
+      ]
+    ).toBe('projects/p/locations/l/catalogs/hive_cat');
+    expect(updatedOther.labels).toEqual({ env: 'prod' });
   });
 });
 
