@@ -1969,6 +1969,50 @@ describe('CreateRuntimeProfileComponent UI & Service', () => {
       ).find(b => b.textContent?.trim() === 'Save') as HTMLButtonElement;
       expect(saveBtn.disabled).toBe(false);
     });
+
+    it('keeps Metastore, Network and security, and Session lifecycle read-only until the update mapper saves them', async () => {
+      await renderEditForm();
+
+      const sectionEditButtons = Array.from(
+        container.querySelectorAll<HTMLButtonElement>(
+          '.section-detail-edit-button'
+        )
+      );
+      expect(sectionEditButtons).toHaveLength(7);
+      // Runtime config (0), Executor and driver (1), Autoscaling (2) and
+      // Other customizations (6) are saved by the update; Metastore (3),
+      // Network and security (4) and Session lifecycle (5) are not yet.
+      const expectedDisabled = [false, false, false, true, true, true, false];
+      sectionEditButtons.forEach((btn, idx) =>
+        expect(btn.getAttribute('aria-disabled')).toBe(
+          String(expectedDisabled[idx])
+        )
+      );
+
+      // A disabled section doesn't open its drawer.
+      await act(async () => {
+        sectionEditButtons[4].click();
+      });
+      expect(
+        document.body.querySelector('#edit-network-source-project')
+      ).toBeNull();
+    });
+
+    it('leaves every section editable in create mode', async () => {
+      await act(async () => {
+        root.render(<CreateRuntimeProfileComponent service={mockService} />);
+      });
+
+      const sectionEditButtons = Array.from(
+        container.querySelectorAll<HTMLButtonElement>(
+          '.section-detail-edit-button'
+        )
+      );
+      expect(sectionEditButtons).toHaveLength(7);
+      sectionEditButtons.forEach(btn =>
+        expect(btn.getAttribute('aria-disabled')).toBe('false')
+      );
+    });
   });
 
   it('should provide network, subnetwork, shared VPC, keyRing, and cryptoKey methods on RuntimeProfileService', async () => {

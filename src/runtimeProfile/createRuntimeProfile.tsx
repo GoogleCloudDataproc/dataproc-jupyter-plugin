@@ -754,6 +754,13 @@ export const CreateRuntimeProfileComponent: React.FC<
     setLabels(initialLabels || DEFAULT_PROFILE_LABELS);
   }, [initialLabels]);
 
+  // TODO(runtime-profile edit, part 2): mapRuntimeProfileToSessionTemplateUpdate
+  // keeps the existing template's environmentConfig (network, subnetwork, tags,
+  // KMS key, service account, idle/session TTL, Dataproc Metastore service), so
+  // edits to these sections are not saved yet. Keep them read-only in edit mode
+  // until the update mapper persists them.
+  const isEnvironmentConfigEditDisabled = isEditMode;
+
   const additionalConfigSections = useMemo(
     () => [
       {
@@ -779,19 +786,19 @@ export const CreateRuntimeProfileComponent: React.FC<
       {
         title: 'Metastore configuration',
         properties: formatMetastoreProperties(metastoreConfig),
-        isEditDisabled: false,
+        isEditDisabled: isEnvironmentConfigEditDisabled,
         onEdit: () => setIsMetastoreDrawerOpen(true)
       },
       {
         title: 'Network and security',
         properties: formatNetworkSecurityProperties(networkAndSecurityConfig),
-        isEditDisabled: false,
+        isEditDisabled: isEnvironmentConfigEditDisabled,
         onEdit: () => setIsNetworkSecurityDrawerOpen(true)
       },
       {
         title: 'Session lifecycle',
         properties: formatSessionLifecycleProperties(sessionLifecycleConfig),
-        isEditDisabled: false,
+        isEditDisabled: isEnvironmentConfigEditDisabled,
         onEdit: () => setIsSessionLifecycleDrawerOpen(true)
       },
       {
@@ -809,7 +816,8 @@ export const CreateRuntimeProfileComponent: React.FC<
       networkAndSecurityConfig,
       sessionLifecycleConfig,
       sparkProperties,
-      labels
+      labels,
+      isEnvironmentConfigEditDisabled
     ]
   );
 
