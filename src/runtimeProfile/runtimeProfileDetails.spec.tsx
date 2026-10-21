@@ -544,15 +544,17 @@ describe('RuntimeProfileDetails Component', () => {
       configHeader.click();
     });
 
-    // Runtime configuration (0) and Executor and driver configuration (1)
-    // have their own edit drawers in the details view; the rest are read-only.
+    // Runtime configuration (0), Executor and driver configuration (1),
+    // Autoscaling (2), Session lifecycle (5) and Other customizations (6)
+    // have their own edit drawers in the details view; Metastore (3) and
+    // Network and security (4) are read-only.
     const subsectionEditBtns = Array.from(
       container.querySelectorAll<HTMLButtonElement>(
         '.runtime-profile-details-subsection-edit-btn'
       )
     );
     expect(subsectionEditBtns).toHaveLength(7);
-    const expectedDisabled = [false, false, true, true, true, true, true];
+    const expectedDisabled = [false, false, false, true, true, false, false];
     subsectionEditBtns.forEach((btn, idx) =>
       expect(btn.disabled).toBe(expectedDisabled[idx])
     );
