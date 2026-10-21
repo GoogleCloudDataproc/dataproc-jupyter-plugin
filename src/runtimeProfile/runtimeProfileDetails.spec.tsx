@@ -125,6 +125,9 @@ describe('RuntimeProfileDetails Component', () => {
     jest
       .spyOn(runtimeProfileService, 'getSubnetworks')
       .mockResolvedValue(['default']);
+    jest
+      .spyOn(runtimeProfileService, 'getNetworkFromSubnetwork')
+      .mockResolvedValue('default');
   });
 
   afterEach(() => {
@@ -651,7 +654,7 @@ describe('RuntimeProfileDetails Component', () => {
     expect(onUpdateSuccessMock).toHaveBeenCalledTimes(7);
   });
 
-  it('should enable the header Edit button when onEdit is provided and keep unsupported section edit icons disabled', async () => {
+  it('should enable the header Edit button when onEdit is provided and enable all 7 section edit icons', async () => {
     const onEditMock = jest.fn();
     await act(async () => {
       root.render(
@@ -682,19 +685,150 @@ describe('RuntimeProfileDetails Component', () => {
       configHeader.click();
     });
 
-    // Runtime configuration (0), Executor and driver configuration (1),
-    // Autoscaling (2), Session lifecycle (5) and Other customizations (6)
-    // have their own edit drawers in the details view; Metastore (3) and
-    // Network and security (4) are read-only.
+    // All 7 configuration subsections have edit drawers wired in the details view.
     const subsectionEditBtns = Array.from(
       container.querySelectorAll<HTMLButtonElement>(
         '.runtime-profile-details-subsection-edit-btn'
       )
     );
     expect(subsectionEditBtns).toHaveLength(7);
-    const expectedDisabled = [false, false, false, true, true, false, false];
-    subsectionEditBtns.forEach((btn, idx) =>
-      expect(btn.disabled).toBe(expectedDisabled[idx])
+    subsectionEditBtns.forEach(btn => expect(btn.disabled).toBe(false));
+  });
+
+  it('should preserve changed network and subnetwork when reopening Network and security drawer and resolve parent network on fresh load', async () => {
+    jest
+      .spyOn(runtimeProfileService, 'getNetworks')
+      .mockResolvedValue(['default', 'custom-vpc']);
+    jest
+      .spyOn(runtimeProfileService, 'getSubnetworks')
+      .mockImplementation(async (network: string) =>
+        network === 'custom-vpc'
+          ? ['custom-subnet-1', 'custom-subnet-2']
+          : ['default']
+      );
+    const getNetFromSubSpy = jest
+      .spyOn(runtimeProfileService, 'getNetworkFromSubnetwork')
+      .mockImplementation(async (sub: string) =>
+        sub.startsWith('custom-subnet') ? 'custom-vpc' : 'default'
+      );
+
+    let latestProfile = mockProfile;
+    const handleUpdateSuccess = jest.fn((updated: IRuntimeProfileTemplate) => {
+      latestProfile = updated;
+      root.render(
+        <RuntimeProfileDetails
+          profile={updated}
+          onBack={jest.fn()}
+          onUpdateSuccess={handleUpdateSuccess}
+        />
+      );
+    });
+
+    await renderDetails(jest.fn(), undefined, latestProfile, handleUpdateSuccess);
+
+    const configHeader = container.querySelector(
+      '.runtime-profile-details-section-header.configuration-header'
+    ) as HTMLElement;
+    await act(async () => {
+      configHeader.click();
+    });
+
+    const openNetworkDrawer = async () => {
+      const btn = container.querySelector(
+        'button[aria-label="Edit Network and security"]'
+      ) as HTMLButtonElement;
+      await act(async () => {
+        btn.click();
+      });
+    };
+
+    await openNetworkDrawer();
+
+    // Change Primary network to 'custom-vpc'
+    const networkTrigger = document.body.querySelector(
+      '#edit-primary-network'
+    ) as HTMLElement;
+    await act(async () => {
+      networkTrigger.dispatchEvent(
+        new MouseEvent('mousedown', { bubbles: true, button: 0 })
+      );
+    });
+    const customVpcOption = document.body.querySelector(
+      'li[role="option"][data-value="custom-vpc"]'
+    ) as HTMLElement;
+    expect(customVpcOption).not.toBeNull();
+    await act(async () => {
+      customVpcOption.click();
+    });
+
+    // Change Subnetwork to 'custom-subnet-2'
+    const subnetworkTrigger = document.body.querySelector(
+      '#edit-subnetwork'
+    ) as HTMLElement;
+    await act(async () => {
+      subnetworkTrigger.dispatchEvent(
+        new MouseEvent('mousedown', { bubbles: true, button: 0 })
+      );
+    });
+    const customSubOption = document.body.querySelector(
+      'li[role="option"][data-value="custom-subnet-2"]'
+    ) as HTMLElement;
+    expect(customSubOption).not.toBeNull();
+    await act(async () => {
+      customSubOption.click();
+    });
+
+    const saveBtn = Array.from(
+      document.body.querySelectorAll(
+        '[role="presentation"]:not(.MuiModal-hidden) .edit-drawer-footer button'
+      )
+    ).find(b => b.textContent?.trim() === 'Save') as HTMLButtonElement;
+    await act(async () => {
+      saveBtn.click();
+    });
+
+    expect(latestProfile.environmentConfig?.executionConfig?.subnetworkUri).toBe(
+      'custom-subnet-2'
+    );
+    expect(
+      latestProfile.environmentConfig?.executionConfig?.networkUri
+    ).toBeUndefined();
+
+    // 1. Re-open drawer immediately after save -> updated network & subnetwork stay selected
+    await openNetworkDrawer();
+    expect(
+      document.body.querySelector('#edit-primary-network')?.textContent
+    ).toBe('custom-vpc');
+    expect(document.body.querySelector('#edit-subnetwork')?.textContent).toBe(
+      'custom-subnet-2'
+    );
+
+    // 2. Unmount and mount fresh RuntimeProfileDetails (only subnetworkUri in SessionTemplate)
+    act(() => {
+      root.unmount();
+    });
+    root = createRoot(container);
+    getNetFromSubSpy.mockClear();
+
+    await renderDetails(jest.fn(), undefined, latestProfile);
+    const freshConfigHeader = container.querySelector(
+      '.runtime-profile-details-section-header.configuration-header'
+    ) as HTMLElement;
+    await act(async () => {
+      freshConfigHeader.click();
+    });
+    await openNetworkDrawer();
+
+    expect(getNetFromSubSpy).toHaveBeenCalledWith(
+      'custom-subnet-2',
+      'test-project',
+      'us-central1'
+    );
+    expect(
+      document.body.querySelector('#edit-primary-network')?.textContent
+    ).toBe('custom-vpc');
+    expect(document.body.querySelector('#edit-subnetwork')?.textContent).toBe(
+      'custom-subnet-2'
     );
   });
 
@@ -1363,7 +1497,7 @@ describe('RuntimeProfileDetails Component', () => {
       hiveCatalogName: 'hive_only'
     });
 
-    // Network and security builder & updater
+    // Network and security builder & updater (omits primaryNetwork when only subnetworkUri is present)
     const initialNetSec = buildNetworkSecurityConfigFromTemplate(
       mockProfile,
       'test-project',
@@ -1371,11 +1505,26 @@ describe('RuntimeProfileDetails Component', () => {
     );
     expect(initialNetSec).toEqual({
       networkSource: 'project',
+      subnetwork: 'default',
+      networkTags: [],
+      executionIdentity: 'user_account',
+      encryption: 'google_managed'
+    });
+
+    // Defaults primaryNetwork to 'default' when neither networkUri nor subnetworkUri is present
+    expect(
+      buildNetworkSecurityConfigFromTemplate(
+        { name: 'projects/test-project/locations/us-central1/sessionTemplates/empty-net' },
+        'test-project',
+        'us-central1'
+      )
+    ).toEqual({
+      networkSource: 'project',
       primaryNetwork: 'default',
       networkInThisProject: 'default',
       subnetwork: 'default',
       networkTags: [],
-      executionIdentity: 'user_account',
+      executionIdentity: 'service_account',
       encryption: 'google_managed'
     });
 
@@ -1509,8 +1658,6 @@ describe('RuntimeProfileDetails Component', () => {
       )
     ).toEqual({
       networkSource: 'project',
-      primaryNetwork: 'default',
-      networkInThisProject: 'default',
       subnetwork: 'custom-subnet',
       networkTags: [],
       executionIdentity: 'service_account',

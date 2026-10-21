@@ -1109,8 +1109,12 @@ export const buildNetworkSecurityConfigFromTemplate = (
     ? 'shared_from_host'
     : 'project';
 
-  const primaryNetwork =
-    (rawNetworkUri && NETWORK_URI_REGEX.exec(rawNetworkUri)?.[1]) || 'default';
+  const explicitNetwork = rawNetworkUri
+    ? NETWORK_URI_REGEX.exec(rawNetworkUri)?.[1]
+    : undefined;
+  const resolvedPrimaryNetwork =
+    explicitNetwork ||
+    (isSharedVpc || !subnetShortName ? 'default' : undefined);
 
   const networkTags = executionConfig?.networkTags
     ? [...executionConfig.networkTags]
@@ -1137,8 +1141,10 @@ export const buildNetworkSecurityConfigFromTemplate = (
 
   return {
     networkSource,
-    primaryNetwork,
-    networkInThisProject: primaryNetwork,
+    ...(resolvedPrimaryNetwork && {
+      primaryNetwork: resolvedPrimaryNetwork,
+      networkInThisProject: resolvedPrimaryNetwork
+    }),
     subnetwork: isSharedVpc ? 'default' : subnetShortName || 'default',
     ...(isSharedVpc && {
       hostProjectId: subnetProject,
@@ -1365,6 +1371,10 @@ export default function RuntimeProfileDetails({
     useState(false);
   const [isOtherCustomizationDrawerOpen, setIsOtherCustomizationDrawerOpen] =
     useState(false);
+  const [lastSavedSubnetNetwork, setLastSavedSubnetNetwork] = useState<{
+    subnetwork: string;
+    network: string;
+  } | null>(null);
   const isMountedRef = useRef(true);
 
   useEffect(() => {
@@ -1377,6 +1387,10 @@ export default function RuntimeProfileDetails({
   useEffect(() => {
     setCurrentProfile(profile);
   }, [profile]);
+
+  useEffect(() => {
+    setLastSavedSubnetNetwork(null);
+  }, [profile.name]);
 
   const {
     projectId,
@@ -1431,11 +1445,26 @@ export default function RuntimeProfileDetails({
     () => buildMetastoreConfigFromTemplate(currentProfile, projectId, region),
     [currentProfile, projectId, region]
   );
-  const networkSecurityDrawerConfig = useMemo(
-    () =>
-      buildNetworkSecurityConfigFromTemplate(currentProfile, projectId, region),
-    [currentProfile, projectId, region]
-  );
+  const networkSecurityDrawerConfig = useMemo(() => {
+    const baseConfig = buildNetworkSecurityConfigFromTemplate(
+      currentProfile,
+      projectId,
+      region
+    );
+    if (
+      baseConfig.networkSource === 'project' &&
+      !baseConfig.primaryNetwork &&
+      baseConfig.subnetwork &&
+      lastSavedSubnetNetwork?.subnetwork === baseConfig.subnetwork
+    ) {
+      return {
+        ...baseConfig,
+        primaryNetwork: lastSavedSubnetNetwork.network,
+        networkInThisProject: lastSavedSubnetNetwork.network
+      };
+    }
+    return baseConfig;
+  }, [currentProfile, projectId, region, lastSavedSubnetNetwork]);
   const sessionLifecycleDrawerConfig = useMemo(
     () => buildSessionLifecycleConfigFromTemplate(currentProfile),
     [currentProfile]
@@ -1932,9 +1961,21 @@ export default function RuntimeProfileDetails({
             projectId,
             region
           );
-          void handleSaveTemplateUpdate(nextTemplate, () =>
-            setIsNetworkSecurityDrawerOpen(false)
-          );
+          void handleSaveTemplateUpdate(nextTemplate, () => {
+            if (
+              updatedConfig.networkSource === 'project' &&
+              updatedConfig.primaryNetwork &&
+              updatedConfig.subnetwork
+            ) {
+              setLastSavedSubnetNetwork({
+                subnetwork: updatedConfig.subnetwork,
+                network: updatedConfig.primaryNetwork
+              });
+            } else {
+              setLastSavedSubnetNetwork(null);
+            }
+            setIsNetworkSecurityDrawerOpen(false);
+          });
         }}
       />
 
