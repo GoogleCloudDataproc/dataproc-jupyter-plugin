@@ -579,12 +579,17 @@ describe('RuntimeProfileService', () => {
       jupyterSession: { displayName: 'sample-profile', kernel: 'PYTHON' },
       environmentConfig: { executionConfig: { idleTtl: '3600s' } }
     };
-    const payload = {
-      displayName: 'Renamed profile',
+    // The form when it opened, and after the user renamed the profile.
+    const initialPayload = {
+      displayName: 'sample-profile',
       region: 'us-central1',
-      description: 'new description',
-      tier: 'Premium',
+      description: 'old description',
       runtimeEnvironmentConfig: { runtimeProfileId: 'sample-profile' }
+    };
+    const payload = {
+      ...initialPayload,
+      displayName: 'Renamed profile',
+      description: 'new description'
     };
     const profileUrl =
       'https://dataproc.googleapis.com/v1/projects/test-project/locations/us-central1/sessionTemplates/sample-profile';
@@ -597,7 +602,7 @@ describe('RuntimeProfileService', () => {
       });
     };
 
-    it('re-reads the profile, then PATCHes the body built from the fresh copy in live mode', async () => {
+    it('re-reads the profile, then PATCHes only the edits applied onto the fresh copy in live mode', async () => {
       const service = new RuntimeProfileService(false);
       // Same updateTime, but a field the form doesn't manage changed on the
       // server: the PATCH body must carry the fresh value, not the opened copy.
@@ -617,9 +622,19 @@ describe('RuntimeProfileService', () => {
 
       const result = await service.updateRuntimeProfile(
         existingProfile,
-        payload
+        payload,
+        initialPayload
       );
 
+      const body = mapRuntimeProfileToSessionTemplateUpdate(
+        payload,
+        initialPayload,
+        latestProfile
+      );
+      expect(body.description).toBe('new description');
+      expect(body.jupyterSession?.displayName).toBe('Renamed profile');
+      // Settings the user didn't edit come from the fresh copy, unchanged
+      expect(body.environmentConfig).toEqual(latestProfile.environmentConfig);
       expect(loggedFetch).toHaveBeenCalledTimes(2);
       expect(loggedFetch).toHaveBeenNthCalledWith(
         1,
@@ -634,9 +649,7 @@ describe('RuntimeProfileService', () => {
           headers: expect.objectContaining({
             Authorization: 'Bearer live-token'
           }),
-          body: JSON.stringify(
-            mapRuntimeProfileToSessionTemplateUpdate(payload, latestProfile)
-          )
+          body: JSON.stringify(body)
         })
       );
       expect(result).toEqual(savedProfile);
@@ -651,7 +664,7 @@ describe('RuntimeProfileService', () => {
       });
 
       await expect(
-        service.updateRuntimeProfile(existingProfile, payload)
+        service.updateRuntimeProfile(existingProfile, payload, initialPayload)
       ).rejects.toThrow(
         'Runtime profile "sample-profile" was modified by someone else after you opened it (last saved 2026-10-02T12:00:00Z). Close this tab, reopen the profile, and reapply your changes.'
       );
@@ -675,7 +688,7 @@ describe('RuntimeProfileService', () => {
       });
 
       await expect(
-        service.updateRuntimeProfile(existingProfile, payload)
+        service.updateRuntimeProfile(existingProfile, payload, initialPayload)
       ).rejects.toThrow('Template not found');
       expect(loggedFetch).toHaveBeenCalledTimes(1);
     });
@@ -694,7 +707,7 @@ describe('RuntimeProfileService', () => {
       });
 
       await expect(
-        service.updateRuntimeProfile(existingProfile, payload)
+        service.updateRuntimeProfile(existingProfile, payload, initialPayload)
       ).rejects.toThrow('Permission denied');
     });
 
@@ -712,7 +725,7 @@ describe('RuntimeProfileService', () => {
       });
 
       await expect(
-        service.updateRuntimeProfile(existingProfile, payload)
+        service.updateRuntimeProfile(existingProfile, payload, initialPayload)
       ).rejects.toThrow('Failed to update runtime profile (502: Bad Gateway)');
     });
 
@@ -730,16 +743,17 @@ describe('RuntimeProfileService', () => {
       });
 
       await expect(
-        service.updateRuntimeProfile(existingProfile, payload)
+        service.updateRuntimeProfile(existingProfile, payload, initialPayload)
       ).rejects.toThrow('Failed to update runtime profile (200: OK)');
     });
 
-    it('returns the merged profile without calling the API in mock mode', async () => {
+    it('returns the updated profile without calling the API in mock mode', async () => {
       const service = new RuntimeProfileService(true);
 
       const result = await service.updateRuntimeProfile(
         existingProfile,
-        payload
+        payload,
+        initialPayload
       );
 
       expect(loggedFetch).not.toHaveBeenCalled();
