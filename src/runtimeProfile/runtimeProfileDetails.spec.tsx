@@ -437,6 +437,25 @@ describe('RuntimeProfileDetails Component', () => {
       'Lakehouse runtime catalog (project: other-lh-proj)'
     );
     expect(getRowValue('Hive endpoint')).toBe('Disabled');
+
+    // Also displays custom Lakehouse project when profile name has no parseable projectId
+    await renderDetails(jest.fn(), undefined, {
+      ...existingLakehouseProfile,
+      name: 'unscoped-lakehouse-profile'
+    });
+    const unscopedRows = Array.from(
+      container.querySelectorAll('.runtime-profile-details-row')
+    );
+    const unscopedMetastore = unscopedRows
+      .find(
+        r =>
+          r.querySelector('.runtime-profile-details-label')?.textContent ===
+          'Metastore'
+      )
+      ?.querySelector('.runtime-profile-details-value')?.textContent;
+    expect(unscopedMetastore).toBe(
+      'Lakehouse runtime catalog (project: other-lh-proj)'
+    );
   });
 
   it('should open section edit drawers, call updateRuntimeProfile on Save, and notify user', async () => {
