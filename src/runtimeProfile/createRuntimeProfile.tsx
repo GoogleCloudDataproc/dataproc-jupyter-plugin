@@ -86,7 +86,10 @@ import {
   DATAPROC_ACCELERATED_MACHINE_TYPES,
   DEFAULT_GENERAL_EXECUTOR_TYPE,
   DEFAULT_ACCELERATED_EXECUTOR_TYPE,
-  DEFAULT_STANDARD_TIER_EXECUTOR_TYPE
+  DEFAULT_STANDARD_TIER_EXECUTOR_TYPE,
+  RUNTIME_PROFILE_CREATED_EVENT,
+  SETTINGS_COMMAND_ID,
+  SETTINGS_WIDGET_TITLE
 } from '../utils/const';
 import {
   DEFAULT_HDD_DISK_SIZE,
@@ -112,6 +115,8 @@ import {
 } from './runtimeProfileService';
 import { registerSessionKernelsInLauncher } from './sessionKernelLauncher';
 import { authApi, IAuthCredentials } from '../utils/utils';
+import { eventEmitter } from '../utils/signalEmitter';
+import { requestRuntimeProfileListTab } from './runtimeProfileNavigation';
 import {
   ALL_MACHINE_TYPES,
   calculateDcu,
@@ -573,8 +578,9 @@ export const CreateRuntimeProfileComponent: React.FC<
     initialMetastoreConfig?.projectId
   );
   const [isLoadingOptions, setIsLoadingOptions] = useState<boolean>(true);
+  // Collapsed by default; the summary panel already shows these settings.
   const [expandAdditionalConfig, setExpandAdditionalConfig] =
-    useState<boolean>(true);
+    useState<boolean>(false);
   const [isRuntimeConfigDrawerOpen, setIsRuntimeConfigDrawerOpen] =
     useState<boolean>(false);
   const [isMetastoreDrawerOpen, setIsMetastoreDrawerOpen] =
@@ -621,10 +627,18 @@ export const CreateRuntimeProfileComponent: React.FC<
         ? DEFAULT_STANDARD_TIER_EXECUTOR_TYPE
         : DEFAULT_GENERAL_EXECUTOR_TYPE)
   );
-  const machineTypes: IMachineTypeOption[] =
-    executorCategory === 'accelerated'
-      ? DATAPROC_ACCELERATED_MACHINE_TYPES
+  // Standard tier supports neither accelerated nor highmem executor shapes,
+  // so its dropdown lists only the standard-* machine types.
+  const machineTypes = useMemo<IMachineTypeOption[]>(() => {
+    if (executorCategory === 'accelerated') {
+      return DATAPROC_ACCELERATED_MACHINE_TYPES;
+    }
+    return tier === 'Standard'
+      ? DATAPROC_STANDARD_MACHINE_TYPES.filter(
+          m => !m.name.toLowerCase().includes('highmem')
+        )
       : DATAPROC_STANDARD_MACHINE_TYPES;
+  }, [executorCategory, tier]);
 
   const defaultRuntimeId = useMemo<string>(
     () =>
@@ -649,6 +663,7 @@ export const CreateRuntimeProfileComponent: React.FC<
   });
 
   const selectedRegion = watch('region');
+  const hasFormErrors = Object.keys(errors).length > 0;
 
   // Configuration values derived from initial props or defaults.
   // TODO: Validation on runtimeProfileId / displayName field will be handled in upcoming PRs.
@@ -999,6 +1014,34 @@ export const CreateRuntimeProfileComponent: React.FC<
     }
   };
 
+  /**
+   * Closes the form and shows the runtime profile listing page: the Spark tab
+   * of the Google Cloud Settings widget, which is brought to the front if it
+   * is already open and opened otherwise.
+   */
+  const navigateToRuntimeProfileList = () => {
+    const shell = app?.shell;
+    if (!shell) {
+      return;
+    }
+    const formWidget = shell.activeWidget;
+    const settingsWidget =
+      typeof shell.widgets === 'function'
+        ? Array.from(shell.widgets('main')).find(
+            widget => widget.title.label === SETTINGS_WIDGET_TITLE
+          )
+        : undefined;
+    if (settingsWidget) {
+      shell.activateById(settingsWidget.id);
+    } else {
+      // The layout of a newly opened Settings widget mounts after the
+      // created event has fired, so ask it to start on the Spark tab.
+      requestRuntimeProfileListTab();
+      void app?.commands.execute(SETTINGS_COMMAND_ID);
+    }
+    formWidget?.close();
+  };
+
   const onSubmit = async (data: IRuntimeProfileFormData) => {
     try {
       const isLightningEngineActive =
@@ -1042,10 +1085,13 @@ export const CreateRuntimeProfileComponent: React.FC<
         }
       }
 
+      // Tell the listing page (and the Settings layout hosting it) to show
+      // the new profile, then return to it.
+      eventEmitter.emit(RUNTIME_PROFILE_CREATED_EVENT);
       if (onSuccess) {
         onSuccess();
       } else {
-        handleBack();
+        navigateToRuntimeProfileList();
       }
     } catch (error: any) {
       const errorMessage =
@@ -1494,9 +1540,9 @@ export const CreateRuntimeProfileComponent: React.FC<
             <div className="runtime-profile-buttons">
               <button
                 type="submit"
-                disabled={isSubmitting}
+                disabled={isSubmitting || hasFormErrors}
                 className={`runtime-profile-submit-btn ${
-                  isSubmitting
+                  isSubmitting || hasFormErrors
                     ? 'submit-button-disable-style'
                     : 'submit-button-style'
                 }`}

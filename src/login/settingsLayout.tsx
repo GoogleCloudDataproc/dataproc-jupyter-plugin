@@ -15,11 +15,14 @@
  * limitations under the License.
  */
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { JupyterLab } from '@jupyterlab/application';
 import { ISettingRegistry } from '@jupyterlab/settingregistry';
 import Common from './common';
 import RuntimeProfileList from '../runtimeProfile/runtimeProfileList';
+import { eventEmitter } from '../utils/signalEmitter';
+import { RUNTIME_PROFILE_CREATED_EVENT } from '../utils/const';
+import { consumeRuntimeProfileListTabRequest } from '../runtimeProfile/runtimeProfileNavigation';
 
 interface ISettingsLayoutProps {
   configError: boolean;
@@ -34,14 +37,24 @@ export default function SettingsLayout({
   app,
   settingRegistry
 }: ISettingsLayoutProps) {
-  const [activeTab, setActiveTab] = useState<'common' | 'spark'>('common');
+  // Starts on the Spark tab when opened to show a newly created profile.
+  const [activeTab, setActiveTab] = useState<'common' | 'spark'>(() =>
+    consumeRuntimeProfileListTabRequest() ? 'spark' : 'common'
+  );
+
+  // A newly created runtime profile is shown on the Spark tab.
+  useEffect(() => {
+    const showRuntimeProfiles = () => setActiveTab('spark');
+    eventEmitter.on(RUNTIME_PROFILE_CREATED_EVENT, showRuntimeProfiles);
+    return () => {
+      eventEmitter.off(RUNTIME_PROFILE_CREATED_EVENT, showRuntimeProfiles);
+    };
+  }, []);
 
   return (
     <div className="settings-layout-container">
       <div className="settings-sidebar">
-        <div className="settings-sidebar-header">
-          Google Cloud Settings
-        </div>
+        <div className="settings-sidebar-header">Google Cloud Settings</div>
         <div
           className={`settings-tab ${activeTab === 'common' ? 'active' : ''}`}
           onClick={() => setActiveTab('common')}
@@ -67,9 +80,7 @@ export default function SettingsLayout({
           />
         )}
 
-        {activeTab === 'spark' && (
-          <RuntimeProfileList app={app} />
-        )}
+        {activeTab === 'spark' && <RuntimeProfileList app={app} />}
       </div>
     </div>
   );

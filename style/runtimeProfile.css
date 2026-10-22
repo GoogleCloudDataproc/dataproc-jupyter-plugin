@@ -1000,7 +1000,6 @@ body[data-jp-theme-light='false']
 
 .runtime-profile-right-panel {
   flex: 0 1 420px;
-  width: 420px;
   min-width: 280px;
   max-width: 100%;
   height: 100%;
