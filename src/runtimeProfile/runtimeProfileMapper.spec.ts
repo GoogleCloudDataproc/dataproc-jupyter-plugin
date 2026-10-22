@@ -1074,8 +1074,39 @@ describe('runtimeProfileMapper', () => {
       expect(minimalBody.name).toBe(
         'projects/p/locations/us-east1/sessionTemplates/minimal'
       );
-      expect(minimalBody.jupyterSession.kernel).toBe('PYTHON');
+      expect(minimalBody.jupyterSession?.kernel).toBe('PYTHON');
+      expect(minimalBody).not.toHaveProperty('sparkConnectSession');
       expect(minimalBody).not.toHaveProperty('environmentConfig');
+    });
+
+    it('keeps sparkConnectSession and does not add jupyterSession for a Spark Connect template', () => {
+      // session_config is a oneof: writing jupyterSession would turn the
+      // template into a Jupyter one (or be rejected if both were sent).
+      const body = mapRuntimeProfileToSessionTemplateUpdate(
+        {
+          displayName: 'Renamed',
+          region: 'us-central1',
+          description: 'new description',
+          runtimeEnvironmentConfig: { runtimeProfileId: 'spark_connect' }
+        },
+        {
+          name: 'projects/test-project/locations/us-central1/sessionTemplates/spark_connect',
+          sparkConnectSession: {},
+          runtimeConfig: { version: '2.2' }
+        }
+      );
+
+      expect(body.sparkConnectSession).toEqual({});
+      expect(body).not.toHaveProperty('jupyterSession');
+      expect(body.name).toBe(
+        'projects/test-project/locations/us-central1/sessionTemplates/spark_connect'
+      );
+      expect(body.description).toBe('new description');
+      expect(
+        Object.keys(body).filter(key =>
+          ['jupyterSession', 'sparkConnectSession'].includes(key)
+        )
+      ).toEqual(['sparkConnectSession']);
     });
   });
 });

@@ -348,6 +348,7 @@ export interface IRuntimeProfileService {
     projectId?: string,
     region?: string
   ): Promise<IRuntimeProfile>;
+  getRuntimeProfile?(name: string): Promise<IRuntimeProfileTemplate>;
   updateRuntimeProfile?(
     existingProfile: IRuntimeProfileTemplate,
     payload: ICreateRuntimeProfilePayload

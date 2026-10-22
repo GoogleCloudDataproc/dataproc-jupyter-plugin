@@ -1379,9 +1379,16 @@ export function mapSessionTemplateToFormValues(
   };
 }
 
-/** Body of a sessionTemplates.patch request built by mapRuntimeProfileToSessionTemplateUpdate. */
+/**
+ * Body of a sessionTemplates.patch request built by mapRuntimeProfileToSessionTemplateUpdate.
+ *
+ * `session_config` is a oneof in the API, so the body carries exactly one of
+ * `jupyterSession` or `sparkConnectSession`: whichever the saved template has.
+ */
 export interface ISessionTemplateUpdatePayload
-  extends ISessionTemplateApiPayload {
+  extends Omit<ISessionTemplateApiPayload, 'jupyterSession'> {
+  jupyterSession?: ISessionTemplateApiPayload['jupyterSession'];
+  sparkConnectSession?: IRuntimeProfileTemplate['sparkConnectSession'];
   environmentConfig?: IRuntimeProfileTemplate['environmentConfig'];
 }
 
@@ -1396,25 +1403,44 @@ const normalizeStagingBucket = (bucket?: string): string | undefined => {
 
 /**
  * Maps the edited form payload to the body of a sessionTemplates.patch request
- * for `existingTemplate`, using the same mapping as create.
+ * for `latestTemplate`, using the same mapping as create.
  *
- * PATCH replaces the whole template, so the body also keeps the profile's
- * resource name (its ID and region can't change), its Jupyter kernel, and the
+ * PATCH replaces the whole template (sessionTemplates.patch has no update mask
+ * and SessionTemplate has no etag), so `latestTemplate` should be the profile
+ * as re-read from the API right before saving, and the body also keeps the
+ * profile's resource name (its ID and region can't change), its session kind
+ * (`jupyterSession` with its kernel, or `sparkConnectSession`), and the
  * settings this mapping doesn't produce yet: the environment config (network,
  * KMS key, TTLs, metastore service) and any other runtime config fields. The
  * staging bucket is taken from the form.
  */
 export function mapRuntimeProfileToSessionTemplateUpdate(
   payload: ICreateRuntimeProfilePayload,
-  existingTemplate: IRuntimeProfileTemplate
+  latestTemplate: IRuntimeProfileTemplate
 ): ISessionTemplateUpdatePayload {
-  const { region } = parseRuntimeProfileResourceName(existingTemplate.name);
-  const projectId = existingTemplate.name.split('/')[1] ?? '';
-  const mapped = mapRuntimeProfileToSessionTemplate(payload, projectId, region);
+  const { region } = parseRuntimeProfileResourceName(latestTemplate.name);
+  const projectId = latestTemplate.name.split('/')[1] ?? '';
+  const { jupyterSession: mappedJupyterSession, ...mapped } =
+    mapRuntimeProfileToSessionTemplate(payload, projectId, region);
+
+  // session_config is a oneof: keep the saved template's kind. A Spark Connect
+  // template has no display name or kernel to edit, so it is copied as-is.
+  const sessionConfig: Pick<
+    ISessionTemplateUpdatePayload,
+    'jupyterSession' | 'sparkConnectSession'
+  > = latestTemplate.sparkConnectSession
+    ? { sparkConnectSession: latestTemplate.sparkConnectSession }
+    : {
+        jupyterSession: {
+          ...mappedJupyterSession,
+          kernel:
+            latestTemplate.jupyterSession?.kernel || mappedJupyterSession.kernel
+        }
+      };
 
   // Runtime config fields the mapping doesn't manage, e.g. autotuningConfig.
   const otherRuntimeConfig: Record<string, unknown> = {
-    ...existingTemplate.runtimeConfig
+    ...latestTemplate.runtimeConfig
   };
   ['version', 'containerImage', 'properties', 'repositoryConfig'].forEach(
     field => delete otherRuntimeConfig[field]
@@ -1424,7 +1450,7 @@ export function mapRuntimeProfileToSessionTemplateUpdate(
     payload.runtimeEnvironmentConfig?.stagingBucket
   );
   const executionConfig = {
-    ...existingTemplate.environmentConfig?.executionConfig
+    ...latestTemplate.environmentConfig?.executionConfig
   };
   if (stagingBucket) {
     executionConfig.stagingBucket = stagingBucket;
@@ -1432,16 +1458,12 @@ export function mapRuntimeProfileToSessionTemplateUpdate(
     delete executionConfig.stagingBucket;
   }
   const hasEnvironmentConfig =
-    Boolean(existingTemplate.environmentConfig) || Boolean(stagingBucket);
+    Boolean(latestTemplate.environmentConfig) || Boolean(stagingBucket);
 
   return {
     ...mapped,
-    name: existingTemplate.name,
-    jupyterSession: {
-      ...mapped.jupyterSession,
-      kernel:
-        existingTemplate.jupyterSession?.kernel || mapped.jupyterSession.kernel
-    },
+    name: latestTemplate.name,
+    ...sessionConfig,
     runtimeConfig: {
       ...otherRuntimeConfig,
       ...mapped.runtimeConfig
@@ -1449,7 +1471,7 @@ export function mapRuntimeProfileToSessionTemplateUpdate(
     ...(hasEnvironmentConfig
       ? {
           environmentConfig: {
-            ...existingTemplate.environmentConfig,
+            ...latestTemplate.environmentConfig,
             executionConfig
           }
         }

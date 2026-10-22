@@ -521,10 +521,61 @@ describe('RuntimeProfileService', () => {
     });
   });
 
+  describe('getRuntimeProfile', () => {
+    const name =
+      'projects/test-project/locations/us-central1/sessionTemplates/sample-profile';
+
+    it('GETs the profile by resource name', async () => {
+      const service = new RuntimeProfileService(false);
+      const profile = { name, updateTime: '2026-10-01T00:00:00Z' };
+      (authApi as jest.Mock).mockResolvedValue({ access_token: 'live-token' });
+      (loggedFetch as jest.Mock).mockResolvedValue({
+        ok: true,
+        json: jest.fn().mockResolvedValue(profile)
+      });
+
+      await expect(service.getRuntimeProfile(name)).resolves.toEqual(profile);
+      expect(loggedFetch).toHaveBeenCalledWith(
+        `https://dataproc.googleapis.com/v1/${name}`,
+        expect.objectContaining({
+          method: 'GET',
+          headers: expect.objectContaining({
+            Authorization: 'Bearer live-token'
+          })
+        })
+      );
+    });
+
+    it('throws the API error message or a readable fallback', async () => {
+      const service = new RuntimeProfileService(false);
+      (authApi as jest.Mock).mockResolvedValue({ access_token: 'live-token' });
+      (loggedFetch as jest.Mock).mockResolvedValueOnce({
+        ok: false,
+        status: 404,
+        statusText: 'Not Found',
+        json: jest.fn().mockResolvedValue({ error: { message: 'Not found' } })
+      });
+      await expect(service.getRuntimeProfile(name)).rejects.toThrow(
+        'Not found'
+      );
+
+      (loggedFetch as jest.Mock).mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        statusText: 'OK',
+        json: jest.fn().mockRejectedValue(new SyntaxError('bad json'))
+      });
+      await expect(service.getRuntimeProfile(name)).rejects.toThrow(
+        'Failed to load runtime profile (200: OK)'
+      );
+    });
+  });
+
   describe('updateRuntimeProfile', () => {
     const existingProfile = {
       name: 'projects/test-project/locations/us-central1/sessionTemplates/sample-profile',
       description: 'old description',
+      updateTime: '2026-10-01T00:00:00Z',
       jupyterSession: { displayName: 'sample-profile', kernel: 'PYTHON' },
       environmentConfig: { executionConfig: { idleTtl: '3600s' } }
     };
@@ -535,12 +586,31 @@ describe('RuntimeProfileService', () => {
       tier: 'Premium',
       runtimeEnvironmentConfig: { runtimeProfileId: 'sample-profile' }
     };
+    const profileUrl =
+      'https://dataproc.googleapis.com/v1/projects/test-project/locations/us-central1/sessionTemplates/sample-profile';
 
-    it('sends a PATCH for the profile resource name with the update mapping in live mode', async () => {
+    /** Queues the GET response that precedes the PATCH in live mode. */
+    const mockLatestProfile = (latest: unknown) => {
+      (loggedFetch as jest.Mock).mockResolvedValueOnce({
+        ok: true,
+        json: jest.fn().mockResolvedValue(latest)
+      });
+    };
+
+    it('re-reads the profile, then PATCHes the body built from the fresh copy in live mode', async () => {
       const service = new RuntimeProfileService(false);
-      const savedProfile = { ...existingProfile, description: 'saved' };
+      // Same updateTime, but a field the form doesn't manage changed on the
+      // server: the PATCH body must carry the fresh value, not the opened copy.
+      const latestProfile = {
+        ...existingProfile,
+        environmentConfig: {
+          executionConfig: { idleTtl: '7200s', kmsKey: 'projects/p/k' }
+        }
+      };
+      const savedProfile = { ...latestProfile, description: 'saved' };
       (authApi as jest.Mock).mockResolvedValue({ access_token: 'live-token' });
-      (loggedFetch as jest.Mock).mockResolvedValue({
+      mockLatestProfile(latestProfile);
+      (loggedFetch as jest.Mock).mockResolvedValueOnce({
         ok: true,
         json: jest.fn().mockResolvedValue(savedProfile)
       });
@@ -550,25 +620,71 @@ describe('RuntimeProfileService', () => {
         payload
       );
 
-      expect(loggedFetch).toHaveBeenCalledWith(
-        'https://dataproc.googleapis.com/v1/projects/test-project/locations/us-central1/sessionTemplates/sample-profile',
+      expect(loggedFetch).toHaveBeenCalledTimes(2);
+      expect(loggedFetch).toHaveBeenNthCalledWith(
+        1,
+        profileUrl,
+        expect.objectContaining({ method: 'GET' })
+      );
+      expect(loggedFetch).toHaveBeenNthCalledWith(
+        2,
+        profileUrl,
         expect.objectContaining({
           method: 'PATCH',
           headers: expect.objectContaining({
             Authorization: 'Bearer live-token'
           }),
           body: JSON.stringify(
-            mapRuntimeProfileToSessionTemplateUpdate(payload, existingProfile)
+            mapRuntimeProfileToSessionTemplateUpdate(payload, latestProfile)
           )
         })
       );
       expect(result).toEqual(savedProfile);
     });
 
+    it('fails without PATCHing when the profile changed after the form opened', async () => {
+      const service = new RuntimeProfileService(false);
+      (authApi as jest.Mock).mockResolvedValue({ access_token: 'live-token' });
+      mockLatestProfile({
+        ...existingProfile,
+        updateTime: '2026-10-02T12:00:00Z'
+      });
+
+      await expect(
+        service.updateRuntimeProfile(existingProfile, payload)
+      ).rejects.toThrow(
+        'Runtime profile "sample-profile" was modified by someone else after you opened it (last saved 2026-10-02T12:00:00Z). Close this tab, reopen the profile, and reapply your changes.'
+      );
+      expect(loggedFetch).toHaveBeenCalledTimes(1);
+      expect(loggedFetch).not.toHaveBeenCalledWith(
+        expect.anything(),
+        expect.objectContaining({ method: 'PATCH' })
+      );
+    });
+
+    it('fails without PATCHing when the profile cannot be re-read', async () => {
+      const service = new RuntimeProfileService(false);
+      (authApi as jest.Mock).mockResolvedValue({ access_token: 'live-token' });
+      (loggedFetch as jest.Mock).mockResolvedValueOnce({
+        ok: false,
+        status: 404,
+        statusText: 'Not Found',
+        json: jest
+          .fn()
+          .mockResolvedValue({ error: { message: 'Template not found' } })
+      });
+
+      await expect(
+        service.updateRuntimeProfile(existingProfile, payload)
+      ).rejects.toThrow('Template not found');
+      expect(loggedFetch).toHaveBeenCalledTimes(1);
+    });
+
     it('throws the API error message when the live update fails', async () => {
       const service = new RuntimeProfileService(false);
       (authApi as jest.Mock).mockResolvedValue({ access_token: 'live-token' });
-      (loggedFetch as jest.Mock).mockResolvedValue({
+      mockLatestProfile(existingProfile);
+      (loggedFetch as jest.Mock).mockResolvedValueOnce({
         ok: false,
         status: 403,
         statusText: 'Forbidden',
@@ -585,7 +701,8 @@ describe('RuntimeProfileService', () => {
     it('throws a readable error when the live update response is not JSON', async () => {
       const service = new RuntimeProfileService(false);
       (authApi as jest.Mock).mockResolvedValue({ access_token: 'live-token' });
-      (loggedFetch as jest.Mock).mockResolvedValue({
+      mockLatestProfile(existingProfile);
+      (loggedFetch as jest.Mock).mockResolvedValueOnce({
         ok: false,
         status: 502,
         statusText: 'Bad Gateway',
@@ -602,7 +719,8 @@ describe('RuntimeProfileService', () => {
     it('throws when the live update succeeds without a readable body', async () => {
       const service = new RuntimeProfileService(false);
       (authApi as jest.Mock).mockResolvedValue({ access_token: 'live-token' });
-      (loggedFetch as jest.Mock).mockResolvedValue({
+      mockLatestProfile(existingProfile);
+      (loggedFetch as jest.Mock).mockResolvedValueOnce({
         ok: true,
         status: 200,
         statusText: 'OK',
