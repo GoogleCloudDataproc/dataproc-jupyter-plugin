@@ -102,11 +102,9 @@ import {
   EXECUTOR_CATEGORY_ACCELERATED_SUB3,
   EXECUTOR_SHAPES_SUBHEADING,
   EXECUTOR_ACCELERATED_SHAPES_SUBHEADING,
-  RUNTIME_PROFILE_CREATED_EVENT,
   SETTINGS_COMMAND_ID,
   SETTINGS_WIDGET_TITLE
 } from '../utils/const';
-import { eventEmitter } from '../utils/signalEmitter';
 import { consumeRuntimeProfileListTabRequest } from './runtimeProfileNavigation';
 
 describe('CreateRuntimeProfileComponent UI & Service', () => {
@@ -958,69 +956,62 @@ describe('CreateRuntimeProfileComponent UI & Service', () => {
     jest
       .spyOn(mockService, 'createRuntimeProfile')
       .mockResolvedValue({ displayName: 'created', region: 'us-central1' });
-    const onCreated = jest.fn();
-    eventEmitter.on(RUNTIME_PROFILE_CREATED_EVENT, onCreated);
 
     const formWidget = { id: 'form-widget', close: jest.fn() };
     const settingsWidget = {
       id: 'settings-widget',
-      title: { label: SETTINGS_WIDGET_TITLE }
+      title: { label: SETTINGS_WIDGET_TITLE },
+      close: jest.fn()
     };
-    const otherWidget = { id: 'other', title: { label: 'Notebook' } };
+    const otherWidget = {
+      id: 'other',
+      title: { label: 'Notebook' },
+      close: jest.fn()
+    };
     const mockApp = {
       shell: {
         activeWidget: formWidget,
-        widgets: jest.fn(() =>
-          [otherWidget, settingsWidget][Symbol.iterator]()
-        ),
-        activateById: jest.fn()
+        widgets: jest.fn(() => [otherWidget, settingsWidget][Symbol.iterator]())
       },
       commands: { execute: jest.fn().mockResolvedValue(undefined) }
     } as any;
 
-    try {
-      await act(async () => {
-        root.render(
-          <CreateRuntimeProfileComponent app={mockApp} service={mockService} />
-        );
-      });
-      await act(async () => {
-        (
-          container.querySelector('button[type="submit"]') as HTMLButtonElement
-        ).click();
-      });
+    await act(async () => {
+      root.render(
+        <CreateRuntimeProfileComponent app={mockApp} service={mockService} />
+      );
+    });
+    await act(async () => {
+      (
+        container.querySelector('button[type="submit"]') as HTMLButtonElement
+      ).click();
+    });
 
-      expect(onCreated).toHaveBeenCalledTimes(1);
-      // The open Settings widget is brought to the front and the form closed
-      expect(mockApp.shell.widgets).toHaveBeenCalledWith('main');
-      expect(mockApp.shell.activateById).toHaveBeenCalledWith(
-        'settings-widget'
-      );
-      expect(mockApp.commands.execute).not.toHaveBeenCalled();
-      expect(formWidget.close).toHaveBeenCalledTimes(1);
-      // The open layout is switched by the event, not by a parked request
-      expect(consumeRuntimeProfileListTabRequest()).toBe(false);
+    // The open Settings widget is replaced by a fresh one, so the listing
+    // reloads with the new profile, and the form is closed
+    expect(mockApp.shell.widgets).toHaveBeenCalledWith('main');
+    expect(settingsWidget.close).toHaveBeenCalledTimes(1);
+    expect(otherWidget.close).not.toHaveBeenCalled();
+    expect(mockApp.commands.execute).toHaveBeenCalledWith(SETTINGS_COMMAND_ID);
+    expect(formWidget.close).toHaveBeenCalledTimes(1);
+    // ...and the fresh Settings layout is asked to start on the Spark tab
+    expect(consumeRuntimeProfileListTabRequest()).toBe(true);
 
-      // Without an open Settings widget, it is opened via its command
-      mockApp.shell.widgets.mockImplementation(() =>
-        [otherWidget][Symbol.iterator]()
-      );
-      mockApp.shell.activateById.mockClear();
-      await act(async () => {
-        (
-          container.querySelector('button[type="submit"]') as HTMLButtonElement
-        ).click();
-      });
-      expect(mockApp.shell.activateById).not.toHaveBeenCalled();
-      expect(mockApp.commands.execute).toHaveBeenCalledWith(
-        SETTINGS_COMMAND_ID
-      );
-      expect(formWidget.close).toHaveBeenCalledTimes(2);
-      // ...and asked to start on the Spark tab once it mounts
-      expect(consumeRuntimeProfileListTabRequest()).toBe(true);
-    } finally {
-      eventEmitter.off(RUNTIME_PROFILE_CREATED_EVENT, onCreated);
-    }
+    // Without an open Settings widget, one is simply opened via its command
+    mockApp.shell.widgets.mockImplementation(() =>
+      [otherWidget][Symbol.iterator]()
+    );
+    mockApp.commands.execute.mockClear();
+    await act(async () => {
+      (
+        container.querySelector('button[type="submit"]') as HTMLButtonElement
+      ).click();
+    });
+    expect(settingsWidget.close).toHaveBeenCalledTimes(1);
+    expect(otherWidget.close).not.toHaveBeenCalled();
+    expect(mockApp.commands.execute).toHaveBeenCalledWith(SETTINGS_COMMAND_ID);
+    expect(formWidget.close).toHaveBeenCalledTimes(2);
+    expect(consumeRuntimeProfileListTabRequest()).toBe(true);
   });
 
   it('pre-selects the region saved in Settings when it is in the list', async () => {

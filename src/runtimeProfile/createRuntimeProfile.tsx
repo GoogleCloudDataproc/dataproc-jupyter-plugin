@@ -87,7 +87,6 @@ import {
   DEFAULT_GENERAL_EXECUTOR_TYPE,
   DEFAULT_ACCELERATED_EXECUTOR_TYPE,
   DEFAULT_STANDARD_TIER_EXECUTOR_TYPE,
-  RUNTIME_PROFILE_CREATED_EVENT,
   SETTINGS_COMMAND_ID,
   SETTINGS_WIDGET_TITLE
 } from '../utils/const';
@@ -115,7 +114,6 @@ import {
 } from './runtimeProfileService';
 import { registerSessionKernelsInLauncher } from './sessionKernelLauncher';
 import { authApi, IAuthCredentials } from '../utils/utils';
-import { eventEmitter } from '../utils/signalEmitter';
 import { requestRuntimeProfileListTab } from './runtimeProfileNavigation';
 import {
   ALL_MACHINE_TYPES,
@@ -1016,8 +1014,9 @@ export const CreateRuntimeProfileComponent: React.FC<
 
   /**
    * Closes the form and shows the runtime profile listing page: the Spark tab
-   * of the Google Cloud Settings widget, which is brought to the front if it
-   * is already open and opened otherwise.
+   * of the Google Cloud Settings widget. Any Settings widget that is already
+   * open is replaced by a fresh one, so the listing reloads and includes the
+   * new profile.
    */
   const navigateToRuntimeProfileList = () => {
     const shell = app?.shell;
@@ -1025,20 +1024,14 @@ export const CreateRuntimeProfileComponent: React.FC<
       return;
     }
     const formWidget = shell.activeWidget;
-    const settingsWidget =
-      typeof shell.widgets === 'function'
-        ? Array.from(shell.widgets('main')).find(
-            widget => widget.title.label === SETTINGS_WIDGET_TITLE
-          )
-        : undefined;
-    if (settingsWidget) {
-      shell.activateById(settingsWidget.id);
-    } else {
-      // The layout of a newly opened Settings widget mounts after the
-      // created event has fired, so ask it to start on the Spark tab.
-      requestRuntimeProfileListTab();
-      void app?.commands.execute(SETTINGS_COMMAND_ID);
+    if (typeof shell.widgets === 'function') {
+      Array.from(shell.widgets('main'))
+        .filter(widget => widget.title.label === SETTINGS_WIDGET_TITLE)
+        .forEach(widget => widget.close());
     }
+    // The new Settings layout reads this request when it mounts.
+    requestRuntimeProfileListTab();
+    void app?.commands.execute(SETTINGS_COMMAND_ID);
     formWidget?.close();
   };
 
@@ -1085,9 +1078,6 @@ export const CreateRuntimeProfileComponent: React.FC<
         }
       }
 
-      // Tell the listing page (and the Settings layout hosting it) to show
-      // the new profile, then return to it.
-      eventEmitter.emit(RUNTIME_PROFILE_CREATED_EVENT);
       if (onSuccess) {
         onSuccess();
       } else {

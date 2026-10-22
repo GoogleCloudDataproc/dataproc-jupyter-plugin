@@ -20,8 +20,6 @@
 import React, { act } from 'react';
 import { createRoot, Root } from 'react-dom/client';
 import SettingsLayout from './settingsLayout';
-import { eventEmitter } from '../utils/signalEmitter';
-import { RUNTIME_PROFILE_CREATED_EVENT } from '../utils/const';
 import { requestRuntimeProfileListTab } from '../runtimeProfile/runtimeProfileNavigation';
 
 jest.mock('./common', () => () => (
@@ -112,21 +110,6 @@ describe('SettingsLayout Component', () => {
     expect(commonTab.classList.contains('active')).toBe(true);
     expect(container.textContent).toContain('Common Settings View');
     expect(container.textContent).not.toContain('Runtime Profile List View');
-  });
-
-  it('shows the Spark tab when a runtime profile is created while open', () => {
-    act(() => {
-      root.render(
-        <SettingsLayout configError={false} setConfigError={jest.fn()} />
-      );
-    });
-    expect(container.textContent).toContain('Common Settings View');
-
-    act(() => {
-      eventEmitter.emit(RUNTIME_PROFILE_CREATED_EVENT);
-    });
-    expect(container.textContent).toContain('Runtime Profile List View');
-    expect(container.textContent).not.toContain('Common Settings View');
   });
 
   it('starts on the Spark tab when opened to show a created runtime profile', () => {

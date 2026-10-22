@@ -462,8 +462,6 @@ export const RUNTIME_PROFILE_INTRO_TEXT =
  * Navigation between the runtime profile form and the listing page, which
  * lives on the Spark tab of the Google Cloud Settings widget.
  */
-/** Emitted after a runtime profile is created, so the listing page refreshes. */
-export const RUNTIME_PROFILE_CREATED_EVENT = 'runtimeProfileCreated';
 /** Title of the Google Cloud Settings main-area widget. */
 export const SETTINGS_WIDGET_TITLE = 'Config Setup';
 /** Command that opens the Google Cloud Settings widget. */

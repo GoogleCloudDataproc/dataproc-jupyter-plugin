@@ -15,13 +15,11 @@
  * limitations under the License.
  */
 
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { JupyterLab } from '@jupyterlab/application';
 import { ISettingRegistry } from '@jupyterlab/settingregistry';
 import Common from './common';
 import RuntimeProfileList from '../runtimeProfile/runtimeProfileList';
-import { eventEmitter } from '../utils/signalEmitter';
-import { RUNTIME_PROFILE_CREATED_EVENT } from '../utils/const';
 import { consumeRuntimeProfileListTabRequest } from '../runtimeProfile/runtimeProfileNavigation';
 
 interface ISettingsLayoutProps {
@@ -41,15 +39,6 @@ export default function SettingsLayout({
   const [activeTab, setActiveTab] = useState<'common' | 'spark'>(() =>
     consumeRuntimeProfileListTabRequest() ? 'spark' : 'common'
   );
-
-  // A newly created runtime profile is shown on the Spark tab.
-  useEffect(() => {
-    const showRuntimeProfiles = () => setActiveTab('spark');
-    eventEmitter.on(RUNTIME_PROFILE_CREATED_EVENT, showRuntimeProfiles);
-    return () => {
-      eventEmitter.off(RUNTIME_PROFILE_CREATED_EVENT, showRuntimeProfiles);
-    };
-  }, []);
 
   return (
     <div className="settings-layout-container">

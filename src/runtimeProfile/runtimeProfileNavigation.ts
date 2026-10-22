@@ -19,11 +19,9 @@
  * One-shot request to open the Google Cloud Settings widget on its Spark
  * (runtime profiles) tab.
  *
- * The runtime profile form navigates to the listing page after a profile is
- * created. When the Settings widget is already open it is told to switch tabs
- * through an event; when it has to be opened first, its layout mounts after
- * that event has fired, so the request is parked here and consumed by the
- * layout when it mounts.
+ * After a profile is created, the runtime profile form opens a fresh Settings
+ * widget to show the listing page. The request is parked here and consumed by
+ * the Settings layout when it mounts.
  */
 let runtimeProfileListTabRequested = false;
 

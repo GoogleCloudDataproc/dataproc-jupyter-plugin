@@ -32,8 +32,6 @@ import { JupyterLab } from '@jupyterlab/application';
 import RuntimeProfileDetails, {
   DeleteConfirmationModal
 } from './runtimeProfileDetails';
-import { eventEmitter } from '../utils/signalEmitter';
-import { RUNTIME_PROFILE_CREATED_EVENT } from '../utils/const';
 
 const iconAddRuntime = new LabIcon({
   name: 'runtime-profile:add-runtime-icon',
@@ -115,25 +113,6 @@ export default function RuntimeProfileList({ app }: { app?: JupyterLab }) {
 
   useEffect(() => {
     fetchProfiles(pageTokens[currentPage]);
-  }, [currentPage]);
-
-  // After a profile is created, leave any open details view and reload the
-  // first page so the new profile is listed.
-  useEffect(() => {
-    const showNewProfile = () => {
-      setSelectedProfile(null);
-      setPageTokens(['']);
-      setPageOffsets([0]);
-      if (currentPage !== 0) {
-        setCurrentPage(0);
-      } else {
-        fetchProfiles('');
-      }
-    };
-    eventEmitter.on(RUNTIME_PROFILE_CREATED_EVENT, showNewProfile);
-    return () => {
-      eventEmitter.off(RUNTIME_PROFILE_CREATED_EVENT, showNewProfile);
-    };
   }, [currentPage]);
 
   const openDeleteModal = (profile: IRuntimeProfileRow) => {
