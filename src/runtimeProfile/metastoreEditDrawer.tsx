@@ -688,7 +688,7 @@ export const MetastoreEditDrawer: React.FC<IMetastoreEditDrawerProps> = ({
                       <FormControlLabel
                         value="new"
                         control={<Radio size="small" />}
-                        label="Create new default catalog"
+                        label="Define new default catalog"
                       />
 
                       {state.catalogSelectionMode === 'new' && (
