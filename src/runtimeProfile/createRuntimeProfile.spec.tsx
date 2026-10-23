@@ -193,6 +193,13 @@ describe('CreateRuntimeProfileComponent UI & Service', () => {
     expect(getFieldValue('Python package repository')).toBe(
       'Google managed PyPI pull-through cache'
     );
+    expect(getFieldValue('Tier')).toBe('Premium (Lightning Engine enabled)');
+    expect(getFieldValue('Driver machine type')).toBe(
+      'highmem-4 (4 vCPU, 32 GB)'
+    );
+    expect(getFieldValue('Driver disk')).toBe('HDD (standard), 200 GiB');
+    expect(getFieldValue('Executor type')).toBe('highmem-4 (4 vCPU, 32 GB)');
+    expect(getFieldValue('Executor disk')).toBe('HDD (standard), 200 GiB');
     expect(getFieldValue('Autoscaling')).toBe('Enabled');
     expect(getFieldValue('Metastore')).toBe('Lakehouse runtime catalog');
     expect(getFieldValue('Hive endpoint')).toBe('Disabled');
@@ -301,8 +308,10 @@ describe('CreateRuntimeProfileComponent UI & Service', () => {
     expect(getFieldValue('Python package repository')).toBe(
       'https://pypi.org/simple'
     );
-    expect(getFieldValue('Tier')).toBe('Premium');
-    expect(getFieldValue('Driver machine type')).toBe('highmem-8');
+    expect(getFieldValue('Tier')).toBe('Premium (Lightning Engine enabled)');
+    expect(getFieldValue('Driver machine type')).toBe(
+      'highmem-8 (8 vCPU, 64 GB)'
+    );
     expect(getFieldValue('Driver disk')).toBe('SSD 200 GB');
     // Executor type always reflects the shape selected in the dropdown
     expect(getFieldValue('Executor type')).toBe('highmem-4 (4 vCPU, 32 GB)');
@@ -468,7 +477,7 @@ describe('CreateRuntimeProfileComponent UI & Service', () => {
     expect(standardCard.textContent).toContain('Standard');
     expect(premiumCard.classList.contains('selected')).toBe(true);
     expect(standardCard.classList.contains('selected')).toBe(false);
-    expect(getFieldValue('Tier')).toBe('Premium');
+    expect(getFieldValue('Tier')).toBe('Premium (Lightning Engine enabled)');
 
     // Switch to Standard tier
     await act(async () => {
@@ -488,7 +497,7 @@ describe('CreateRuntimeProfileComponent UI & Service', () => {
       );
     });
     expect(premiumCard.classList.contains('selected')).toBe(true);
-    expect(getFieldValue('Tier')).toBe('Premium');
+    expect(getFieldValue('Tier')).toBe('Premium (Lightning Engine enabled)');
     expect(
       container.querySelector('.runtime-profile-checkbox-section')
     ).not.toBeNull();
@@ -895,6 +904,7 @@ describe('CreateRuntimeProfileComponent UI & Service', () => {
 
     await selectExecutorType('highmem-16');
     expect(getFieldValue('Executor type')).toContain('highmem-16');
+    expect(getFieldValue('Driver machine type')).toContain('highmem-16');
 
     const generalCard = container
       .querySelectorAll('.node-config-cards-container')[1]
@@ -1740,6 +1750,7 @@ describe('CreateRuntimeProfileComponent UI & Service', () => {
     expect(getProfileTierSummaryValue()).toBe(
       'Premium (Lightning Engine enabled)'
     );
+    expect(getFieldValue('Tier')).toBe('Premium (Lightning Engine enabled)');
 
     const lightningCheckbox = container.querySelector(
       '.runtime-profile-checkbox-section input[type="checkbox"]'
@@ -1753,6 +1764,7 @@ describe('CreateRuntimeProfileComponent UI & Service', () => {
     });
     expect(lightningCheckbox.checked).toBe(false);
     expect(getProfileTierSummaryValue()).toBe('Premium');
+    expect(getFieldValue('Tier')).toBe('Premium');
 
     // Re-check Lightning Engine
     await act(async () => {
@@ -1762,6 +1774,7 @@ describe('CreateRuntimeProfileComponent UI & Service', () => {
     expect(getProfileTierSummaryValue()).toBe(
       'Premium (Lightning Engine enabled)'
     );
+    expect(getFieldValue('Tier')).toBe('Premium (Lightning Engine enabled)');
   });
 
   describe('edit mode', () => {
@@ -1861,7 +1874,10 @@ describe('CreateRuntimeProfileComponent UI & Service', () => {
       expect(getFieldValue('Custom spark image')).toBe(
         'gcr.io/my-project/spark:latest'
       );
-      expect(getFieldValue('Tier')).toBe('Premium');
+      expect(getFieldValue('Tier')).toBe('Premium (Lightning Engine enabled)');
+      expect(getFieldValue('Driver machine type')).toBe(
+        'highmem-8 (8 vCPU, 64 GB)'
+      );
       expect(getFieldValue('Executor type')).toBe('highmem-8 (8 vCPU, 64 GB)');
       expect(getFieldValue('Maximum executors')).toBe('20');
       expect(getFieldValue('Metastore')).toBe(

@@ -34,17 +34,27 @@ import {
 import {
   AutoscalingEditDrawer,
   ExecutorAndDriverEditDrawer,
+  NetworkSecurityEditDrawer,
   OtherCustomizationEditDrawer,
   RuntimeEnvironmentEditDrawer,
   SessionLifecycleEditDrawer
 } from './runtimeProfileEditDrawers';
 import {
+  DATAPROC_METASTORE,
+  MetastoreEditDrawer
+} from './metastoreEditDrawer';
+import {
+  CatalogSelectionMode,
   DISK_TIER_HDD,
   DISK_TIER_SSD,
+  ExecutionIdentityType,
   IAutoscalingConfig,
   IExecutorAndDriverConfig,
+  IMetastoreConfig,
+  INetworkAndSecurityConfig,
   IRuntimeEnvironmentConfig,
   ISessionLifecycleConfig,
+  NetworkSourceType,
   ProfileLabels,
   SparkProperties,
   TimeUnit
@@ -52,7 +62,14 @@ import {
 import {
   DEFAULT_DISK_SIZE,
   extractRuntimeVersion,
+  getDefaultLakehouseCatalogName,
+  getLakehouseCatalogResource,
   isAcceleratedMachine,
+  LAKEHOUSE_CATALOG_PROPERTY_PREFIX,
+  LAKEHOUSE_DEFAULT_CATALOG_PROPERTY,
+  LAKEHOUSE_PROJECT_PROPERTY,
+  LAKEHOUSE_RUNTIME_CATALOG,
+  METASTORE_NONE,
   parseDiskSpec,
   parseDiskTierAndSize,
   parseMachineTypeSpec
@@ -149,8 +166,6 @@ export const formatDurationTtl = (ttl?: string): string => {
   return `${secs} secs`;
 };
 
-const LAKEHOUSE_CATALOG_PREFIX = 'dataproc.lakehouse.catalog.';
-
 const HANDLED_SPARK_PROPERTY_KEYS = new Set<string>([
   DATAPROC_LIGHTNING_ENGINE_PROPERTY,
   'spark.driver.cores',
@@ -169,8 +184,8 @@ const HANDLED_SPARK_PROPERTY_KEYS = new Set<string>([
   'spark.dynamicAllocation.initialExecutors',
   'spark.dynamicAllocation.minExecutors',
   'spark.dynamicAllocation.maxExecutors',
-  'dataproc.lakehouse.defaultCatalog',
-  'spark.dataproc.lakehouse.project'
+  LAKEHOUSE_DEFAULT_CATALOG_PROPERTY,
+  LAKEHOUSE_PROJECT_PROPERTY
 ]);
 
 const EXECUTOR_AND_DRIVER_PROPERTY_KEYS = [
@@ -781,7 +796,7 @@ export const buildOtherCustomizationSparkPropertiesFromTemplate = (
     const normalizedKey = stripPropertyPrefix(rawKey);
     if (
       !HANDLED_SPARK_PROPERTY_KEYS.has(normalizedKey) &&
-      !normalizedKey.startsWith(LAKEHOUSE_CATALOG_PREFIX) &&
+      !normalizedKey.startsWith(LAKEHOUSE_CATALOG_PROPERTY_PREFIX) &&
       !(normalizedKey in result)
     ) {
       result[normalizedKey] = getPropertyValue(properties, normalizedKey);
@@ -802,7 +817,7 @@ export const applyOtherCustomizationUpdateToTemplate = (
     const normalizedKey = stripPropertyPrefix(rawKey);
     if (
       HANDLED_SPARK_PROPERTY_KEYS.has(normalizedKey) ||
-      normalizedKey.startsWith(LAKEHOUSE_CATALOG_PREFIX)
+      normalizedKey.startsWith(LAKEHOUSE_CATALOG_PROPERTY_PREFIX)
     ) {
       nextProps[rawKey] = value;
     }
@@ -827,6 +842,419 @@ export const applyOtherCustomizationUpdateToTemplate = (
       properties: nextProps
     }
   };
+};
+
+const LAKEHOUSE_CATALOG_RESOURCE_REGEX =
+  /^projects\/([^/]+)\/(?:locations\/[^/]+\/)?catalogs\/([^/]+)$/;
+
+export const buildMetastoreConfigFromTemplate = (
+  profile: IRuntimeProfileTemplate,
+  projectId: string = '',
+  region: string = ''
+): IMetastoreConfig => {
+  const metastoreService =
+    profile.environmentConfig?.peripheralsConfig?.metastoreService?.trim() ||
+    '';
+  if (metastoreService) {
+    const svcMatch = /^projects\/([^/]+)\//.exec(metastoreService);
+    const svcProject = svcMatch?.[1] || '';
+    return {
+      metastore: DATAPROC_METASTORE,
+      metastoreType: 'dataproc',
+      ...(svcProject && svcProject !== projectId
+        ? { projectId: svcProject }
+        : {}),
+      dataprocMetastoreService: metastoreService
+    };
+  }
+
+  const properties = profile.runtimeConfig?.properties || {};
+  const lakehouseProject = getPropertyValue(
+    properties,
+    LAKEHOUSE_PROJECT_PROPERTY
+  ).trim();
+  const defaultCatalog = getPropertyValue(
+    properties,
+    LAKEHOUSE_DEFAULT_CATALOG_PROPERTY
+  ).trim();
+
+  const catalogEntries: Array<{ alias: string; resource: string }> = [];
+  const seenAliases = new Set<string>();
+  Object.keys(properties).forEach(rawKey => {
+    const normalized = stripPropertyPrefix(rawKey);
+    if (normalized.startsWith(LAKEHOUSE_CATALOG_PROPERTY_PREFIX)) {
+      const alias = normalized.slice(LAKEHOUSE_CATALOG_PROPERTY_PREFIX.length);
+      if (alias && !seenAliases.has(alias)) {
+        seenAliases.add(alias);
+        catalogEntries.push({
+          alias,
+          resource: properties[rawKey].trim()
+        });
+      }
+    }
+  });
+
+  if (!lakehouseProject && !defaultCatalog && catalogEntries.length === 0) {
+    return {
+      hiveEndpointEnabled: false
+    };
+  }
+
+  const isDefaultEntry = (entry: { alias: string; resource: string }) =>
+    Boolean(defaultCatalog) &&
+    (entry.alias === defaultCatalog || entry.resource === defaultCatalog);
+
+  const defaultEntry = catalogEntries.find(isDefaultEntry);
+  const hiveEntry = catalogEntries.find(entry => !isDefaultEntry(entry));
+
+  const icebergRestEndpointEnabled = Boolean(defaultCatalog) || !hiveEntry;
+  let catalogSelectionMode: CatalogSelectionMode = 'new';
+  let catalogId: string | undefined;
+  let catalogName: string | undefined;
+  let icebergProject = lakehouseProject;
+
+  if (icebergRestEndpointEnabled) {
+    if (defaultCatalog.startsWith('projects/')) {
+      catalogSelectionMode = 'existing';
+      const parsedDefault =
+        LAKEHOUSE_CATALOG_RESOURCE_REGEX.exec(defaultCatalog);
+      icebergProject = parsedDefault?.[1] || lakehouseProject;
+      catalogId = parsedDefault?.[2] || defaultEntry?.alias || undefined;
+    } else {
+      catalogSelectionMode = 'new';
+      const parsedEntry = defaultEntry
+        ? LAKEHOUSE_CATALOG_RESOURCE_REGEX.exec(defaultEntry.resource)
+        : null;
+      icebergProject = parsedEntry?.[1] || lakehouseProject;
+      const defaultRegionCatalogName = getDefaultLakehouseCatalogName(region);
+      if (defaultCatalog && defaultCatalog !== defaultRegionCatalogName) {
+        catalogName = defaultCatalog;
+      }
+    }
+  }
+
+  const otherProjectId =
+    icebergProject && icebergProject !== projectId ? icebergProject : undefined;
+
+  let hiveProjectId: string | undefined;
+  let hiveCatalogId: string | undefined;
+  let hiveCatalogName: string | undefined;
+  if (hiveEntry) {
+    const parsedHive = LAKEHOUSE_CATALOG_RESOURCE_REGEX.exec(
+      hiveEntry.resource
+    );
+    hiveProjectId =
+      parsedHive?.[1] || lakehouseProject || projectId || undefined;
+    hiveCatalogId = parsedHive?.[2] || hiveEntry.alias;
+    hiveCatalogName = hiveEntry.alias;
+  }
+
+  return {
+    metastore: LAKEHOUSE_RUNTIME_CATALOG,
+    metastoreType: 'lakehouse',
+    ...(icebergRestEndpointEnabled && otherProjectId
+      ? { projectId: otherProjectId }
+      : {}),
+    icebergRestEndpointEnabled,
+    ...(icebergRestEndpointEnabled && {
+      catalogSelectionMode,
+      ...(catalogSelectionMode === 'existing' && catalogId
+        ? { catalogId }
+        : {}),
+      ...(catalogSelectionMode === 'new' && catalogName ? { catalogName } : {})
+    }),
+    hiveEndpointEnabled: Boolean(hiveEntry),
+    ...(hiveEntry && {
+      ...(hiveProjectId ? { hiveProjectId } : {}),
+      hiveCatalogId,
+      hiveCatalogName
+    })
+  };
+};
+
+export const applyMetastoreUpdateToTemplate = (
+  profile: IRuntimeProfileTemplate,
+  updated: IMetastoreConfig,
+  projectId: string = '',
+  region: string = ''
+): IRuntimeProfileTemplate => {
+  if (!updated.metastoreType) {
+    return profile;
+  }
+
+  const existingProps = profile.runtimeConfig?.properties || {};
+  const nextProps: Record<string, string> = {
+    ...existingProps
+  };
+
+  Object.keys(nextProps).forEach(rawKey => {
+    const normalized = stripPropertyPrefix(rawKey);
+    if (
+      normalized === LAKEHOUSE_PROJECT_PROPERTY ||
+      normalized === LAKEHOUSE_DEFAULT_CATALOG_PROPERTY ||
+      normalized.startsWith(LAKEHOUSE_CATALOG_PROPERTY_PREFIX)
+    ) {
+      delete nextProps[rawKey];
+    }
+  });
+
+  const nextPeripheralsConfig = {
+    ...(profile.environmentConfig?.peripheralsConfig || {})
+  };
+
+  if (updated.metastoreType === 'dataproc') {
+    if (
+      updated.dataprocMetastoreService &&
+      updated.dataprocMetastoreService !== METASTORE_NONE
+    ) {
+      nextPeripheralsConfig.metastoreService = updated.dataprocMetastoreService;
+    } else {
+      delete nextPeripheralsConfig.metastoreService;
+    }
+  } else if (updated.metastoreType === 'lakehouse') {
+    delete nextPeripheralsConfig.metastoreService;
+
+    const isIcebergEnabled = updated.icebergRestEndpointEnabled ?? true;
+    const isHiveEnabled = Boolean(updated.hiveEndpointEnabled);
+    const hiveProject = updated.hiveProjectId || projectId;
+
+    if (isIcebergEnabled) {
+      const icebergProject = updated.projectId || projectId;
+      if (icebergProject) {
+        nextProps[LAKEHOUSE_PROJECT_PROPERTY] = icebergProject;
+      }
+
+      if (updated.catalogSelectionMode === 'existing') {
+        if (updated.catalogId && icebergProject) {
+          const catalogResource = getLakehouseCatalogResource(
+            icebergProject,
+            updated.catalogId
+          );
+          nextProps[LAKEHOUSE_CATALOG_PROPERTY_PREFIX + updated.catalogId] =
+            catalogResource;
+          nextProps[LAKEHOUSE_DEFAULT_CATALOG_PROPERTY] = catalogResource;
+        }
+      } else {
+        const catalogName =
+          updated.catalogName || getDefaultLakehouseCatalogName(region);
+        if (catalogName) {
+          if (icebergProject) {
+            nextProps[LAKEHOUSE_CATALOG_PROPERTY_PREFIX + catalogName] =
+              getLakehouseCatalogResource(icebergProject, catalogName);
+          }
+          nextProps[LAKEHOUSE_DEFAULT_CATALOG_PROPERTY] = catalogName;
+        }
+      }
+    } else if (isHiveEnabled && hiveProject) {
+      nextProps[LAKEHOUSE_PROJECT_PROPERTY] = hiveProject;
+    }
+
+    if (isHiveEnabled && updated.hiveCatalogName && hiveProject) {
+      nextProps[LAKEHOUSE_CATALOG_PROPERTY_PREFIX + updated.hiveCatalogName] =
+        getLakehouseCatalogResource(
+          hiveProject,
+          updated.hiveCatalogId || updated.hiveCatalogName
+        );
+    }
+  }
+
+  const nextEnvironmentConfig = {
+    ...(profile.environmentConfig || {})
+  };
+  if (Object.keys(nextPeripheralsConfig).length > 0) {
+    nextEnvironmentConfig.peripheralsConfig = nextPeripheralsConfig;
+  } else {
+    delete nextEnvironmentConfig.peripheralsConfig;
+  }
+
+  const nextProfile: IRuntimeProfileTemplate = {
+    ...profile,
+    runtimeConfig: {
+      ...(profile.runtimeConfig || {}),
+      properties: nextProps
+    }
+  };
+  if (Object.keys(nextEnvironmentConfig).length > 0) {
+    nextProfile.environmentConfig = nextEnvironmentConfig;
+  } else {
+    delete nextProfile.environmentConfig;
+  }
+
+  return nextProfile;
+};
+
+const SUBNETWORK_URI_REGEX =
+  /projects\/(?<project>[^/]+)\/regions\/(?<region>[^/]+)\/subnetworks\/(?<subnetwork>[^/?#]+)/;
+const NETWORK_URI_REGEX = /(?:^|\/networks\/)([^/?#]+)$/;
+const KMS_RESOURCE_REGEX =
+  /^projects\/([^/]+)\/locations\/([^/]+)\/keyRings\/([^/]+)\/cryptoKeys\/([^/]+)$/;
+
+export const buildNetworkSecurityConfigFromTemplate = (
+  profile: IRuntimeProfileTemplate,
+  projectId: string = '',
+  region: string = ''
+): INetworkAndSecurityConfig => {
+  const executionConfig = profile.environmentConfig?.executionConfig;
+  const rawSubnetworkUri = executionConfig?.subnetworkUri?.trim() || '';
+  const rawNetworkUri = executionConfig?.networkUri?.trim() || '';
+
+  const subnetMatch = SUBNETWORK_URI_REGEX.exec(rawSubnetworkUri);
+  const subnetProject = subnetMatch?.groups?.['project'] || '';
+  const subnetShortName =
+    subnetMatch?.groups?.['subnetwork'] || rawSubnetworkUri;
+  const isSharedVpc = Boolean(
+    projectId && subnetProject && subnetProject !== projectId
+  );
+  const networkSource: NetworkSourceType = isSharedVpc
+    ? 'shared_from_host'
+    : 'project';
+
+  const explicitNetwork = rawNetworkUri
+    ? NETWORK_URI_REGEX.exec(rawNetworkUri)?.[1]
+    : undefined;
+  const resolvedPrimaryNetwork =
+    explicitNetwork ||
+    (isSharedVpc || !subnetShortName ? 'default' : undefined);
+
+  const networkTags = executionConfig?.networkTags
+    ? [...executionConfig.networkTags]
+    : [];
+
+  const authType =
+    executionConfig?.authenticationConfig?.userWorkloadAuthenticationType || '';
+  const executionIdentity: ExecutionIdentityType =
+    authType === 'END_USER_CREDENTIALS' ? 'user_account' : 'service_account';
+  const serviceAccount =
+    executionIdentity === 'service_account'
+      ? executionConfig?.serviceAccount?.trim() || undefined
+      : undefined;
+
+  const rawKmsKey = executionConfig?.kmsKey?.trim() || '';
+  const kmsMatch = rawKmsKey ? KMS_RESOURCE_REGEX.exec(rawKmsKey) : null;
+  const isLocalSelectKey = Boolean(
+    kmsMatch &&
+      projectId &&
+      region &&
+      kmsMatch[1] === projectId &&
+      kmsMatch[2] === region
+  );
+
+  return {
+    networkSource,
+    ...(resolvedPrimaryNetwork && {
+      primaryNetwork: resolvedPrimaryNetwork,
+      networkInThisProject: resolvedPrimaryNetwork
+    }),
+    subnetwork: isSharedVpc ? 'default' : subnetShortName || 'default',
+    ...(isSharedVpc && {
+      hostProjectId: subnetProject,
+      sharedSubnetwork: subnetShortName
+    }),
+    networkTags,
+    executionIdentity,
+    ...(serviceAccount && { serviceAccount }),
+    encryption: rawKmsKey ? 'customer_managed_key' : 'google_managed',
+    ...(rawKmsKey && {
+      kmsKeySelectionMode: isLocalSelectKey ? 'select' : 'manual',
+      ...(isLocalSelectKey && kmsMatch
+        ? { keyRing: kmsMatch[3], cryptoKey: kmsMatch[4] }
+        : {}),
+      kmsKeyName: rawKmsKey
+    })
+  };
+};
+
+export const applyNetworkSecurityUpdateToTemplate = (
+  profile: IRuntimeProfileTemplate,
+  updated: INetworkAndSecurityConfig,
+  projectId: string = '',
+  region: string = ''
+): IRuntimeProfileTemplate => {
+  const nextExecutionConfig = {
+    ...(profile.environmentConfig?.executionConfig || {})
+  };
+
+  delete nextExecutionConfig.subnetworkUri;
+  delete nextExecutionConfig.networkTags;
+  delete nextExecutionConfig.serviceAccount;
+  delete nextExecutionConfig.authenticationConfig;
+  delete nextExecutionConfig.kmsKey;
+
+  if (updated.networkSource === 'shared_from_host') {
+    const sharedSub = updated.sharedSubnetwork?.trim() || '';
+    const hostProj = updated.hostProjectId?.trim() || '';
+    if (sharedSub) {
+      nextExecutionConfig.subnetworkUri =
+        sharedSub.startsWith('projects/') || !hostProj
+          ? sharedSub
+          : `projects/${hostProj}/regions/${region}/subnetworks/${sharedSub}`;
+    }
+  } else {
+    const sub = updated.subnetwork?.trim() || '';
+    if (sub) {
+      nextExecutionConfig.subnetworkUri = sub;
+    }
+  }
+
+  if (nextExecutionConfig.subnetworkUri) {
+    delete nextExecutionConfig.networkUri;
+  }
+
+  if (updated.networkTags && updated.networkTags.length > 0) {
+    nextExecutionConfig.networkTags = [...updated.networkTags];
+  }
+
+  if (updated.executionIdentity === 'user_account') {
+    nextExecutionConfig.authenticationConfig = {
+      userWorkloadAuthenticationType: 'END_USER_CREDENTIALS'
+    };
+  } else if (updated.executionIdentity === 'service_account') {
+    const sa = updated.serviceAccount?.trim();
+    if (sa) {
+      nextExecutionConfig.serviceAccount = sa;
+    }
+  }
+
+  if (updated.encryption === 'customer_managed_key') {
+    const keyRing = updated.keyRing?.trim();
+    const cryptoKey = updated.cryptoKey?.trim();
+    const manualKeyName = updated.kmsKeyName?.trim();
+    let kmsKey: string | undefined;
+    if (
+      updated.kmsKeySelectionMode !== 'manual' &&
+      keyRing &&
+      cryptoKey &&
+      projectId &&
+      region
+    ) {
+      kmsKey = `projects/${projectId}/locations/${region}/keyRings/${keyRing}/cryptoKeys/${cryptoKey}`;
+    } else if (manualKeyName) {
+      kmsKey = manualKeyName;
+    }
+    if (kmsKey) {
+      nextExecutionConfig.kmsKey = kmsKey;
+    }
+  }
+
+  const nextEnvironmentConfig = {
+    ...(profile.environmentConfig || {})
+  };
+  if (Object.keys(nextExecutionConfig).length > 0) {
+    nextEnvironmentConfig.executionConfig = nextExecutionConfig;
+  } else {
+    delete nextEnvironmentConfig.executionConfig;
+  }
+
+  const nextProfile: IRuntimeProfileTemplate = {
+    ...profile
+  };
+  if (Object.keys(nextEnvironmentConfig).length > 0) {
+    nextProfile.environmentConfig = nextEnvironmentConfig;
+  } else {
+    delete nextProfile.environmentConfig;
+  }
+
+  return nextProfile;
 };
 
 const EMPTY_LABELS: ProfileLabels = Object.freeze({});
@@ -936,10 +1364,17 @@ export default function RuntimeProfileDetails({
   const [isExecutorDriverDrawerOpen, setIsExecutorDriverDrawerOpen] =
     useState(false);
   const [isAutoscalingDrawerOpen, setIsAutoscalingDrawerOpen] = useState(false);
+  const [isMetastoreDrawerOpen, setIsMetastoreDrawerOpen] = useState(false);
+  const [isNetworkSecurityDrawerOpen, setIsNetworkSecurityDrawerOpen] =
+    useState(false);
   const [isSessionLifecycleDrawerOpen, setIsSessionLifecycleDrawerOpen] =
     useState(false);
   const [isOtherCustomizationDrawerOpen, setIsOtherCustomizationDrawerOpen] =
     useState(false);
+  const [lastSavedSubnetNetwork, setLastSavedSubnetNetwork] = useState<{
+    subnetwork: string;
+    network: string;
+  } | null>(null);
   const isMountedRef = useRef(true);
 
   useEffect(() => {
@@ -953,9 +1388,15 @@ export default function RuntimeProfileDetails({
     setCurrentProfile(profile);
   }, [profile]);
 
-  const { region, profileId: shortName } = parseRuntimeProfileResourceName(
-    currentProfile.name
-  );
+  useEffect(() => {
+    setLastSavedSubnetNetwork(null);
+  }, [profile.name]);
+
+  const {
+    projectId,
+    region,
+    profileId: shortName
+  } = parseRuntimeProfileResourceName(currentProfile.name);
   const displayName = currentProfile.jupyterSession?.displayName || shortName;
   const properties = currentProfile.runtimeConfig?.properties || {};
   const executionConfig = currentProfile.environmentConfig?.executionConfig;
@@ -1000,6 +1441,30 @@ export default function RuntimeProfileDetails({
     () => buildAutoscalingConfigFromTemplate(currentProfile),
     [currentProfile]
   );
+  const metastoreDrawerConfig = useMemo(
+    () => buildMetastoreConfigFromTemplate(currentProfile, projectId, region),
+    [currentProfile, projectId, region]
+  );
+  const networkSecurityDrawerConfig = useMemo(() => {
+    const baseConfig = buildNetworkSecurityConfigFromTemplate(
+      currentProfile,
+      projectId,
+      region
+    );
+    if (
+      baseConfig.networkSource === 'project' &&
+      !baseConfig.primaryNetwork &&
+      baseConfig.subnetwork &&
+      lastSavedSubnetNetwork?.subnetwork === baseConfig.subnetwork
+    ) {
+      return {
+        ...baseConfig,
+        primaryNetwork: lastSavedSubnetNetwork.network,
+        networkInThisProject: lastSavedSubnetNetwork.network
+      };
+    }
+    return baseConfig;
+  }, [currentProfile, projectId, region, lastSavedSubnetNetwork]);
   const sessionLifecycleDrawerConfig = useMemo(
     () => buildSessionLifecycleConfigFromTemplate(currentProfile),
     [currentProfile]
@@ -1146,17 +1611,38 @@ export default function RuntimeProfileDetails({
   const initialExec = getProp('spark.dynamicAllocation.initialExecutors');
   const minExec = getProp('spark.dynamicAllocation.minExecutors');
   const maxExec = getProp('spark.dynamicAllocation.maxExecutors');
-  const metastore =
-    currentProfile.environmentConfig?.peripheralsConfig?.metastoreService ||
-    'None';
-  const defaultLakehouseCatalog = getProp('dataproc.lakehouse.defaultCatalog');
+  const lakehouseProject = getProp(LAKEHOUSE_PROJECT_PROPERTY).trim();
+  const defaultLakehouseCatalog = getProp(
+    LAKEHOUSE_DEFAULT_CATALOG_PROPERTY
+  ).trim();
+  const hasLakehouseCatalogEntry = Object.keys(properties).some(rawKey =>
+    stripPropertyPrefix(rawKey).startsWith(LAKEHOUSE_CATALOG_PROPERTY_PREFIX)
+  );
+  const hasLakehouseConfig =
+    Boolean(lakehouseProject) ||
+    Boolean(defaultLakehouseCatalog) ||
+    hasLakehouseCatalogEntry;
+  const metastoreService =
+    currentProfile.environmentConfig?.peripheralsConfig?.metastoreService?.trim();
+  const metastore = metastoreService
+    ? metastoreService
+    : hasLakehouseConfig
+      ? lakehouseProject && (!projectId || lakehouseProject !== projectId)
+        ? `${LAKEHOUSE_RUNTIME_CATALOG} (project: ${lakehouseProject})`
+        : LAKEHOUSE_RUNTIME_CATALOG
+      : METASTORE_NONE;
   const hasHiveCatalog = Object.keys(properties).some(rawKey => {
     const key = stripPropertyPrefix(rawKey);
-    if (!key.startsWith(LAKEHOUSE_CATALOG_PREFIX)) {
+    if (!key.startsWith(LAKEHOUSE_CATALOG_PROPERTY_PREFIX)) {
       return false;
     }
-    const catalogName = key.slice(LAKEHOUSE_CATALOG_PREFIX.length);
-    return Boolean(catalogName) && catalogName !== defaultLakehouseCatalog;
+    const catalogName = key.slice(LAKEHOUSE_CATALOG_PROPERTY_PREFIX.length);
+    const catalogResource = properties[rawKey].trim();
+    const isDefaultIcebergCatalog =
+      Boolean(defaultLakehouseCatalog) &&
+      (catalogName === defaultLakehouseCatalog ||
+        catalogResource === defaultLakehouseCatalog);
+    return Boolean(catalogName) && !isDefaultIcebergCatalog;
   });
   const hiveEndpoint = hasHiveCatalog ? 'Enabled' : 'Disabled';
   const maxIdleTime = formatDurationTtl(executionConfig?.idleTtl);
@@ -1213,6 +1699,7 @@ export default function RuntimeProfileDetails({
     },
     {
       title: 'Metastore configuration',
+      onEdit: () => setIsMetastoreDrawerOpen(true),
       rows: [
         { label: 'Metastore', value: metastore },
         { label: 'Hive endpoint', value: hiveEndpoint }
@@ -1220,6 +1707,7 @@ export default function RuntimeProfileDetails({
     },
     {
       title: 'Network and security',
+      onEdit: () => setIsNetworkSecurityDrawerOpen(true),
       rows: [{ label: 'Encryption type', value: encryptionType }]
     },
     {
@@ -1438,6 +1926,56 @@ export default function RuntimeProfileDetails({
           void handleSaveTemplateUpdate(nextTemplate, () =>
             setIsAutoscalingDrawerOpen(false)
           );
+        }}
+      />
+
+      <MetastoreEditDrawer
+        open={isMetastoreDrawerOpen}
+        config={metastoreDrawerConfig}
+        region={region}
+        projectId={projectId}
+        onClose={() => setIsMetastoreDrawerOpen(false)}
+        onSave={updatedConfig => {
+          const nextTemplate = applyMetastoreUpdateToTemplate(
+            currentProfile,
+            updatedConfig,
+            projectId,
+            region
+          );
+          void handleSaveTemplateUpdate(nextTemplate, () =>
+            setIsMetastoreDrawerOpen(false)
+          );
+        }}
+      />
+
+      <NetworkSecurityEditDrawer
+        open={isNetworkSecurityDrawerOpen}
+        config={networkSecurityDrawerConfig}
+        region={region}
+        projectId={projectId}
+        onClose={() => setIsNetworkSecurityDrawerOpen(false)}
+        onSave={updatedConfig => {
+          const nextTemplate = applyNetworkSecurityUpdateToTemplate(
+            currentProfile,
+            updatedConfig,
+            projectId,
+            region
+          );
+          void handleSaveTemplateUpdate(nextTemplate, () => {
+            if (
+              updatedConfig.networkSource === 'project' &&
+              updatedConfig.primaryNetwork &&
+              updatedConfig.subnetwork
+            ) {
+              setLastSavedSubnetNetwork({
+                subnetwork: updatedConfig.subnetwork,
+                network: updatedConfig.primaryNetwork
+              });
+            } else {
+              setLastSavedSubnetNetwork(null);
+            }
+            setIsNetworkSecurityDrawerOpen(false);
+          });
         }}
       />
 

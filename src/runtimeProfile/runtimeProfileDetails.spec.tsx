@@ -28,11 +28,15 @@ import { createRoot, Root } from 'react-dom/client';
 import RuntimeProfileDetails, {
   applyAutoscalingUpdateToTemplate,
   applyExecutorAndDriverUpdateToTemplate,
+  applyMetastoreUpdateToTemplate,
+  applyNetworkSecurityUpdateToTemplate,
   applyOtherCustomizationUpdateToTemplate,
   applyRuntimeEnvironmentUpdateToTemplate,
   applySessionLifecycleUpdateToTemplate,
   buildAutoscalingConfigFromTemplate,
   buildExecutorAndDriverConfigFromTemplate,
+  buildMetastoreConfigFromTemplate,
+  buildNetworkSecurityConfigFromTemplate,
   buildOtherCustomizationSparkPropertiesFromTemplate,
   buildRuntimeEnvironmentConfigFromTemplate,
   buildSessionLifecycleConfigFromTemplate,
@@ -43,9 +47,13 @@ import RuntimeProfileDetails, {
 } from './runtimeProfileDetails';
 import {
   formatLastUsed,
-  IRuntimeProfileTemplate
+  IRuntimeProfileTemplate,
+  parseRuntimeProfileResourceName
 } from './runtimeProfileListMapper';
-import { RuntimeProfileService } from './runtimeProfileService';
+import {
+  runtimeProfileService,
+  RuntimeProfileService
+} from './runtimeProfileService';
 import { Notification } from '@jupyterlab/apputils';
 
 jest.mock('@jupyterlab/apputils', () => ({
@@ -111,9 +119,19 @@ describe('RuntimeProfileDetails Component', () => {
     jest
       .spyOn(RuntimeProfileService, 'updateRuntimeProfile')
       .mockImplementation(async (_id, payload) => payload);
+    jest
+      .spyOn(runtimeProfileService, 'getNetworks')
+      .mockResolvedValue(['default']);
+    jest
+      .spyOn(runtimeProfileService, 'getSubnetworks')
+      .mockResolvedValue(['default']);
+    jest
+      .spyOn(runtimeProfileService, 'getNetworkFromSubnetwork')
+      .mockResolvedValue('default');
   });
 
   afterEach(() => {
+    jest.restoreAllMocks();
     jest.useRealTimers();
     Object.defineProperty(navigator, 'clipboard', {
       value: originalClipboard,
@@ -232,8 +250,8 @@ describe('RuntimeProfileDetails Component', () => {
     expect(subsectionEditBtns[0].disabled).toBe(false); // Runtime configuration
     expect(subsectionEditBtns[1].disabled).toBe(false); // Executor and driver configuration
     expect(subsectionEditBtns[2].disabled).toBe(false); // Autoscaling
-    expect(subsectionEditBtns[3].disabled).toBe(true); // Metastore configuration
-    expect(subsectionEditBtns[4].disabled).toBe(true); // Network and security
+    expect(subsectionEditBtns[3].disabled).toBe(false); // Metastore configuration
+    expect(subsectionEditBtns[4].disabled).toBe(false); // Network and security
     expect(subsectionEditBtns[5].disabled).toBe(false); // Session lifecycle
     expect(subsectionEditBtns[6].disabled).toBe(false); // Other customizations
 
@@ -378,6 +396,68 @@ describe('RuntimeProfileDetails Component', () => {
     expect(container.textContent).toContain('Runtime configuration');
   });
 
+  it('should render Lakehouse runtime catalog summary and Disabled Hive endpoint for existing Iceberg catalog', async () => {
+    const existingLakehouseProfile: IRuntimeProfileTemplate = {
+      name: 'projects/test-project/locations/us-central1/sessionTemplates/lakehouse-profile',
+      jupyterSession: { displayName: 'lakehouse-profile', kernel: 'PYTHON' },
+      runtimeConfig: {
+        version: '2.3',
+        properties: {
+          'spark.dataproc.lakehouse.project': 'other-lh-proj',
+          'dataproc.lakehouse.defaultCatalog':
+            'projects/other-lh-proj/catalogs/existing_iceberg_cat',
+          'dataproc.lakehouse.catalog.existing_iceberg_cat':
+            'projects/other-lh-proj/catalogs/existing_iceberg_cat'
+        }
+      }
+    };
+
+    await renderDetails(jest.fn(), undefined, existingLakehouseProfile);
+
+    const configHeader = container.querySelector(
+      '[aria-controls="runtime-profile-config-content"]'
+    ) as HTMLElement;
+    act(() => {
+      configHeader.click();
+    });
+
+    const rows = Array.from(
+      container.querySelectorAll('.runtime-profile-details-row')
+    );
+    const getRowValue = (label: string) =>
+      rows
+        .find(
+          r =>
+            r.querySelector('.runtime-profile-details-label')?.textContent ===
+            label
+        )
+        ?.querySelector('.runtime-profile-details-value')?.textContent;
+
+    expect(getRowValue('Metastore')).toBe(
+      'Lakehouse runtime catalog (project: other-lh-proj)'
+    );
+    expect(getRowValue('Hive endpoint')).toBe('Disabled');
+
+    // Also displays custom Lakehouse project when profile name has no parseable projectId
+    await renderDetails(jest.fn(), undefined, {
+      ...existingLakehouseProfile,
+      name: 'unscoped-lakehouse-profile'
+    });
+    const unscopedRows = Array.from(
+      container.querySelectorAll('.runtime-profile-details-row')
+    );
+    const unscopedMetastore = unscopedRows
+      .find(
+        r =>
+          r.querySelector('.runtime-profile-details-label')?.textContent ===
+          'Metastore'
+      )
+      ?.querySelector('.runtime-profile-details-value')?.textContent;
+    expect(unscopedMetastore).toBe(
+      'Lakehouse runtime catalog (project: other-lh-proj)'
+    );
+  });
+
   it('should open section edit drawers, call updateRuntimeProfile on Save, and notify user', async () => {
     const onUpdateSuccessMock = jest.fn();
     await renderDetails(jest.fn(), undefined, mockProfile, onUpdateSuccessMock);
@@ -404,14 +484,23 @@ describe('RuntimeProfileDetails Component', () => {
     expect(profileIdInput.value).toBe('sample-profile');
     expect(profileIdInput.disabled).toBe(true);
 
-    // Click Save in Runtime configuration drawer
-    const getDrawerSaveBtn = () =>
-      Array.from(
-        document.body.querySelectorAll('.edit-drawer-footer button')
-      ).find(btn => btn.textContent === 'Save') as HTMLButtonElement;
+    // Click Save in active EditDrawer matching the section title
+    const getDrawerSaveBtn = (title: string) => {
+      const activeModals = Array.from(
+        document.body.querySelectorAll(
+          '[role="presentation"]:not(.MuiModal-hidden)'
+        )
+      );
+      const target = activeModals.find(
+        el => el.querySelector('.edit-drawer-title')?.textContent === title
+      );
+      return Array.from(target?.querySelectorAll('button') ?? []).find(
+        btn => btn.textContent === 'Save'
+      ) as HTMLButtonElement;
+    };
 
     await act(async () => {
-      getDrawerSaveBtn().click();
+      getDrawerSaveBtn('Runtime configuration').click();
     });
 
     expect(RuntimeProfileService.updateRuntimeProfile).toHaveBeenCalledWith(
@@ -441,7 +530,7 @@ describe('RuntimeProfileDetails Component', () => {
       RuntimeProfileService.updateRuntimeProfile as jest.Mock
     ).mockRejectedValueOnce(new Error('Quota exceeded'));
     await act(async () => {
-      getDrawerSaveBtn().click();
+      getDrawerSaveBtn('Executor and driver configuration').click();
     });
     expect(Notification.emit).toHaveBeenCalledWith(
       expect.stringContaining('Failed to update sample-profile:'),
@@ -450,7 +539,7 @@ describe('RuntimeProfileDetails Component', () => {
     );
 
     await act(async () => {
-      getDrawerSaveBtn().click();
+      getDrawerSaveBtn('Executor and driver configuration').click();
     });
     expect(RuntimeProfileService.updateRuntimeProfile).toHaveBeenCalledTimes(3);
     expect(onUpdateSuccessMock).toHaveBeenCalledTimes(2);
@@ -467,7 +556,7 @@ describe('RuntimeProfileDetails Component', () => {
         ?.value
     ).toBe('2');
     await act(async () => {
-      getDrawerSaveBtn().click();
+      getDrawerSaveBtn('Autoscaling').click();
     });
     expect(RuntimeProfileService.updateRuntimeProfile).toHaveBeenCalledTimes(4);
     expect(onUpdateSuccessMock).toHaveBeenCalledTimes(3);
@@ -487,7 +576,7 @@ describe('RuntimeProfileDetails Component', () => {
       )?.value
     ).toBe('1');
     await act(async () => {
-      getDrawerSaveBtn().click();
+      getDrawerSaveBtn('Session lifecycle').click();
     });
     expect(RuntimeProfileService.updateRuntimeProfile).toHaveBeenCalledTimes(5);
     expect(onUpdateSuccessMock).toHaveBeenCalledTimes(4);
@@ -507,13 +596,84 @@ describe('RuntimeProfileDetails Component', () => {
       )?.value
     ).toBe('spark.sql.catalog.biglake');
     await act(async () => {
-      getDrawerSaveBtn().click();
+      getDrawerSaveBtn('Other customizations').click();
     });
     expect(RuntimeProfileService.updateRuntimeProfile).toHaveBeenCalledTimes(6);
     expect(onUpdateSuccessMock).toHaveBeenCalledTimes(5);
+
+    // 6. Open Metastore configuration drawer and save
+    const editMetastoreBtn = container.querySelector(
+      'button[aria-label="Edit Metastore configuration"]'
+    ) as HTMLButtonElement;
+    await act(async () => {
+      editMetastoreBtn.click();
+    });
+    expect(
+      (document.body.querySelector('#metastore-project-id') as HTMLInputElement)
+        ?.value
+    ).toBe('test-project');
+    expect(
+      (document.body.querySelector('#new-catalog-name') as HTMLInputElement)
+        ?.value
+    ).toBe('standard-lh-catalog-us-central1');
+    await act(async () => {
+      getDrawerSaveBtn('Metastore configuration').click();
+    });
+    expect(RuntimeProfileService.updateRuntimeProfile).toHaveBeenCalledTimes(7);
+    expect(RuntimeProfileService.updateRuntimeProfile).toHaveBeenLastCalledWith(
+      mockProfile.name,
+      expect.objectContaining({
+        runtimeConfig: expect.objectContaining({
+          properties: expect.objectContaining({
+            'spark.dataproc.lakehouse.project': 'test-project',
+            'dataproc.lakehouse.defaultCatalog':
+              'standard-lh-catalog-us-central1',
+            'dataproc.lakehouse.catalog.standard-lh-catalog-us-central1':
+              'projects/test-project/catalogs/standard-lh-catalog-us-central1'
+          })
+        })
+      }),
+      'sample-profile'
+    );
+    expect(onUpdateSuccessMock).toHaveBeenCalledTimes(6);
+    expect(container.textContent).toContain('Lakehouse runtime catalog');
+
+    // 7. Open Network and security drawer and save
+    const editNetworkBtn = container.querySelector(
+      'button[aria-label="Edit Network and security"]'
+    ) as HTMLButtonElement;
+    await act(async () => {
+      editNetworkBtn.click();
+    });
+    expect(
+      (
+        document.body.querySelector(
+          '#edit-execution-identity-user-account'
+        ) as HTMLInputElement
+      )?.checked
+    ).toBe(true);
+    await act(async () => {
+      getDrawerSaveBtn('Network and security').click();
+    });
+    expect(RuntimeProfileService.updateRuntimeProfile).toHaveBeenCalledTimes(8);
+    expect(RuntimeProfileService.updateRuntimeProfile).toHaveBeenLastCalledWith(
+      mockProfile.name,
+      expect.objectContaining({
+        environmentConfig: expect.objectContaining({
+          executionConfig: expect.objectContaining({
+            subnetworkUri: 'default',
+            authenticationConfig: {
+              userWorkloadAuthenticationType: 'END_USER_CREDENTIALS'
+            }
+          })
+        })
+      }),
+      'sample-profile'
+    );
+    expect(onUpdateSuccessMock).toHaveBeenCalledTimes(7);
   });
 
-  it('should enable the header Edit button when onEdit is provided and keep unsupported section edit icons disabled', async () => {
+  it('should enable the header Edit button when onEdit is provided and enable all 7 section edit icons', async () => {
     const onEditMock = jest.fn();
     await act(async () => {
       root.render(
@@ -544,19 +704,150 @@ describe('RuntimeProfileDetails Component', () => {
       configHeader.click();
     });
 
-    // Runtime configuration (0), Executor and driver configuration (1),
-    // Autoscaling (2), Session lifecycle (5) and Other customizations (6)
-    // have their own edit drawers in the details view; Metastore (3) and
-    // Network and security (4) are read-only.
+    // All 7 configuration subsections have edit drawers wired in the details view.
     const subsectionEditBtns = Array.from(
       container.querySelectorAll<HTMLButtonElement>(
         '.runtime-profile-details-subsection-edit-btn'
       )
     );
     expect(subsectionEditBtns).toHaveLength(7);
-    const expectedDisabled = [false, false, false, true, true, false, false];
-    subsectionEditBtns.forEach((btn, idx) =>
-      expect(btn.disabled).toBe(expectedDisabled[idx])
+    subsectionEditBtns.forEach(btn => expect(btn.disabled).toBe(false));
+  });
+
+  it('should preserve changed network and subnetwork when reopening Network and security drawer and resolve parent network on fresh load', async () => {
+    jest
+      .spyOn(runtimeProfileService, 'getNetworks')
+      .mockResolvedValue(['default', 'custom-vpc']);
+    jest
+      .spyOn(runtimeProfileService, 'getSubnetworks')
+      .mockImplementation(async (network: string) =>
+        network === 'custom-vpc'
+          ? ['custom-subnet-1', 'custom-subnet-2']
+          : ['default']
+      );
+    const getNetFromSubSpy = jest
+      .spyOn(runtimeProfileService, 'getNetworkFromSubnetwork')
+      .mockImplementation(async (sub: string) =>
+        sub.startsWith('custom-subnet') ? 'custom-vpc' : 'default'
+      );
+
+    let latestProfile = mockProfile;
+    const handleUpdateSuccess = jest.fn((updated: IRuntimeProfileTemplate) => {
+      latestProfile = updated;
+      root.render(
+        <RuntimeProfileDetails
+          profile={updated}
+          onBack={jest.fn()}
+          onUpdateSuccess={handleUpdateSuccess}
+        />
+      );
+    });
+
+    await renderDetails(jest.fn(), undefined, latestProfile, handleUpdateSuccess);
+
+    const configHeader = container.querySelector(
+      '.runtime-profile-details-section-header.configuration-header'
+    ) as HTMLElement;
+    await act(async () => {
+      configHeader.click();
+    });
+
+    const openNetworkDrawer = async () => {
+      const btn = container.querySelector(
+        'button[aria-label="Edit Network and security"]'
+      ) as HTMLButtonElement;
+      await act(async () => {
+        btn.click();
+      });
+    };
+
+    await openNetworkDrawer();
+
+    // Change Primary network to 'custom-vpc'
+    const networkTrigger = document.body.querySelector(
+      '#edit-primary-network'
+    ) as HTMLElement;
+    await act(async () => {
+      networkTrigger.dispatchEvent(
+        new MouseEvent('mousedown', { bubbles: true, button: 0 })
+      );
+    });
+    const customVpcOption = document.body.querySelector(
+      'li[role="option"][data-value="custom-vpc"]'
+    ) as HTMLElement;
+    expect(customVpcOption).not.toBeNull();
+    await act(async () => {
+      customVpcOption.click();
+    });
+
+    // Change Subnetwork to 'custom-subnet-2'
+    const subnetworkTrigger = document.body.querySelector(
+      '#edit-subnetwork'
+    ) as HTMLElement;
+    await act(async () => {
+      subnetworkTrigger.dispatchEvent(
+        new MouseEvent('mousedown', { bubbles: true, button: 0 })
+      );
+    });
+    const customSubOption = document.body.querySelector(
+      'li[role="option"][data-value="custom-subnet-2"]'
+    ) as HTMLElement;
+    expect(customSubOption).not.toBeNull();
+    await act(async () => {
+      customSubOption.click();
+    });
+
+    const saveBtn = Array.from(
+      document.body.querySelectorAll(
+        '[role="presentation"]:not(.MuiModal-hidden) .edit-drawer-footer button'
+      )
+    ).find(b => b.textContent?.trim() === 'Save') as HTMLButtonElement;
+    await act(async () => {
+      saveBtn.click();
+    });
+
+    expect(latestProfile.environmentConfig?.executionConfig?.subnetworkUri).toBe(
+      'custom-subnet-2'
+    );
+    expect(
+      latestProfile.environmentConfig?.executionConfig?.networkUri
+    ).toBeUndefined();
+
+    // 1. Re-open drawer immediately after save -> updated network & subnetwork stay selected
+    await openNetworkDrawer();
+    expect(
+      document.body.querySelector('#edit-primary-network')?.textContent
+    ).toBe('custom-vpc');
+    expect(document.body.querySelector('#edit-subnetwork')?.textContent).toBe(
+      'custom-subnet-2'
+    );
+
+    // 2. Unmount and mount fresh RuntimeProfileDetails (only subnetworkUri in SessionTemplate)
+    act(() => {
+      root.unmount();
+    });
+    root = createRoot(container);
+    getNetFromSubSpy.mockClear();
+
+    await renderDetails(jest.fn(), undefined, latestProfile);
+    const freshConfigHeader = container.querySelector(
+      '.runtime-profile-details-section-header.configuration-header'
+    ) as HTMLElement;
+    await act(async () => {
+      freshConfigHeader.click();
+    });
+    await openNetworkDrawer();
+
+    expect(getNetFromSubSpy).toHaveBeenCalledWith(
+      'custom-subnet-2',
+      'test-project',
+      'us-central1'
+    );
+    expect(
+      document.body.querySelector('#edit-primary-network')?.textContent
+    ).toBe('custom-vpc');
+    expect(document.body.querySelector('#edit-subnetwork')?.textContent).toBe(
+      'custom-subnet-2'
     );
   });
 
@@ -999,6 +1290,424 @@ describe('RuntimeProfileDetails Component', () => {
       ]
     ).toBe('projects/p/locations/l/catalogs/hive_cat');
     expect(updatedOther.labels).toEqual({ env: 'prod' });
+
+    // Resource name parser extracts projectId, region, and profileId
+    expect(parseRuntimeProfileResourceName(mockProfile.name)).toEqual({
+      projectId: 'test-project',
+      region: 'us-central1',
+      profileId: 'sample-profile'
+    });
+    expect(parseRuntimeProfileResourceName('')).toEqual({
+      projectId: '',
+      region: '',
+      profileId: ''
+    });
+
+    // Metastore builder & updater
+    expect(
+      buildMetastoreConfigFromTemplate(mockProfile, 'test-project', 'us-central1')
+    ).toEqual({
+      hiveEndpointEnabled: false
+    });
+
+    // Unset metastoreType is a safe no-op that preserves existing properties
+    const unchangedMetastoreRef = applyMetastoreUpdateToTemplate(
+      mockProfile,
+      { hiveEndpointEnabled: false },
+      'test-project',
+      'us-central1'
+    );
+    expect(unchangedMetastoreRef).toBe(mockProfile);
+
+    // 'new' Lakehouse catalog mode (default regional catalog name vs. custom catalogName + prefixed keys)
+    const defaultNewLakehouse = applyMetastoreUpdateToTemplate(
+      { name: 'projects/test-project/locations/us-central1/sessionTemplates/p1' },
+      {
+        metastore: 'Lakehouse runtime catalog',
+        metastoreType: 'lakehouse',
+        icebergRestEndpointEnabled: true,
+        catalogSelectionMode: 'new',
+        hiveEndpointEnabled: false
+      },
+      'test-project',
+      'us-central1'
+    );
+    expect(defaultNewLakehouse.environmentConfig).toBeUndefined();
+    expect(defaultNewLakehouse.runtimeConfig?.properties).toEqual({
+      'spark.dataproc.lakehouse.project': 'test-project',
+      'dataproc.lakehouse.defaultCatalog': 'standard-lh-catalog-us-central1',
+      'dataproc.lakehouse.catalog.standard-lh-catalog-us-central1':
+        'projects/test-project/catalogs/standard-lh-catalog-us-central1'
+    });
+    expect(
+      buildMetastoreConfigFromTemplate(
+        defaultNewLakehouse,
+        'test-project',
+        'us-central1'
+      )
+    ).toEqual({
+      metastore: 'Lakehouse runtime catalog',
+      metastoreType: 'lakehouse',
+      icebergRestEndpointEnabled: true,
+      catalogSelectionMode: 'new',
+      hiveEndpointEnabled: false
+    });
+
+    const prefixedCustomNewLakehouse: IRuntimeProfileTemplate = {
+      name: 'projects/test-project/locations/us-central1/sessionTemplates/p2',
+      runtimeConfig: {
+        properties: {
+          'spark:spark.dataproc.lakehouse.project': 'test-project',
+          'dataproc:dataproc.lakehouse.defaultCatalog': 'my_custom_catalog',
+          'dataproc:dataproc.lakehouse.catalog.my_custom_catalog':
+            'projects/test-project/catalogs/my_custom_catalog'
+        }
+      }
+    };
+    expect(
+      buildMetastoreConfigFromTemplate(
+        prefixedCustomNewLakehouse,
+        'test-project',
+        'us-central1'
+      )
+    ).toEqual({
+      metastore: 'Lakehouse runtime catalog',
+      metastoreType: 'lakehouse',
+      icebergRestEndpointEnabled: true,
+      catalogSelectionMode: 'new',
+      catalogName: 'my_custom_catalog',
+      hiveEndpointEnabled: false
+    });
+
+    const dpmsTemplate = applyMetastoreUpdateToTemplate(
+      mockProfile,
+      {
+        metastore: 'Dataproc Metastore',
+        metastoreType: 'dataproc',
+        projectId: 'other-dpms-proj',
+        dataprocMetastoreService:
+          'projects/other-dpms-proj/locations/us-central1/services/dpms-1'
+      },
+      'test-project',
+      'us-central1'
+    );
+    expect(
+      dpmsTemplate.environmentConfig?.peripheralsConfig?.metastoreService
+    ).toBe('projects/other-dpms-proj/locations/us-central1/services/dpms-1');
+    expect(
+      buildMetastoreConfigFromTemplate(
+        dpmsTemplate,
+        'test-project',
+        'us-central1'
+      )
+    ).toEqual({
+      metastore: 'Dataproc Metastore',
+      metastoreType: 'dataproc',
+      projectId: 'other-dpms-proj',
+      dataprocMetastoreService:
+        'projects/other-dpms-proj/locations/us-central1/services/dpms-1'
+    });
+
+    const clearedDpmsTemplate = applyMetastoreUpdateToTemplate(
+      dpmsTemplate,
+      {
+        metastore: 'Dataproc Metastore',
+        metastoreType: 'dataproc',
+        dataprocMetastoreService: 'None'
+      },
+      'test-project',
+      'us-central1'
+    );
+    expect(
+      clearedDpmsTemplate.environmentConfig?.peripheralsConfig
+    ).toBeUndefined();
+
+    const lakehouseExistingWithHive = applyMetastoreUpdateToTemplate(
+      dpmsTemplate,
+      {
+        metastore: 'Lakehouse runtime catalog',
+        metastoreType: 'lakehouse',
+        projectId: 'iceberg-proj',
+        icebergRestEndpointEnabled: true,
+        catalogSelectionMode: 'existing',
+        catalogId: 'existing_cat',
+        hiveEndpointEnabled: true,
+        hiveProjectId: 'hive-proj',
+        hiveCatalogId: 'hive-cat-id',
+        hiveCatalogName: 'hive_alias'
+      },
+      'test-project',
+      'us-central1'
+    );
+    expect(
+      lakehouseExistingWithHive.environmentConfig?.peripheralsConfig
+    ).toBeUndefined();
+    expect(
+      lakehouseExistingWithHive.runtimeConfig?.properties?.[
+        'spark.dataproc.lakehouse.project'
+      ]
+    ).toBe('iceberg-proj');
+    expect(
+      lakehouseExistingWithHive.runtimeConfig?.properties?.[
+        'dataproc.lakehouse.defaultCatalog'
+      ]
+    ).toBe('projects/iceberg-proj/catalogs/existing_cat');
+    expect(
+      lakehouseExistingWithHive.runtimeConfig?.properties?.[
+        'dataproc.lakehouse.catalog.existing_cat'
+      ]
+    ).toBe('projects/iceberg-proj/catalogs/existing_cat');
+    expect(
+      lakehouseExistingWithHive.runtimeConfig?.properties?.[
+        'dataproc.lakehouse.catalog.hive_alias'
+      ]
+    ).toBe('projects/hive-proj/catalogs/hive-cat-id');
+    expect(
+      buildMetastoreConfigFromTemplate(
+        lakehouseExistingWithHive,
+        'test-project',
+        'us-central1'
+      )
+    ).toEqual({
+      metastore: 'Lakehouse runtime catalog',
+      metastoreType: 'lakehouse',
+      projectId: 'iceberg-proj',
+      icebergRestEndpointEnabled: true,
+      catalogSelectionMode: 'existing',
+      catalogId: 'existing_cat',
+      hiveEndpointEnabled: true,
+      hiveProjectId: 'hive-proj',
+      hiveCatalogId: 'hive-cat-id',
+      hiveCatalogName: 'hive_alias'
+    });
+
+    const lakehouseHiveOnly = applyMetastoreUpdateToTemplate(
+      lakehouseExistingWithHive,
+      {
+        metastore: 'Lakehouse runtime catalog',
+        metastoreType: 'lakehouse',
+        icebergRestEndpointEnabled: false,
+        hiveEndpointEnabled: true,
+        hiveProjectId: 'hive-only-proj',
+        hiveCatalogId: 'hive-only-id',
+        hiveCatalogName: 'hive_only'
+      },
+      'test-project',
+      'us-central1'
+    );
+    expect(
+      lakehouseHiveOnly.runtimeConfig?.properties?.[
+        'dataproc.lakehouse.defaultCatalog'
+      ]
+    ).toBeUndefined();
+    expect(
+      buildMetastoreConfigFromTemplate(
+        lakehouseHiveOnly,
+        'test-project',
+        'us-central1'
+      )
+    ).toEqual({
+      metastore: 'Lakehouse runtime catalog',
+      metastoreType: 'lakehouse',
+      icebergRestEndpointEnabled: false,
+      hiveEndpointEnabled: true,
+      hiveProjectId: 'hive-only-proj',
+      hiveCatalogId: 'hive-only-id',
+      hiveCatalogName: 'hive_only'
+    });
+
+    // Network and security builder & updater (omits primaryNetwork when only subnetworkUri is present)
+    const initialNetSec = buildNetworkSecurityConfigFromTemplate(
+      mockProfile,
+      'test-project',
+      'us-central1'
+    );
+    expect(initialNetSec).toEqual({
+      networkSource: 'project',
+      subnetwork: 'default',
+      networkTags: [],
+      executionIdentity: 'user_account',
+      encryption: 'google_managed'
+    });
+
+    // Defaults primaryNetwork to 'default' when neither networkUri nor subnetworkUri is present
+    expect(
+      buildNetworkSecurityConfigFromTemplate(
+        { name: 'projects/test-project/locations/us-central1/sessionTemplates/empty-net' },
+        'test-project',
+        'us-central1'
+      )
+    ).toEqual({
+      networkSource: 'project',
+      primaryNetwork: 'default',
+      networkInThisProject: 'default',
+      subnetwork: 'default',
+      networkTags: [],
+      executionIdentity: 'service_account',
+      encryption: 'google_managed'
+    });
+
+    // Domain-scoped Shared VPC project ID + full compute networkUri URL
+    expect(
+      buildNetworkSecurityConfigFromTemplate(
+        {
+          name: 'projects/test-project/locations/us-central1/sessionTemplates/domain-vpc',
+          environmentConfig: {
+            executionConfig: {
+              networkUri:
+                'https://www.googleapis.com/compute/v1/projects/test-project/global/networks/analytics-vpc',
+              subnetworkUri:
+                'projects/google.com:host-vpc/regions/us-central1/subnetworks/shared-sub-domain'
+            }
+          }
+        },
+        'test-project',
+        'us-central1'
+      )
+    ).toEqual({
+      networkSource: 'shared_from_host',
+      primaryNetwork: 'analytics-vpc',
+      networkInThisProject: 'analytics-vpc',
+      subnetwork: 'default',
+      hostProjectId: 'google.com:host-vpc',
+      sharedSubnetwork: 'shared-sub-domain',
+      networkTags: [],
+      executionIdentity: 'service_account',
+      encryption: 'google_managed'
+    });
+
+    // Same-project full subnetwork URI and empty projectId stay in 'project' networkSource
+    const sameProjFullSubnetTemplate: IRuntimeProfileTemplate = {
+      name: 'same-proj-template',
+      environmentConfig: {
+        executionConfig: {
+          subnetworkUri:
+            'projects/test-project/regions/us-central1/subnetworks/local-sub'
+        }
+      }
+    };
+    expect(
+      buildNetworkSecurityConfigFromTemplate(
+        sameProjFullSubnetTemplate,
+        'test-project',
+        'us-central1'
+      ).networkSource
+    ).toBe('project');
+    expect(
+      buildNetworkSecurityConfigFromTemplate(
+        sameProjFullSubnetTemplate,
+        '',
+        'us-central1'
+      ).networkSource
+    ).toBe('project');
+
+    const sharedVpcCmekTemplate = applyNetworkSecurityUpdateToTemplate(
+      mockProfile,
+      {
+        networkSource: 'shared_from_host',
+        hostProjectId: 'host-vpc-proj',
+        sharedSubnetwork: 'shared-sub-1',
+        networkTags: ['spark-tag', 'internal'],
+        executionIdentity: 'service_account',
+        serviceAccount: 'runner@test-project.iam.gserviceaccount.com',
+        encryption: 'customer_managed_key',
+        kmsKeySelectionMode: 'select',
+        keyRing: 'ring-1',
+        cryptoKey: 'key-1'
+      },
+      'test-project',
+      'us-central1'
+    );
+    expect(sharedVpcCmekTemplate.environmentConfig?.executionConfig).toEqual({
+      idleTtl: '3600s',
+      ttl: '259200s',
+      subnetworkUri:
+        'projects/host-vpc-proj/regions/us-central1/subnetworks/shared-sub-1',
+      networkTags: ['spark-tag', 'internal'],
+      serviceAccount: 'runner@test-project.iam.gserviceaccount.com',
+      kmsKey:
+        'projects/test-project/locations/us-central1/keyRings/ring-1/cryptoKeys/key-1'
+    });
+
+    expect(
+      buildNetworkSecurityConfigFromTemplate(
+        sharedVpcCmekTemplate,
+        'test-project',
+        'us-central1'
+      )
+    ).toEqual({
+      networkSource: 'shared_from_host',
+      primaryNetwork: 'default',
+      networkInThisProject: 'default',
+      subnetwork: 'default',
+      hostProjectId: 'host-vpc-proj',
+      sharedSubnetwork: 'shared-sub-1',
+      networkTags: ['spark-tag', 'internal'],
+      executionIdentity: 'service_account',
+      serviceAccount: 'runner@test-project.iam.gserviceaccount.com',
+      encryption: 'customer_managed_key',
+      kmsKeySelectionMode: 'select',
+      keyRing: 'ring-1',
+      cryptoKey: 'key-1',
+      kmsKeyName:
+        'projects/test-project/locations/us-central1/keyRings/ring-1/cryptoKeys/key-1'
+    });
+
+    const manualCrossProjKmsTemplate = applyNetworkSecurityUpdateToTemplate(
+      sharedVpcCmekTemplate,
+      {
+        networkSource: 'project',
+        primaryNetwork: 'default',
+        subnetwork: 'custom-subnet',
+        networkTags: [],
+        executionIdentity: 'service_account',
+        encryption: 'customer_managed_key',
+        kmsKeySelectionMode: 'manual',
+        kmsKeyName:
+          'projects/kms-proj/locations/us-central1/keyRings/ext-ring/cryptoKeys/ext-key'
+      },
+      'test-project',
+      'us-central1'
+    );
+    expect(
+      buildNetworkSecurityConfigFromTemplate(
+        manualCrossProjKmsTemplate,
+        'test-project',
+        'us-central1'
+      )
+    ).toEqual({
+      networkSource: 'project',
+      subnetwork: 'custom-subnet',
+      networkTags: [],
+      executionIdentity: 'service_account',
+      encryption: 'customer_managed_key',
+      kmsKeySelectionMode: 'manual',
+      kmsKeyName:
+        'projects/kms-proj/locations/us-central1/keyRings/ext-ring/cryptoKeys/ext-key'
+    });
+
+    // Switching back to google_managed clears kmsKey and omits empty environmentConfig
+    const clearedExecTemplate = applyNetworkSecurityUpdateToTemplate(
+      {
+        name: 'projects/test-project/locations/us-central1/sessionTemplates/minimal',
+        environmentConfig: {
+          executionConfig: {
+            kmsKey:
+              'projects/test-project/locations/us-central1/keyRings/r/cryptoKeys/k'
+          }
+        }
+      },
+      {
+        networkSource: 'project',
+        subnetwork: '',
+        networkTags: [],
+        executionIdentity: 'service_account',
+        encryption: 'google_managed'
+      },
+      'test-project',
+      'us-central1'
+    );
+    expect(clearedExecTemplate.environmentConfig).toBeUndefined();
   });
 });
 
