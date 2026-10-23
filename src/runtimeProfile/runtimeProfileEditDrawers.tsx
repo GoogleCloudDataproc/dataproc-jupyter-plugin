@@ -1823,9 +1823,26 @@ export const NetworkSecurityEditDrawer: React.FC<
       setServiceAccount(config.serviceAccount || '');
       setEncryption(config.encryption ?? 'google_managed');
 
+      // Extract keyRing and cryptoKey from kmsKeyName if formatted and not explicitly stored
+      let initialKeyRing = config.keyRing || '';
+      let initialCryptoKey = config.cryptoKey || '';
+      if (!initialKeyRing && config.kmsKeyName) {
+        const parts = config.kmsKeyName.split('/');
+        if (
+          parts.length === 8 &&
+          parts[0] === 'projects' &&
+          parts[2] === 'locations' &&
+          parts[4] === 'keyRings' &&
+          parts[6] === 'cryptoKeys'
+        ) {
+          initialKeyRing = parts[5] || '';
+          initialCryptoKey = parts[7] || '';
+        }
+      }
+
       const resolvedKmsMode: 'select' | 'manual' =
         config.kmsKeySelectionMode ??
-        (config.kmsKeyName && !config.keyRing ? 'manual' : 'select');
+        (config.kmsKeyName && !initialKeyRing ? 'manual' : 'select');
       setKmsKeySelectionMode(resolvedKmsMode);
 
       if (resolvedKmsMode === 'manual') {
@@ -1836,8 +1853,8 @@ export const NetworkSecurityEditDrawer: React.FC<
           !config.kmsKeyName || KMS_KEY_REGEX.test(config.kmsKeyName)
         );
       } else {
-        setKeyRing(config.keyRing || '');
-        setCryptoKey(config.cryptoKey || '');
+        setKeyRing(initialKeyRing);
+        setCryptoKey(initialCryptoKey);
         setKmsKeyName('');
         setIsValidManualKey(true);
       }
