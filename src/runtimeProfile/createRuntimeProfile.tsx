@@ -341,18 +341,41 @@ export const formatAutoscalingProperties = (
   ];
 };
 
+/**
+ * Project of the metastore in use, defaulting to the profile's own project.
+ * With only the Hive endpoint enabled, that is the Hive endpoint's project.
+ */
+const getMetastoreProjectId = (
+  config: IMetastoreConfig,
+  defaultProjectId?: string
+): string | undefined => {
+  const isHiveOnly =
+    config.metastoreType === 'lakehouse' &&
+    config.icebergRestEndpointEnabled === false &&
+    Boolean(config.hiveEndpointEnabled);
+  return (
+    (isHiveOnly ? config.hiveProjectId : config.projectId) || defaultProjectId
+  );
+};
+
+/**
+ * Metastore rows of the form. `defaultProjectId` is the profile's own project,
+ * shown when the config has no project of its own.
+ */
 export const formatMetastoreProperties = (
-  config?: IMetastoreConfig
+  config?: IMetastoreConfig,
+  defaultProjectId?: string
 ): ISectionProperty[] => {
   if (!config) {
     return [];
   }
   const isDataprocMetastore = config.metastoreType === 'dataproc';
   const lakehouseLabel = config.metastore || LAKEHOUSE_RUNTIME_CATALOG;
+  const lakehouseProjectId = getMetastoreProjectId(config, defaultProjectId);
   const metastoreLabel = isDataprocMetastore
     ? config.dataprocMetastoreService || METASTORE_NONE
-    : config.projectId
-    ? `${lakehouseLabel} (project: ${config.projectId})`
+    : lakehouseLabel !== METASTORE_NONE && lakehouseProjectId
+    ? `${lakehouseLabel} (project: ${lakehouseProjectId})`
     : lakehouseLabel;
 
   const properties: ISectionProperty[] = [
@@ -760,7 +783,7 @@ export const CreateRuntimeProfileComponent: React.FC<
       },
       {
         title: 'Metastore configuration',
-        properties: formatMetastoreProperties(metastoreConfig),
+        properties: formatMetastoreProperties(metastoreConfig, projectId),
         isEditDisabled: false,
         onEdit: () => setIsMetastoreDrawerOpen(true)
       },
@@ -788,6 +811,7 @@ export const CreateRuntimeProfileComponent: React.FC<
       executorAndDriverConfig,
       autoscalingConfig,
       metastoreConfig,
+      projectId,
       networkAndSecurityConfig,
       sessionLifecycleConfig,
       sparkProperties,
@@ -877,6 +901,8 @@ export const CreateRuntimeProfileComponent: React.FC<
     return matched ? matched.displayName : selectedRegionValue;
   }, [regions, selectedRegionValue]);
 
+  const metastoreProjectId = getMetastoreProjectId(metastoreConfig, projectId);
+
   const summaryInput = React.useMemo(
     () => ({
       tier,
@@ -897,7 +923,7 @@ export const CreateRuntimeProfileComponent: React.FC<
       minExecutors: autoscalingConfig.minExecutors,
       maxExecutors: autoscalingConfig.maxExecutors,
       metastore: metastoreConfig.metastore || 'Lakehouse runtime catalog',
-      projectId: metastoreConfig.projectId || projectId
+      projectId: metastoreProjectId
     }),
     [
       tier,
@@ -914,8 +940,7 @@ export const CreateRuntimeProfileComponent: React.FC<
       autoscalingConfig.minExecutors,
       autoscalingConfig.maxExecutors,
       metastoreConfig.metastore,
-      metastoreConfig.projectId,
-      projectId
+      metastoreProjectId
     ]
   );
 

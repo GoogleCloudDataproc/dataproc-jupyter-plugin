@@ -22,6 +22,7 @@ import {
   CircularProgress,
   FormControl,
   FormControlLabel,
+  InputAdornment,
   InputLabel,
   MenuItem,
   Radio,
@@ -98,8 +99,9 @@ interface IProjectIdFieldProps {
 }
 
 /**
- * Project ID input with a Browse button. Typed values reach onChange after a
- * short pause or on blur, so callers don't fetch on every keystroke.
+ * Project ID input with a Browse button inside the field. Typed values reach
+ * onChange after a short pause or on blur, so callers don't fetch on every
+ * keystroke.
  */
 const ProjectIdField: React.FC<IProjectIdFieldProps> = ({
   id,
@@ -130,30 +132,35 @@ const ProjectIdField: React.FC<IProjectIdFieldProps> = ({
   }, [draft, value]);
 
   return (
-    <div className={`edit-drawer-input-with-button ${className ?? ''}`}>
-      <TextField
-        id={id}
-        label={label}
-        value={draft}
-        onChange={e => setDraft(e.target.value)}
-        onBlur={() => {
-          if (draft.trim() !== value) {
-            onChange(draft.trim());
-          }
-        }}
-        variant="outlined"
-        size="small"
-        fullWidth
-        InputLabelProps={{ shrink: true }}
-      />
-      <button
-        type="button"
-        className="edit-drawer-browse-btn"
-        onClick={onBrowse}
-      >
-        Browse
-      </button>
-    </div>
+    <TextField
+      id={id}
+      className={className}
+      label={label}
+      value={draft}
+      onChange={e => setDraft(e.target.value)}
+      onBlur={() => {
+        if (draft.trim() !== value) {
+          onChange(draft.trim());
+        }
+      }}
+      variant="outlined"
+      size="small"
+      fullWidth
+      InputLabelProps={{ shrink: true }}
+      InputProps={{
+        endAdornment: (
+          <InputAdornment position="end">
+            <button
+              type="button"
+              className="edit-drawer-browse-btn"
+              onClick={onBrowse}
+            >
+              Browse
+            </button>
+          </InputAdornment>
+        )
+      }}
+    />
   );
 };
 
@@ -482,12 +489,10 @@ export const MetastoreEditDrawer: React.FC<IMetastoreEditDrawerProps> = ({
   const hiveCatalogNameError = isInvalidCatalogName(state.hiveCatalogName);
 
   const isSaveDisabled = (() => {
-    // "None" is a valid Dataproc Metastore selection.
+    // "None" is a valid selection: a Dataproc Metastore without a service, or
+    // a Lakehouse runtime catalog with no endpoint enabled.
     if (state.metastoreType === 'dataproc') {
       return false;
-    }
-    if (!state.icebergRestEndpointEnabled && !state.hiveEndpointEnabled) {
-      return true;
     }
     // Both endpoints wait while their catalogs load, so a quick Save after a
     // project change can't go out before that project's catalog is picked.
@@ -542,7 +547,11 @@ export const MetastoreEditDrawer: React.FC<IMetastoreEditDrawerProps> = ({
     const catalogName = state.catalogName.trim();
     const isHiveEnabled = state.hiveEndpointEnabled;
     onSave({
-      metastore: LAKEHOUSE_RUNTIME_CATALOG,
+      // With no endpoint enabled, no Lakehouse catalog is configured.
+      metastore:
+        isIcebergEnabled || isHiveEnabled
+          ? LAKEHOUSE_RUNTIME_CATALOG
+          : METASTORE_NONE,
       metastoreType: 'lakehouse',
       projectId: isIcebergEnabled ? otherProjectId : undefined,
       icebergRestEndpointEnabled: isIcebergEnabled,
