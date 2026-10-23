@@ -356,15 +356,31 @@ export function mapRuntimeProfileToSessionTemplate(
   }
 
   // Driver machine type & disk properties
-  const driverMachine = parseMachineTypeSpec(
-    executorAndDriverConfig?.driverMachineType
-  );
+  const driverMachineType = executorAndDriverConfig?.driverMachineType;
+  const driverMachine = parseMachineTypeSpec(driverMachineType);
   if (driverMachine) {
     if (!properties['spark.driver.cores']) {
       properties['spark.driver.cores'] = String(driverMachine.cores);
     }
     if (!properties['spark.driver.memory']) {
       properties['spark.driver.memory'] = driverMachine.memory;
+    }
+    const isHighmemDriverShape =
+      driverMachineType?.toLowerCase().includes('highmem') ||
+      (driverMachine.cores > 0 &&
+        (memoryToMb(driverMachine.memory) * 1.4) / driverMachine.cores > 7424);
+    if (
+      (isHighmemDriverShape || driverMachine.acceleratorType) &&
+      !properties['spark.dataproc.driver.compute.tier']
+    ) {
+      properties['spark.dataproc.driver.compute.tier'] = 'premium';
+    }
+    if (
+      driverMachine.acceleratorType &&
+      !properties['spark.dataproc.driver.resource.accelerator.type']
+    ) {
+      properties['spark.dataproc.driver.resource.accelerator.type'] =
+        driverMachine.acceleratorType;
     }
   }
 
@@ -1098,6 +1114,7 @@ const FORM_DERIVED_PROPERTY_KEYS = new Set<string>([
   'spark.driver.cores',
   'spark.driver.memory',
   'spark.dataproc.driver.compute.tier',
+  'spark.dataproc.driver.resource.accelerator.type',
   'spark.dataproc.driver.disk.tier',
   'spark.dataproc.driver.disk.size',
   'spark.executor.cores',
@@ -1228,13 +1245,23 @@ export function mapSessionTemplateToFormValues(
     );
   }
 
+  const driverCategory: ExecutorCategoryType = getProperty(
+    'spark.dataproc.driver.resource.accelerator.type'
+  )
+    ? 'accelerated'
+    : 'general';
   const driverMachine = findMachineType(
     getProperty('spark.driver.cores'),
     getProperty('spark.driver.memory'),
-    'general'
+    driverCategory
   );
   if (driverMachine) {
-    markMapped('spark.driver.cores', 'spark.driver.memory');
+    markMapped(
+      'spark.driver.cores',
+      'spark.driver.memory',
+      'spark.dataproc.driver.compute.tier',
+      'spark.dataproc.driver.resource.accelerator.type'
+    );
   }
 
   const driverDisk = formatDiskSpec(
