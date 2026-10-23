@@ -49,8 +49,125 @@ import {
 import { IRuntimeProfileTemplate } from './runtimeProfileListMapper';
 import {
   DATAPROC_LIGHTNING_ENGINE_PROPERTY,
-  DATAPROC_TIER_PROPERTY
+  DATAPROC_TIER_PROPERTY,
+  DEFAULT_ACCELERATED_EXECUTOR_TYPE,
+  DEFAULT_GENERAL_EXECUTOR_TYPE,
+  DEFAULT_STANDARD_TIER_EXECUTOR_TYPE
 } from '../utils/const';
+
+// Session templates shared by the update tests.
+
+// Created by the form and saved with every section set.
+const savedProfile = {
+  name: 'projects/test-project/locations/us-central1/sessionTemplates/my_profile',
+  description: 'old description',
+  creator: 'user@example.com',
+  createTime: '2026-09-16T08:02:03Z',
+  updateTime: '2026-09-16T08:02:03Z',
+  uuid: 'f2b6c0de-1234-4abc-8def-000000000000',
+  jupyterSession: { displayName: 'Old name', kernel: 'SCALA' },
+  environmentConfig: {
+    executionConfig: {
+      subnetworkUri: 'default',
+      networkTags: ['old-tag'],
+      kmsKey:
+        'projects/test-project/locations/us-central1/keyRings/kr/cryptoKeys/k',
+      serviceAccount: 'old-sa@test-project.iam.gserviceaccount.com',
+      stagingBucket: 'old-bucket',
+      idleTtl: '3600s',
+      ttl: '259200s'
+    },
+    peripheralsConfig: {
+      metastoreService:
+        'projects/test-project/locations/us-central1/services/old-metastore',
+      sparkHistoryServerConfig: {
+        dataprocCluster:
+          'projects/test-project/regions/us-central1/clusters/phs'
+      }
+    }
+  },
+  runtimeConfig: {
+    version: '2.2',
+    containerImage: 'gcr.io/my-project/old:1',
+    properties: {
+      [DATAPROC_TIER_PROPERTY]: 'premium',
+      [DATAPROC_LIGHTNING_ENGINE_PROPERTY]: 'lightningEngine',
+      'spark.executor.cores': '4',
+      'spark.executor.memory': '32g',
+      'spark.dataproc.executor.compute.tier': 'premium',
+      'spark.dynamicAllocation.enabled': 'true',
+      'spark.dynamicAllocation.initialExecutors': '2',
+      'spark.dynamicAllocation.minExecutors': '2',
+      'spark.dynamicAllocation.maxExecutors': '10',
+      'spark.sql.shuffle.partitions': '100'
+    },
+    autotuningConfig: { scenarios: ['SCALING'] }
+  },
+  labels: { env: 'dev' }
+} as IRuntimeProfileTemplate;
+
+// Created in the Console: no tier, executor or autoscaling properties.
+const consoleProfile: IRuntimeProfileTemplate = {
+  name: 'projects/test-project/locations/us-central1/sessionTemplates/console',
+  jupyterSession: { displayName: 'Console profile', kernel: 'PYTHON' },
+  runtimeConfig: { version: '2.3' },
+  environmentConfig: { executionConfig: { subnetworkUri: 'default' } }
+};
+
+// Values the form can't show: a custom executor shape, a non-numeric
+// autoscaling limit, an unknown Lightning Engine value, prefixed keys and a
+// network without a subnetwork.
+const unusualProfile: IRuntimeProfileTemplate = {
+  name: 'projects/test-project/locations/us-central1/sessionTemplates/unusual',
+  jupyterSession: { displayName: 'Unusual', kernel: 'PYTHON' },
+  environmentConfig: { executionConfig: { networkUri: 'custom-vpc' } },
+  runtimeConfig: {
+    properties: {
+      'dataproc:dataproc.tier': 'standard',
+      [DATAPROC_LIGHTNING_ENGINE_PROPERTY]: 'default',
+      'spark:spark.executor.cores': '6',
+      'spark:spark.executor.memory': '20g',
+      'spark.dataproc.driver.disk.size': '1t',
+      'spark.dynamicAllocation.maxExecutors': 'unlimited',
+      'spark:spark.sql.adaptive.enabled': 'true'
+    }
+  }
+};
+
+// Lakehouse runtime catalog: an existing default catalog in another project,
+// a Hive endpoint catalog, and one more catalog added as a Spark property.
+const lakehouseProfile: IRuntimeProfileTemplate = {
+  name: 'projects/test-project/locations/us-central1/sessionTemplates/lakehouse',
+  jupyterSession: { displayName: 'Lakehouse', kernel: 'PYTHON' },
+  runtimeConfig: {
+    properties: {
+      [LAKEHOUSE_PROJECT_PROPERTY]: 'data-project',
+      [LAKEHOUSE_DEFAULT_CATALOG_PROPERTY]:
+        'projects/data-project/catalogs/sales',
+      [`${LAKEHOUSE_CATALOG_PROPERTY_PREFIX}sales`]:
+        'projects/data-project/catalogs/sales',
+      [`${LAKEHOUSE_CATALOG_PROPERTY_PREFIX}hive_cat`]:
+        'projects/hive-project/catalogs/hive_cat',
+      [`${LAKEHOUSE_CATALOG_PROPERTY_PREFIX}extra`]:
+        'projects/other/catalogs/extra'
+    }
+  }
+};
+
+// A Shared VPC subnetwork, a key from another project entered by hand, and
+// runtime 3.0 without an authentication type (end-user credentials).
+const sharedVpcProfile: IRuntimeProfileTemplate = {
+  name: 'projects/test-project/locations/us-central1/sessionTemplates/shared',
+  jupyterSession: { displayName: 'Shared', kernel: 'PYTHON' },
+  runtimeConfig: { version: '3.0' },
+  environmentConfig: {
+    executionConfig: {
+      subnetworkUri:
+        'projects/host-project/regions/us-central1/subnetworks/shared-subnet',
+      kmsKey: 'projects/kms-project/locations/global/keyRings/kr/cryptoKeys/k'
+    }
+  }
+};
 
 describe('runtimeProfileMapper', () => {
   describe('extractRuntimeVersion', () => {
@@ -662,9 +779,151 @@ describe('runtimeProfileMapper', () => {
         'Shared subnetwork is required when shared VPC network is selected.'
       );
     });
+    it('maps the session lifecycle times and the staging bucket to the execution config', () => {
+      const result = mapRuntimeProfileToSessionTemplate(
+        {
+          displayName: 'Lifecycle Profile',
+          region: 'us-central1',
+          runtimeEnvironmentConfig: {
+            stagingBucket: 'gs://my-staging-bucket/'
+          },
+          sessionLifecycleConfig: {
+            maxIdleTime: '30 minutes',
+            maxIdleTimeQuantity: 30,
+            maxIdleTimeUnit: 'minutes',
+            maxSessionTime: '2 days'
+          }
+        },
+        'test-project',
+        'us-central1'
+      );
+      expect(result.environmentConfig).toEqual({
+        executionConfig: {
+          stagingBucket: 'my-staging-bucket',
+          idleTtl: '1800s',
+          ttl: '172800s'
+        }
+      });
+
+      // The defaults ('None' and Auto) send nothing
+      expect(
+        mapRuntimeProfileToSessionTemplate(
+          {
+            displayName: 'Default Profile',
+            region: 'us-central1',
+            runtimeEnvironmentConfig: { stagingBucket: 'Auto' },
+            sessionLifecycleConfig: {
+              maxIdleTime: 'None',
+              maxSessionTime: 'None'
+            }
+          },
+          'test-project',
+          'us-central1'
+        ).environmentConfig
+      ).toBeUndefined();
+    });
+
+    it('keeps a Spark property written with a prefix instead of adding a derived duplicate', () => {
+      const properties = mapRuntimeProfileToSessionTemplate(
+        {
+          displayName: 'Prefixed Profile',
+          region: 'us-central1',
+          executorConfig: { executorType: 'general', machineType: 'highmem-4' },
+          autoscalingConfig: { maxExecutors: 10 },
+          sparkProperties: {
+            'spark:spark.executor.cores': '10',
+            'spark:spark.dynamicAllocation.maxExecutors': '30'
+          }
+        },
+        'test-project',
+        'us-central1'
+      ).runtimeConfig?.properties;
+
+      expect(properties?.['spark:spark.executor.cores']).toBe('10');
+      expect(properties).not.toHaveProperty('spark.executor.cores');
+      expect(properties?.['spark:spark.dynamicAllocation.maxExecutors']).toBe(
+        '30'
+      );
+      expect(properties).not.toHaveProperty(
+        'spark.dynamicAllocation.maxExecutors'
+      );
+      expect(properties?.['spark.executor.memory']).toBe('32g');
+    });
   });
 
   describe('mapSessionTemplateToFormValues', () => {
+    it('maps the Lakehouse runtime catalog settings and keeps other catalogs as Spark properties', () => {
+      const values = mapSessionTemplateToFormValues(lakehouseProfile);
+      expect(values.initialMetastoreConfig).toEqual({
+        metastore: LAKEHOUSE_RUNTIME_CATALOG,
+        metastoreType: 'lakehouse',
+        projectId: 'data-project',
+        icebergRestEndpointEnabled: true,
+        catalogSelectionMode: 'existing',
+        catalogId: 'sales',
+        hiveEndpointEnabled: true,
+        hiveProjectId: 'hive-project',
+        hiveCatalogId: 'hive_cat',
+        hiveCatalogName: 'hive_cat'
+      });
+      expect(values.initialSparkProperties).toEqual({
+        [`${LAKEHOUSE_CATALOG_PROPERTY_PREFIX}extra`]:
+          'projects/other/catalogs/extra'
+      });
+
+      // A new catalog with the region's default name in the profile's project
+      expect(
+        mapSessionTemplateToFormValues(
+          mapRuntimeProfileToSessionTemplate(
+            {
+              displayName: 'default-catalog',
+              region: 'us-central1',
+              metastoreConfig: {
+                metastoreType: 'lakehouse',
+                catalogSelectionMode: 'new'
+              }
+            },
+            'test-project',
+            'us-central1'
+          )
+        ).initialMetastoreConfig
+      ).toEqual({
+        metastore: LAKEHOUSE_RUNTIME_CATALOG,
+        metastoreType: 'lakehouse',
+        icebergRestEndpointEnabled: true,
+        catalogSelectionMode: 'new',
+        hiveEndpointEnabled: false
+      });
+    });
+
+    it('maps a Shared VPC subnetwork, a key entered by hand, and the default identity of runtime 3.0', () => {
+      expect(
+        mapSessionTemplateToFormValues(sharedVpcProfile)
+          .initialNetworkAndSecurityConfig
+      ).toEqual({
+        networkSource: 'shared_from_host',
+        hostProjectId: 'host-project',
+        sharedSubnetwork: 'shared-subnet',
+        // Without an authentication type, runtime 3.0 uses end-user credentials
+        executionIdentity: 'user_account',
+        encryption: 'customer_managed_key',
+        kmsKeySelectionMode: 'manual',
+        kmsKeyName:
+          'projects/kms-project/locations/global/keyRings/kr/cryptoKeys/k'
+      });
+
+      expect(
+        mapSessionTemplateToFormValues(savedProfile)
+          .initialNetworkAndSecurityConfig
+      ).toEqual(
+        expect.objectContaining({
+          // Runtime 2.2 uses the service account by default
+          executionIdentity: 'service_account',
+          serviceAccount: 'old-sa@test-project.iam.gserviceaccount.com'
+        })
+      );
+    });
+
     it('maps every form section from a session template, including prefixed property keys', () => {
       const template: IRuntimeProfileTemplate = {
         name: 'projects/test-project/locations/us-central1/sessionTemplates/sample-profile',
@@ -747,16 +1006,24 @@ describe('runtimeProfileMapper', () => {
           minExecutors: 2,
           maxExecutors: 20
         },
+        // The Dataproc Metastore service is the metastore; the Lakehouse
+        // properties stay Spark properties
         initialMetastoreConfig: {
           metastore: 'projects/p/locations/l/services/my-metastore',
-          hiveEndpointEnabled: true
+          metastoreType: 'dataproc',
+          projectId: 'p',
+          dataprocMetastoreService:
+            'projects/p/locations/l/services/my-metastore',
+          hiveEndpointEnabled: false
         },
         initialNetworkAndSecurityConfig: {
+          networkSource: 'project',
           executionIdentity: 'user_account',
           networkInThisProject: 'default',
           subnetwork: 'default',
           networkTags: ['tag-a'],
           encryption: 'customer_managed_key',
+          kmsKeySelectionMode: 'manual',
           kmsKeyName: 'projects/p/locations/l/keyRings/kr/cryptoKeys/k'
         },
         initialSessionLifecycleConfig: {
@@ -810,6 +1077,8 @@ describe('runtimeProfileMapper', () => {
       expect(values.initialAutoscalingConfig).toEqual({});
       expect(values.initialSessionLifecycleConfig).toEqual({});
       expect(values.initialNetworkAndSecurityConfig).toEqual({
+        networkSource: 'project',
+        executionIdentity: 'service_account',
         encryption: 'google_managed'
       });
       expect(values.initialMetastoreConfig).toEqual({
@@ -855,6 +1124,7 @@ describe('runtimeProfileMapper', () => {
       expect(values.initialExecutorType).toBe('l4-8');
       expect(values.initialSparkProperties).toEqual({});
       expect(values.initialNetworkAndSecurityConfig).toEqual({
+        networkSource: 'project',
         executionIdentity: 'service_account',
         networkInThisProject: 'my-network',
         primaryNetwork: 'my-network',
@@ -972,141 +1242,467 @@ describe('runtimeProfileMapper', () => {
   });
 
   describe('mapRuntimeProfileToSessionTemplateUpdate', () => {
-    const existingTemplate = {
-      name: 'projects/test-project/locations/us-central1/sessionTemplates/my_profile',
-      description: 'old description',
-      creator: 'user@example.com',
-      createTime: '2026-09-16T08:02:03Z',
-      updateTime: '2026-09-16T08:02:03Z',
-      jupyterSession: { displayName: 'Old name', kernel: 'SCALA' },
-      environmentConfig: {
-        executionConfig: {
-          subnetworkUri: 'default',
-          idleTtl: '3600s',
-          ttl: '259200s',
-          kmsKey: 'projects/p/locations/l/keyRings/kr/cryptoKeys/k',
-          stagingBucket: 'old-bucket'
+    /** The form values the edit form starts from, built like the form does. */
+    const formPayloadFor = (
+      template: IRuntimeProfileTemplate
+    ): ICreateRuntimeProfilePayload => {
+      const values = mapSessionTemplateToFormValues(template);
+      const tier = values.initialTier ?? 'Premium';
+      const isLightningEngineActive =
+        tier === 'Premium' && Boolean(values.initialLightningEngineEnabled);
+      const executorCategory = values.initialExecutorCategory ?? 'general';
+      const executorType =
+        values.initialExecutorType ??
+        (executorCategory === 'accelerated'
+          ? DEFAULT_ACCELERATED_EXECUTOR_TYPE
+          : tier === 'Standard'
+          ? DEFAULT_STANDARD_TIER_EXECUTOR_TYPE
+          : DEFAULT_GENERAL_EXECUTOR_TYPE);
+      return {
+        displayName: values.initialDisplayName ?? '',
+        region: values.initialRegion ?? '',
+        description: values.initialDescription || undefined,
+        tier,
+        lightningEngineEnabled: isLightningEngineActive,
+        executorConfig: {
+          executorType: executorCategory,
+          machineType: executorType
         },
-        peripheralsConfig: {
-          metastoreService: 'projects/p/locations/l/services/my-metastore'
-        }
-      },
-      runtimeConfig: {
-        version: '2.2',
-        containerImage: 'gcr.io/my-project/old:1',
-        properties: { 'spark.sql.shuffle.partitions': '100' },
-        autotuningConfig: { scenarios: ['SCALING'] }
-      },
-      labels: { env: 'dev' }
-    } as IRuntimeProfileTemplate;
+        runtimeEnvironmentConfig: {
+          ...values.initialRuntimeEnvironmentConfig,
+          lightningEngineEnabled: isLightningEngineActive
+        },
+        executorAndDriverConfig: {
+          ...values.initialExecutorAndDriverConfig,
+          tier,
+          executorType,
+          executorMachineType: executorType,
+          lightningEngineEnabled: Boolean(values.initialLightningEngineEnabled)
+        },
+        autoscalingConfig: values.initialAutoscalingConfig,
+        metastoreConfig: values.initialMetastoreConfig,
+        networkAndSecurityConfig: values.initialNetworkAndSecurityConfig,
+        sessionLifecycleConfig: values.initialSessionLifecycleConfig,
+        sparkProperties: values.initialSparkProperties,
+        labels: values.initialLabels
+      };
+    };
 
-    it('keeps the resource name, kernel and settings the form does not map, and applies the edited fields', () => {
-      const body = mapRuntimeProfileToSessionTemplateUpdate(
-        {
-          displayName: 'New name',
-          region: 'us-central1',
-          description: 'new description',
-          tier: 'Standard',
-          runtimeEnvironmentConfig: {
-            runtimeProfileId: 'my_profile',
-            runtimeVersion: '2.3 LTS (Spark 3.5.1, Python 3.12)',
-            customSparkImage: '',
-            stagingBucket: 'gs://new-bucket/'
-          },
-          sparkProperties: { 'spark.sql.shuffle.partitions': '100' },
-          labels: { env: 'dev' }
-        },
-        existingTemplate
+    /**
+     * Opens the form on `opened`, applies `edit` and builds the update body
+     * against `latest`, the copy saved when the user clicks Save.
+     */
+    const saveEdits = (
+      opened: IRuntimeProfileTemplate,
+      edit: (payload: ICreateRuntimeProfilePayload) => void = () => undefined,
+      latest: IRuntimeProfileTemplate = opened
+    ) => {
+      const initialPayload = formPayloadFor(opened);
+      const payload: ICreateRuntimeProfilePayload = JSON.parse(
+        JSON.stringify(initialPayload)
       );
+      edit(payload);
+      return mapRuntimeProfileToSessionTemplateUpdate(
+        payload,
+        initialPayload,
+        latest
+      );
+    };
+
+    const withoutOutputOnlyFields = (template: IRuntimeProfileTemplate) => {
+      const copy: Record<string, unknown> = { ...template };
+      ['createTime', 'updateTime', 'creator', 'uuid'].forEach(
+        field => delete copy[field]
+      );
+      return copy;
+    };
+
+    it.each([
+      ['a profile created by the form', savedProfile],
+      ['a profile created in the Console', consoleProfile],
+      ['values the form cannot show', unusualProfile],
+      ['a Lakehouse runtime catalog', lakehouseProfile],
+      [
+        'a Shared VPC subnetwork and a key from another project',
+        sharedVpcProfile
+      ]
+    ])('saves %s unchanged when nothing was edited', (_label, template) => {
+      expect(saveEdits(template)).toEqual(withoutOutputOnlyFields(template));
+    });
+
+    it('applies the edits made in every section', () => {
+      const body = saveEdits(savedProfile, payload => {
+        payload.displayName = 'New name';
+        payload.description = undefined;
+        payload.labels = { env: 'prod', team: 'data' };
+        payload.sparkProperties = {
+          'spark.sql.shuffle.partitions': '200',
+          'spark.foo': 'bar'
+        };
+        payload.autoscalingConfig = {
+          ...payload.autoscalingConfig,
+          maxExecutors: 50
+        };
+        payload.runtimeEnvironmentConfig = {
+          ...payload.runtimeEnvironmentConfig,
+          runtimeVersion: '2.3 LTS (Spark 3.5, Java 17, Scala 2.13)',
+          customSparkImage: '',
+          stagingBucket: 'gs://new-bucket/'
+        };
+        payload.networkAndSecurityConfig = {
+          networkSource: 'project',
+          primaryNetwork: 'default',
+          networkInThisProject: 'default',
+          subnetwork: 'new-subnet',
+          networkTags: ['new-tag'],
+          executionIdentity: 'user_account',
+          encryption: 'google_managed'
+        };
+        payload.sessionLifecycleConfig = {
+          maxIdleTime: '30 minutes',
+          maxIdleTimeQuantity: 30,
+          maxIdleTimeUnit: 'minutes',
+          maxSessionTime: '2 days',
+          maxSessionTimeQuantity: 2,
+          maxSessionTimeUnit: 'days'
+        };
+        payload.metastoreConfig = {
+          metastore: 'Dataproc Metastore',
+          metastoreType: 'dataproc',
+          dataprocMetastoreService:
+            'projects/test-project/locations/us-central1/services/new-metastore'
+        };
+      });
 
       expect(body).toEqual({
-        // The ID can't change, even if the form would sanitize it differently
-        name: 'projects/test-project/locations/us-central1/sessionTemplates/my_profile',
-        description: 'new description',
-        jupyterSession: { kernel: 'SCALA', displayName: 'New name' },
-        labels: { env: 'dev' },
+        // The ID and region can't change
+        name: savedProfile.name,
+        jupyterSession: { displayName: 'New name', kernel: 'SCALA' },
+        labels: { env: 'prod', team: 'data' },
         runtimeConfig: {
-          autotuningConfig: { scenarios: ['SCALING'] },
           version: '2.3',
+          autotuningConfig: { scenarios: ['SCALING'] },
           properties: {
-            'spark.sql.shuffle.partitions': '100',
-            [DATAPROC_TIER_PROPERTY]: 'standard'
+            [DATAPROC_TIER_PROPERTY]: 'premium',
+            [DATAPROC_LIGHTNING_ENGINE_PROPERTY]: 'lightningEngine',
+            'spark.executor.cores': '4',
+            'spark.executor.memory': '32g',
+            'spark.dataproc.executor.compute.tier': 'premium',
+            'spark.dynamicAllocation.enabled': 'true',
+            'spark.dynamicAllocation.initialExecutors': '2',
+            'spark.dynamicAllocation.minExecutors': '2',
+            'spark.dynamicAllocation.maxExecutors': '50',
+            'spark.sql.shuffle.partitions': '200',
+            'spark.foo': 'bar'
           }
         },
         environmentConfig: {
           executionConfig: {
-            subnetworkUri: 'default',
-            idleTtl: '3600s',
-            ttl: '259200s',
-            kmsKey: 'projects/p/locations/l/keyRings/kr/cryptoKeys/k',
-            stagingBucket: 'new-bucket'
+            subnetworkUri: 'new-subnet',
+            networkTags: ['new-tag'],
+            authenticationConfig: {
+              userWorkloadAuthenticationType: 'END_USER_CREDENTIALS'
+            },
+            stagingBucket: 'new-bucket',
+            idleTtl: '1800s',
+            ttl: '172800s'
           },
           peripheralsConfig: {
-            metastoreService: 'projects/p/locations/l/services/my-metastore'
+            metastoreService:
+              'projects/test-project/locations/us-central1/services/new-metastore',
+            sparkHistoryServerConfig:
+              savedProfile.environmentConfig?.peripheralsConfig
+                ?.sparkHistoryServerConfig
           }
         }
       });
-      // Output-only fields are not sent back
-      expect(body).not.toHaveProperty('createTime');
-      expect(body).not.toHaveProperty('updateTime');
-      expect(body).not.toHaveProperty('creator');
     });
 
-    it('clears an Auto staging bucket and adds no environment config when the template has none', () => {
-      const autoBucketBody = mapRuntimeProfileToSessionTemplateUpdate(
-        {
-          displayName: 'Old name',
-          region: 'us-central1',
-          runtimeEnvironmentConfig: { stagingBucket: 'Auto' }
-        },
-        existingTemplate
-      );
-      expect(
-        autoBucketBody.environmentConfig?.executionConfig
-      ).not.toHaveProperty('stagingBucket');
-
-      const minimalBody = mapRuntimeProfileToSessionTemplateUpdate(
-        { displayName: 'minimal', region: 'us-east1' },
-        {
-          name: 'projects/p/locations/us-east1/sessionTemplates/minimal'
+    it('rewrites a custom executor shape, with its compute tier, when another type is picked', () => {
+      const customShapeProfile: IRuntimeProfileTemplate = {
+        name: 'projects/test-project/locations/us-central1/sessionTemplates/custom',
+        jupyterSession: { displayName: 'Custom', kernel: 'PYTHON' },
+        runtimeConfig: {
+          properties: {
+            [DATAPROC_TIER_PROPERTY]: 'premium',
+            'spark.executor.cores': '6',
+            'spark.executor.memory': '20g',
+            'spark.dataproc.driver.disk.size': '1t'
+          }
         }
-      );
-      expect(minimalBody.name).toBe(
-        'projects/p/locations/us-east1/sessionTemplates/minimal'
-      );
-      expect(minimalBody.jupyterSession?.kernel).toBe('PYTHON');
-      expect(minimalBody).not.toHaveProperty('sparkConnectSession');
-      expect(minimalBody).not.toHaveProperty('environmentConfig');
+      };
+
+      const body = saveEdits(customShapeProfile, payload => {
+        payload.executorConfig = {
+          executorType: 'general',
+          machineType: 'highmem-8'
+        };
+        payload.executorAndDriverConfig = {
+          ...payload.executorAndDriverConfig,
+          executorType: 'highmem-8',
+          executorMachineType: 'highmem-8'
+        };
+      });
+
+      expect(body.runtimeConfig?.properties).toEqual({
+        [DATAPROC_TIER_PROPERTY]: 'premium',
+        'spark.executor.cores': '8',
+        'spark.executor.memory': '64g',
+        'spark.dataproc.executor.compute.tier': 'premium',
+        // Other controls keep their values, even ones the form can't show
+        'spark.dataproc.driver.disk.size': '1t'
+      });
     });
 
-    it('keeps sparkConnectSession and does not add jupyterSession for a Spark Connect template', () => {
+    it('applies a value typed in Spark properties for a control the user did not change', () => {
+      const body = saveEdits(unusualProfile, payload => {
+        payload.sparkProperties = {
+          ...payload.sparkProperties,
+          'spark.executor.cores': '10'
+        };
+      });
+
+      const properties = body.runtimeConfig?.properties;
+      expect(properties?.['spark.executor.cores']).toBe('10');
+      // The prefixed key is replaced, not duplicated
+      expect(properties).not.toHaveProperty('spark:spark.executor.cores');
+      expect(properties?.['spark:spark.executor.memory']).toBe('20g');
+      expect(properties).not.toHaveProperty(
+        'spark.dataproc.executor.compute.tier'
+      );
+    });
+
+    it('rewrites the tier and Lightning Engine properties when they change', () => {
+      const body = saveEdits(unusualProfile, payload => {
+        payload.tier = 'Premium';
+        payload.lightningEngineEnabled = true;
+        payload.runtimeEnvironmentConfig = {
+          ...payload.runtimeEnvironmentConfig,
+          lightningEngineEnabled: true
+        };
+      });
+
+      const properties = body.runtimeConfig?.properties;
+      expect(properties?.[DATAPROC_TIER_PROPERTY]).toBe('premium');
+      expect(properties).not.toHaveProperty('dataproc:dataproc.tier');
+      expect(properties?.[DATAPROC_LIGHTNING_ENGINE_PROPERTY]).toBe(
+        'lightningEngine'
+      );
+    });
+
+    it('replaces the Lakehouse settings when the metastore changes and keeps catalogs added by hand', () => {
+      const newCatalog = saveEdits(lakehouseProfile, payload => {
+        payload.metastoreConfig = {
+          metastore: LAKEHOUSE_RUNTIME_CATALOG,
+          metastoreType: 'lakehouse',
+          icebergRestEndpointEnabled: true,
+          catalogSelectionMode: 'new',
+          catalogName: 'analytics',
+          hiveEndpointEnabled: false
+        };
+      });
+      expect(newCatalog.runtimeConfig?.properties).toEqual({
+        [LAKEHOUSE_PROJECT_PROPERTY]: 'test-project',
+        [`${LAKEHOUSE_CATALOG_PROPERTY_PREFIX}analytics`]:
+          'projects/test-project/catalogs/analytics',
+        [LAKEHOUSE_DEFAULT_CATALOG_PROPERTY]: 'analytics',
+        [`${LAKEHOUSE_CATALOG_PROPERTY_PREFIX}extra`]:
+          'projects/other/catalogs/extra'
+      });
+
+      const dataprocMetastore = saveEdits(lakehouseProfile, payload => {
+        payload.metastoreConfig = {
+          metastore: 'Dataproc Metastore',
+          metastoreType: 'dataproc',
+          dataprocMetastoreService:
+            'projects/test-project/locations/us-central1/services/dpms'
+        };
+      });
+      expect(dataprocMetastore.runtimeConfig?.properties).toEqual({
+        [`${LAKEHOUSE_CATALOG_PROPERTY_PREFIX}extra`]:
+          'projects/other/catalogs/extra'
+      });
+      expect(dataprocMetastore.environmentConfig).toEqual({
+        peripheralsConfig: {
+          metastoreService:
+            'projects/test-project/locations/us-central1/services/dpms'
+        }
+      });
+    });
+
+    it('saves network edits with an explicit execution identity and keeps the Shared VPC subnetwork', () => {
+      const body = saveEdits(sharedVpcProfile, payload => {
+        payload.networkAndSecurityConfig = {
+          ...payload.networkAndSecurityConfig,
+          executionIdentity: 'service_account',
+          serviceAccount: 'runner@test-project.iam.gserviceaccount.com'
+        };
+      });
+
+      expect(body.environmentConfig?.executionConfig).toEqual({
+        subnetworkUri:
+          'projects/host-project/regions/us-central1/subnetworks/shared-subnet',
+        kmsKey:
+          'projects/kms-project/locations/global/keyRings/kr/cryptoKeys/k',
+        serviceAccount: 'runner@test-project.iam.gserviceaccount.com',
+        authenticationConfig: {
+          userWorkloadAuthenticationType: 'SERVICE_ACCOUNT'
+        }
+      });
+    });
+
+    it('does not check network settings the user left alone, but rejects an invalid network edit', () => {
+      // A network without a subnetwork can't be entered in the form
+      const body = saveEdits(unusualProfile, payload => {
+        payload.description = 'Notes';
+      });
+      expect(body.description).toBe('Notes');
+      expect(body.environmentConfig).toEqual({
+        executionConfig: { networkUri: 'custom-vpc' }
+      });
+
+      expect(() =>
+        saveEdits(unusualProfile, payload => {
+          payload.networkAndSecurityConfig = {
+            ...payload.networkAndSecurityConfig,
+            networkTags: ['new-tag']
+          };
+        })
+      ).toThrow('Subnetwork is required when a project network is selected.');
+    });
+
+    it('saves security edits on a profile that uses the default network without requiring a subnetwork', () => {
+      const defaultNetworkProfile: IRuntimeProfileTemplate = {
+        name: 'projects/test-project/locations/us-central1/sessionTemplates/default-net',
+        jupyterSession: { displayName: 'Default network', kernel: 'PYTHON' }
+      };
+
+      const body = saveEdits(defaultNetworkProfile, payload => {
+        payload.networkAndSecurityConfig = {
+          ...payload.networkAndSecurityConfig,
+          networkTags: ['new-tag'],
+          encryption: 'customer_managed_key',
+          kmsKeySelectionMode: 'manual',
+          kmsKeyName:
+            'projects/kms-project/locations/global/keyRings/kr/cryptoKeys/k'
+        };
+      });
+
+      expect(body.environmentConfig?.executionConfig).toEqual({
+        networkTags: ['new-tag'],
+        kmsKey:
+          'projects/kms-project/locations/global/keyRings/kr/cryptoKeys/k',
+        authenticationConfig: {
+          userWorkloadAuthenticationType: 'SERVICE_ACCOUNT'
+        }
+      });
+    });
+
+    it('clears the staging bucket when it is set back to Auto', () => {
+      const body = saveEdits(savedProfile, payload => {
+        payload.runtimeEnvironmentConfig = {
+          ...payload.runtimeEnvironmentConfig,
+          stagingBucket: 'Auto'
+        };
+      });
+      expect(body.environmentConfig?.executionConfig).not.toHaveProperty(
+        'stagingBucket'
+      );
+      expect(body.environmentConfig?.executionConfig?.subnetworkUri).toBe(
+        'default'
+      );
+    });
+
+    it('keeps sparkConnectSession and never adds jupyterSession for a Spark Connect template', () => {
       // session_config is a oneof: writing jupyterSession would turn the
       // template into a Jupyter one (or be rejected if both were sent).
-      const body = mapRuntimeProfileToSessionTemplateUpdate(
-        {
-          displayName: 'Renamed',
-          region: 'us-central1',
-          description: 'new description',
-          runtimeEnvironmentConfig: { runtimeProfileId: 'spark_connect' }
-        },
-        {
-          name: 'projects/test-project/locations/us-central1/sessionTemplates/spark_connect',
-          sparkConnectSession: {},
-          runtimeConfig: { version: '2.2' }
-        }
-      );
-
-      expect(body.sparkConnectSession).toEqual({});
-      expect(body).not.toHaveProperty('jupyterSession');
-      expect(body.name).toBe(
-        'projects/test-project/locations/us-central1/sessionTemplates/spark_connect'
-      );
-      expect(body.description).toBe('new description');
-      expect(
+      const sparkConnectProfile: IRuntimeProfileTemplate = {
+        name: 'projects/test-project/locations/us-central1/sessionTemplates/spark_connect',
+        sparkConnectSession: {},
+        runtimeConfig: { version: '2.2' }
+      };
+      const onlySessionKeys = (body: object) =>
         Object.keys(body).filter(key =>
           ['jupyterSession', 'sparkConnectSession'].includes(key)
-        )
-      ).toEqual(['sparkConnectSession']);
+        );
+
+      const described = saveEdits(sparkConnectProfile, payload => {
+        payload.description = 'new description';
+      });
+      expect(described.description).toBe('new description');
+      expect(described.sparkConnectSession).toEqual({});
+      expect(onlySessionKeys(described)).toEqual(['sparkConnectSession']);
+
+      // A Spark Connect template has no display name, so renaming is a no-op
+      const renamed = saveEdits(sparkConnectProfile, payload => {
+        payload.displayName = 'Renamed';
+      });
+      expect(renamed.sparkConnectSession).toEqual({});
+      expect(renamed).not.toHaveProperty('jupyterSession');
+      expect(onlySessionKeys(renamed)).toEqual(['sparkConnectSession']);
+    });
+
+    it('keeps changes saved since the form opened in settings the user did not edit', () => {
+      const latest = {
+        ...savedProfile,
+        labels: { env: 'dev', owner: 'data-team' },
+        environmentConfig: {
+          ...savedProfile.environmentConfig,
+          executionConfig: {
+            ...savedProfile.environmentConfig?.executionConfig,
+            idleTtl: '7200s'
+          }
+        },
+        runtimeConfig: {
+          ...savedProfile.runtimeConfig,
+          properties: {
+            ...savedProfile.runtimeConfig?.properties,
+            'spark.sql.shuffle.partitions': '400'
+          }
+        }
+      } as IRuntimeProfileTemplate;
+
+      const body = saveEdits(
+        savedProfile,
+        payload => {
+          payload.description = 'new description';
+        },
+        latest
+      );
+
+      expect(body).toEqual({
+        ...withoutOutputOnlyFields(latest),
+        description: 'new description'
+      });
+    });
+
+    it("applies the user's edit over a change saved since the form opened", () => {
+      const latest = {
+        ...savedProfile,
+        environmentConfig: {
+          ...savedProfile.environmentConfig,
+          executionConfig: {
+            ...savedProfile.environmentConfig?.executionConfig,
+            idleTtl: '7200s'
+          }
+        }
+      } as IRuntimeProfileTemplate;
+
+      const body = saveEdits(
+        savedProfile,
+        payload => {
+          payload.sessionLifecycleConfig = {
+            ...payload.sessionLifecycleConfig,
+            maxIdleTime: '30 minutes',
+            maxIdleTimeQuantity: 30,
+            maxIdleTimeUnit: 'minutes'
+          };
+        },
+        latest
+      );
+
+      expect(body.environmentConfig?.executionConfig?.idleTtl).toBe('1800s');
+      expect(body.environmentConfig?.executionConfig?.ttl).toBe('259200s');
     });
   });
 });

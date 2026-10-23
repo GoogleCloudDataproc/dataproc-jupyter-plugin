@@ -112,7 +112,7 @@ export class RuntimeProfileService implements IRuntimeProfileService {
         });
         throw new Error(
           errorData?.error?.message ||
-          `Failed to fetch runtime profiles: ${response.statusText}`
+            `Failed to fetch runtime profiles: ${response.statusText}`
         );
       }
 
@@ -170,7 +170,7 @@ export class RuntimeProfileService implements IRuntimeProfileService {
     if (!response.ok || data?.error) {
       throw new Error(
         data?.error?.message ||
-        `Failed to delete runtime profile ${displayName}`
+          `Failed to delete runtime profile ${displayName}`
       );
     }
   }
@@ -247,7 +247,7 @@ export class RuntimeProfileService implements IRuntimeProfileService {
     if (!response.ok || result?.error) {
       throw new Error(
         result?.error?.message ||
-        `Failed to fetch regions: ${response.statusText}`
+          `Failed to fetch regions: ${response.statusText}`
       );
     }
 
@@ -290,7 +290,7 @@ export class RuntimeProfileService implements IRuntimeProfileService {
     if (!response.ok || result?.error) {
       throw new Error(
         result?.error?.message ||
-        `Failed to fetch buckets: ${response.statusText}`
+          `Failed to fetch buckets: ${response.statusText}`
       );
     }
 
@@ -327,7 +327,7 @@ export class RuntimeProfileService implements IRuntimeProfileService {
     if (!response.ok || result?.error) {
       throw new Error(
         result?.error?.message ||
-        `Failed to fetch objects for bucket ${bucketName}: ${response.statusText}`
+          `Failed to fetch objects for bucket ${bucketName}: ${response.statusText}`
       );
     }
 
@@ -372,7 +372,7 @@ export class RuntimeProfileService implements IRuntimeProfileService {
     if (!response.ok || result?.error) {
       throw new Error(
         result?.error?.message ||
-        `Failed to create bucket ${trimmedName}: ${response.statusText}`
+          `Failed to create bucket ${trimmedName}: ${response.statusText}`
       );
     }
 
@@ -1018,7 +1018,7 @@ export class RuntimeProfileService implements IRuntimeProfileService {
       if (!response.ok || result?.error) {
         throw new Error(
           result?.error?.message ||
-          `Failed to create runtime profile (${response.status}: ${response.statusText})`
+            `Failed to create runtime profile (${response.status}: ${response.statusText})`
         );
       }
       return result as IRuntimeProfile;
@@ -1053,8 +1053,10 @@ export class RuntimeProfileService implements IRuntimeProfileService {
 
   /**
    * Updates an existing Runtime Profile (session template) with the edited
-   * form payload. Uses mock simulation or sends a PATCH request for the
-   * profile's resource name to the Dataproc API when live.
+   * form payload. Only the changes from `initialPayload` (the form when it
+   * opened) to `payload` are applied to the profile; settings the user didn't
+   * change keep their saved values. Uses mock simulation or sends a PATCH
+   * request for the profile's resource name to the Dataproc API when live.
    *
    * sessionTemplates.patch has no update mask and SessionTemplate has no etag,
    * so the PATCH replaces the whole template. To avoid overwriting changes
@@ -1064,7 +1066,8 @@ export class RuntimeProfileService implements IRuntimeProfileService {
    */
   async updateRuntimeProfile(
     existingProfile: IRuntimeProfileTemplate,
-    payload: ICreateRuntimeProfilePayload
+    payload: ICreateRuntimeProfilePayload,
+    initialPayload: ICreateRuntimeProfilePayload
   ): Promise<IRuntimeProfileTemplate> {
     safeLog(
       `Updating runtime profile: ${existingProfile.name} (mockMode=${this.useMock})`,
@@ -1074,13 +1077,15 @@ export class RuntimeProfileService implements IRuntimeProfileService {
     if (this.useMock) {
       const apiPayload = mapRuntimeProfileToSessionTemplateUpdate(
         payload,
+        initialPayload,
         existingProfile
       );
       // Simulate network latency for mock response
       await new Promise(resolve => setTimeout(resolve, 600));
       return {
-        ...existingProfile,
         ...apiPayload,
+        creator: existingProfile.creator,
+        createTime: existingProfile.createTime,
         updateTime: new Date().toISOString()
       };
     }
@@ -1104,6 +1109,7 @@ export class RuntimeProfileService implements IRuntimeProfileService {
       }
       const apiPayload = mapRuntimeProfileToSessionTemplateUpdate(
         payload,
+        initialPayload,
         latestProfile
       );
 

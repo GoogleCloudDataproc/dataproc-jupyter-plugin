@@ -730,6 +730,47 @@ export const CreateRuntimeProfileComponent: React.FC<
     () => initialLabels || DEFAULT_PROFILE_LABELS
   );
 
+  /** The save payload for the form's current values. */
+  const buildPayload = (
+    data: IRuntimeProfileFormData
+  ): ICreateRuntimeProfilePayload => {
+    const isLightningEngineActive =
+      tier === 'Premium' && Boolean(lightningEngineEnabled);
+    return {
+      displayName: data.displayName.trim(),
+      region: data.region,
+      description: data.description.trim() || undefined,
+      tier,
+      lightningEngineEnabled: isLightningEngineActive,
+      executorConfig: {
+        executorType: executorCategory,
+        machineType: executorType
+      },
+      runtimeEnvironmentConfig: activeRuntimeEnvironmentConfig,
+      executorAndDriverConfig,
+      autoscalingConfig,
+      metastoreConfig,
+      networkAndSecurityConfig,
+      sessionLifecycleConfig,
+      sparkProperties,
+      labels
+    };
+  };
+
+  // The form's values when an existing profile is opened. Saving applies only
+  // the changes made since then, so settings the user didn't touch (including
+  // ones the form can't show) keep their saved values.
+  const [initialPayload] = useState<ICreateRuntimeProfilePayload | undefined>(
+    () =>
+      isEditMode
+        ? buildPayload({
+            displayName: initialDisplayName ?? defaultRuntimeId,
+            region: initialRegion ?? '',
+            description: initialDescription ?? ''
+          })
+        : undefined
+  );
+
   useEffect(() => {
     setAutoscalingConfig(
       initialAutoscalingConfig || DEFAULT_AUTOSCALING_CONFIG
@@ -753,13 +794,6 @@ export const CreateRuntimeProfileComponent: React.FC<
   useEffect(() => {
     setLabels(initialLabels || DEFAULT_PROFILE_LABELS);
   }, [initialLabels]);
-
-  // TODO(runtime-profile edit, part 2): mapRuntimeProfileToSessionTemplateUpdate
-  // keeps the existing template's environmentConfig (network, subnetwork, tags,
-  // KMS key, service account, idle/session TTL, Dataproc Metastore service), so
-  // edits to these sections are not saved yet. Keep them read-only in edit mode
-  // until the update mapper persists them.
-  const isEnvironmentConfigEditDisabled = isEditMode;
 
   const additionalConfigSections = useMemo(
     () => [
@@ -786,19 +820,19 @@ export const CreateRuntimeProfileComponent: React.FC<
       {
         title: 'Metastore configuration',
         properties: formatMetastoreProperties(metastoreConfig),
-        isEditDisabled: isEnvironmentConfigEditDisabled,
+        isEditDisabled: false,
         onEdit: () => setIsMetastoreDrawerOpen(true)
       },
       {
         title: 'Network and security',
         properties: formatNetworkSecurityProperties(networkAndSecurityConfig),
-        isEditDisabled: isEnvironmentConfigEditDisabled,
+        isEditDisabled: false,
         onEdit: () => setIsNetworkSecurityDrawerOpen(true)
       },
       {
         title: 'Session lifecycle',
         properties: formatSessionLifecycleProperties(sessionLifecycleConfig),
-        isEditDisabled: isEnvironmentConfigEditDisabled,
+        isEditDisabled: false,
         onEdit: () => setIsSessionLifecycleDrawerOpen(true)
       },
       {
@@ -816,8 +850,7 @@ export const CreateRuntimeProfileComponent: React.FC<
       networkAndSecurityConfig,
       sessionLifecycleConfig,
       sparkProperties,
-      labels,
-      isEnvironmentConfigEditDisabled
+      labels
     ]
   );
 
@@ -1028,32 +1061,13 @@ export const CreateRuntimeProfileComponent: React.FC<
 
   const onSubmit = async (data: IRuntimeProfileFormData) => {
     try {
-      const isLightningEngineActive =
-        tier === 'Premium' && Boolean(lightningEngineEnabled);
-      const payload: ICreateRuntimeProfilePayload = {
-        displayName: data.displayName.trim(),
-        region: data.region,
-        description: data.description.trim() || undefined,
-        tier,
-        lightningEngineEnabled: isLightningEngineActive,
-        executorConfig: {
-          executorType: executorCategory,
-          machineType: executorType
-        },
-        runtimeEnvironmentConfig: activeRuntimeEnvironmentConfig,
-        executorAndDriverConfig,
-        autoscalingConfig,
-        metastoreConfig,
-        networkAndSecurityConfig,
-        sessionLifecycleConfig,
-        sparkProperties,
-        labels
-      };
+      const payload = buildPayload(data);
 
       if (isEditMode && profile) {
         const updatedProfile = await service.updateRuntimeProfile(
           profile,
-          payload
+          payload,
+          initialPayload ?? payload
         );
         Notification.emit(
           `Runtime profile "${data.displayName}" updated successfully.`,
