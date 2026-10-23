@@ -188,7 +188,7 @@ describe('CreateRuntimeProfileComponent UI & Service', () => {
     expect(getFieldValue('Python package repository')).toBe(
       'Google managed PyPI pull-through cache'
     );
-    expect(getFieldValue('Autoscaling')).toBe('Enabled');
+    expect(getFieldValue('Autoscaling')).toBe('On');
     expect(getFieldValue('Metastore')).toBe('Lakehouse runtime catalog');
     expect(getFieldValue('Hive endpoint')).toBe('Disabled');
     expect(getFieldValue('Maximum idle time')).toBe('None');
@@ -302,7 +302,7 @@ describe('CreateRuntimeProfileComponent UI & Service', () => {
     // Executor type always reflects the shape selected in the dropdown
     expect(getFieldValue('Executor type')).toBe('highmem-4 (4 vCPU, 32 GB)');
     expect(getFieldValue('Executor disk')).toBe('SSD 400 GB');
-    expect(getFieldValue('Autoscaling')).toBe('Disabled');
+    expect(getFieldValue('Autoscaling')).toBe('Off');
     expect(getFieldValue('Initial executors')).toBe('4');
     expect(getFieldValue('Minimum executors')).toBe('2');
     expect(getFieldValue('Maximum executors')).toBe('50');
@@ -1853,6 +1853,17 @@ describe('CreateRuntimeProfileComponent UI & Service', () => {
       cmekRadio.click();
     });
     expect(getSaveBtn()?.disabled).toBe(true);
+    expect(document.body.textContent).toContain('Select a Cloud KMS key');
+    expect(document.body.textContent).toContain('Enter key manually');
+
+    const keyRingLabel = document.body.querySelector('#edit-kms-keyring-label');
+    const keyLabel = document.body.querySelector('#edit-kms-key-label');
+    expect(keyRingLabel?.textContent).toBe('Key Ring *');
+    expect(keyLabel?.textContent).toBe('Key *');
+    expect(keyRingLabel?.classList.contains('MuiInputLabel-shrink')).toBe(
+      false
+    );
+    expect(keyLabel?.classList.contains('MuiInputLabel-shrink')).toBe(false);
 
     // Switch back to Google-managed encryption key
     const googleManagedRadio = document.body.querySelector(
@@ -2076,7 +2087,7 @@ describe('CreateRuntimeProfileComponent UI & Service', () => {
       );
     });
 
-    expect(getFieldValue('Autoscaling')).toBe('Disabled');
+    expect(getFieldValue('Autoscaling')).toBe('Off');
     expect(getFieldValue('Initial executors')).toBe('6');
     expect(getFieldValue('Maximum idle time')).toBe('45 minutes');
     expect(getFieldValue('Maximum session time')).toBe('5 days');
