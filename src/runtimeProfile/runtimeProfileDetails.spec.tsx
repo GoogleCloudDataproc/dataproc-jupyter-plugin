@@ -513,6 +513,53 @@ describe('RuntimeProfileDetails Component', () => {
     expect(onUpdateSuccessMock).toHaveBeenCalledTimes(5);
   });
 
+  it('should enable the header Edit button when onEdit is provided and keep unsupported section edit icons disabled', async () => {
+    const onEditMock = jest.fn();
+    await act(async () => {
+      root.render(
+        <RuntimeProfileDetails
+          profile={mockProfile}
+          onBack={jest.fn()}
+          onEdit={onEditMock}
+        />
+      );
+    });
+
+    const editBtn = Array.from(
+      container.querySelectorAll('.secondary-action-btn')
+    ).find(btn => btn.textContent?.includes('Edit')) as HTMLButtonElement;
+    expect(editBtn.disabled).toBe(false);
+
+    act(() => {
+      editBtn.click();
+    });
+    expect(onEditMock).toHaveBeenCalledTimes(1);
+
+    // Configuration is collapsed by default; expand it to reach the
+    // subsection edit buttons.
+    const configHeader = container.querySelector(
+      '[aria-controls="runtime-profile-config-content"]'
+    ) as HTMLElement;
+    act(() => {
+      configHeader.click();
+    });
+
+    // Runtime configuration (0), Executor and driver configuration (1),
+    // Autoscaling (2), Session lifecycle (5) and Other customizations (6)
+    // have their own edit drawers in the details view; Metastore (3) and
+    // Network and security (4) are read-only.
+    const subsectionEditBtns = Array.from(
+      container.querySelectorAll<HTMLButtonElement>(
+        '.runtime-profile-details-subsection-edit-btn'
+      )
+    );
+    expect(subsectionEditBtns).toHaveLength(7);
+    const expectedDisabled = [false, false, false, true, true, false, false];
+    subsectionEditBtns.forEach((btn, idx) =>
+      expect(btn.disabled).toBe(expectedDisabled[idx])
+    );
+  });
+
   it('should open delete modal, handle Escape/Cancel, and delete or notify on error', async () => {
     const onDeleteSuccessMock = jest.fn();
     await renderDetails(jest.fn(), onDeleteSuccessMock);

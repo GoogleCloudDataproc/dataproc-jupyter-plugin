@@ -31,14 +31,26 @@ import {
   IRuntimeProfileService,
   ISharedVpcSubnetworksResult
 } from './runtimeProfileInterface';
-import { IRuntimeProfileTemplate } from './runtimeProfileListMapper';
-import { mapRuntimeProfileToSessionTemplate } from './runtimeProfileMapper';
+import {
+  IRuntimeProfileTemplate,
+  parseRuntimeProfileResourceName
+} from './runtimeProfileListMapper';
+import {
+  mapRuntimeProfileToSessionTemplate,
+  mapRuntimeProfileToSessionTemplateUpdate
+} from './runtimeProfileMapper';
 
 /**
  * Flag to enable mock mode for UI development/testing.
  * When false, runtime profiles are created via the Dataproc sessionTemplates API.
  */
 export const RUNTIME_PROFILE_USE_MOCK = false;
+
+/**
+ * Event emitted (via eventEmitter) with the saved session template after a
+ * runtime profile is edited, so open views can show the new values.
+ */
+export const RUNTIME_PROFILE_UPDATED_EVENT = 'runtimeProfileUpdated';
 
 /**
  * Mock regions with human-readable location descriptions
@@ -1012,6 +1024,113 @@ export class RuntimeProfileService implements IRuntimeProfileService {
       return result as IRuntimeProfile;
     } catch (error) {
       safeLog('Error creating runtime profile: ' + error, LOG_LEVEL.ERROR);
+      throw error;
+    }
+  }
+
+  /**
+   * Fetches a Runtime Profile (session template) by its resource name.
+   */
+  async getRuntimeProfile(name: string): Promise<IRuntimeProfileTemplate> {
+    const credentials = await authApi();
+    const { DATAPROC } = await gcpServiceUrls;
+    const response = await loggedFetch(`${DATAPROC}/${name}`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': API_HEADER_CONTENT_TYPE,
+        Authorization: API_HEADER_BEARER + (credentials?.access_token || '')
+      }
+    });
+    const result = await response.json().catch(() => null);
+    if (!response.ok || !result || result.error) {
+      throw new Error(
+        result?.error?.message ||
+          `Failed to load runtime profile (${response.status}: ${response.statusText})`
+      );
+    }
+    return result as IRuntimeProfileTemplate;
+  }
+
+  /**
+   * Updates an existing Runtime Profile (session template) with the edited
+   * form payload. Uses mock simulation or sends a PATCH request for the
+   * profile's resource name to the Dataproc API when live.
+   *
+   * sessionTemplates.patch has no update mask and SessionTemplate has no etag,
+   * so the PATCH replaces the whole template. To avoid overwriting changes
+   * saved elsewhere, the live flow re-reads the template right before saving,
+   * fails if its `updateTime` differs from the copy the form opened with
+   * (`existingProfile`), and otherwise builds the body from the fresh copy.
+   */
+  async updateRuntimeProfile(
+    existingProfile: IRuntimeProfileTemplate,
+    payload: ICreateRuntimeProfilePayload
+  ): Promise<IRuntimeProfileTemplate> {
+    safeLog(
+      `Updating runtime profile: ${existingProfile.name} (mockMode=${this.useMock})`,
+      LOG_LEVEL.INFO
+    );
+
+    if (this.useMock) {
+      const apiPayload = mapRuntimeProfileToSessionTemplateUpdate(
+        payload,
+        existingProfile
+      );
+      // Simulate network latency for mock response
+      await new Promise(resolve => setTimeout(resolve, 600));
+      return {
+        ...existingProfile,
+        ...apiPayload,
+        updateTime: new Date().toISOString()
+      };
+    }
+
+    try {
+      const latestProfile = await this.getRuntimeProfile(existingProfile.name);
+      if (
+        existingProfile.updateTime &&
+        latestProfile.updateTime !== existingProfile.updateTime
+      ) {
+        const { profileId } = parseRuntimeProfileResourceName(
+          existingProfile.name
+        );
+        throw new Error(
+          `Runtime profile "${profileId}" was modified by someone else after ` +
+            `you opened it (last saved ${
+              latestProfile.updateTime ?? 'unknown'
+            }). ` +
+            'Close this tab, reopen the profile, and reapply your changes.'
+        );
+      }
+      const apiPayload = mapRuntimeProfileToSessionTemplateUpdate(
+        payload,
+        latestProfile
+      );
+
+      const credentials = await authApi();
+      const { DATAPROC } = await gcpServiceUrls;
+      const response = await loggedFetch(
+        `${DATAPROC}/${existingProfile.name}`,
+        {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': API_HEADER_CONTENT_TYPE,
+            Authorization: API_HEADER_BEARER + (credentials?.access_token || '')
+          },
+          body: JSON.stringify(apiPayload)
+        }
+      );
+
+      const result = await response.json().catch(() => null);
+      if (!response.ok || !result || result.error) {
+        throw new Error(
+          result?.error?.message ||
+            `Failed to update runtime profile (${response.status}: ${response.statusText})`
+        );
+      }
+      return result as IRuntimeProfileTemplate;
+    } catch (error) {
+      safeLog('Error updating runtime profile: ' + error, LOG_LEVEL.ERROR);
       throw error;
     }
   }

@@ -912,6 +912,8 @@ export interface IRuntimeProfileDetailsProps {
   profile: IRuntimeProfileTemplate;
   onBack: () => void;
   onDeleteSuccess?: () => void;
+  /** Opens this profile in the runtime profile form in edit mode. */
+  onEdit?: () => void;
   onUpdateSuccess?: (updatedProfile: IRuntimeProfileTemplate) => void;
 }
 
@@ -920,6 +922,7 @@ export default function RuntimeProfileDetails({
   profile,
   onBack,
   onDeleteSuccess,
+  onEdit,
   onUpdateSuccess
 }: IRuntimeProfileDetailsProps) {
   const [currentProfile, setCurrentProfile] =
@@ -1286,7 +1289,12 @@ export default function RuntimeProfileDetails({
           Resource details
         </div>
         <div className="runtime-profile-details-header-actions">
-          <button type="button" className="secondary-action-btn" disabled>
+          <button
+            type="button"
+            className="secondary-action-btn"
+            onClick={onEdit}
+            disabled={!onEdit}
+          >
             <iconEdit.react tag="div" aria-hidden="true" />
             Edit
           </button>
