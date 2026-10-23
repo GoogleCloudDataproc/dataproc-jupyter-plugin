@@ -315,3 +315,44 @@ async def test_resource_manager_handler_error(jp_fetch, monkeypatch):
     payload = json.loads(response.body)
     assert payload["status"] == "ERROR"
     assert payload["error"] == "Simulated gcloud error"
+
+
+@pytest.mark.parametrize(
+    "endpoint,path",
+    [
+        ("hive", "hive/v1/projects/google.com%3Amy-project/catalogs"),
+        (
+            "iceberg",
+            "iceberg/v1/restcatalog/extensions/projects/google.com%3Amy-project/catalogs",
+        ),
+    ],
+)
+async def test_biglake_catalogs_handler(jp_fetch, monkeypatch, endpoint, path):
+    mocks.patch_mocks(monkeypatch)
+    params = {"endpoint": endpoint, "project_id": "google.com:my-project"}
+
+    response = await jp_fetch("dataproc-plugin", "biglakeCatalogs", params=params)
+
+    # MockClientSession answers with the request it received.
+    payload = json.loads(response.body)
+    assert payload["api_endpoint"] == f"https://biglake.googleapis.com/{path}"
+    assert payload["headers"]["Authorization"] == "Bearer mock-token"
+
+
+@pytest.mark.parametrize(
+    "params",
+    [
+        {"endpoint": "other", "project_id": "my-project"},
+        {"endpoint": "hive", "project_id": "a/../b"},
+        {"endpoint": "hive", "project_id": ".."},
+    ],
+)
+async def test_biglake_catalogs_handler_rejects_unsupported_input(
+    jp_fetch, monkeypatch, params
+):
+    mocks.patch_mocks(monkeypatch)
+
+    response = await jp_fetch("dataproc-plugin", "biglakeCatalogs", params=params)
+
+    # An error, not the echoed BigLake request: BigLake was never called.
+    assert json.loads(response.body)["error"]["code"] == 400
