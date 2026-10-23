@@ -216,6 +216,127 @@
   margin-right: 0;
 }
 
+body[data-jp-theme-light='false'] .edit-drawer-paper,
+body[data-jp-theme-name='JupyterLab Dark'] .edit-drawer-paper {
+  background-color: var(--jp-layout-color0, #111111) !important;
+  background-image: none !important;
+  color: var(--jp-ui-font-color0, #e8eaed) !important;
+  border-left: 1px solid var(--jp-border-color2, #3c4043);
+}
+
+body[data-jp-theme-light='false'] .edit-drawer-container,
+body[data-jp-theme-name='JupyterLab Dark'] .edit-drawer-container {
+  background-color: var(--jp-layout-color0, #111111) !important;
+  color: var(--jp-ui-font-color0, #e8eaed) !important;
+}
+
+body[data-jp-theme-light='false'] .edit-drawer-header,
+body[data-jp-theme-name='JupyterLab Dark'] .edit-drawer-header {
+  background-color: var(--jp-layout-color0, #111111) !important;
+  border-bottom-color: var(--jp-border-color2, #3c4043) !important;
+}
+
+body[data-jp-theme-light='false'] .edit-drawer-footer,
+body[data-jp-theme-name='JupyterLab Dark'] .edit-drawer-footer {
+  background-color: var(--jp-layout-color0, #111111) !important;
+  border-top-color: var(--jp-border-color2, #3c4043) !important;
+}
+
+body[data-jp-theme-light='false'] .edit-drawer-close-btn,
+body[data-jp-theme-name='JupyterLab Dark'] .edit-drawer-close-btn {
+  color: #8ab4f8 !important;
+}
+
+body[data-jp-theme-light='false'] .edit-drawer-close-btn:hover,
+body[data-jp-theme-name='JupyterLab Dark'] .edit-drawer-close-btn:hover {
+  background-color: var(--jp-layout-color2, #303134) !important;
+  color: #aecbfa !important;
+}
+
+body[data-jp-theme-light='false'] .edit-drawer-footer .submit-button-style,
+body[data-jp-theme-name='JupyterLab Dark']
+  .edit-drawer-footer
+  .submit-button-style {
+  background-color: #8ab4f8 !important;
+  color: #202124 !important;
+}
+
+body[data-jp-theme-light='false']
+  .edit-drawer-footer
+  .submit-button-style:hover,
+body[data-jp-theme-name='JupyterLab Dark']
+  .edit-drawer-footer
+  .submit-button-style:hover {
+  background-color: #aecbfa !important;
+}
+
+body[data-jp-theme-light='false']
+  .edit-drawer-footer
+  .submit-button-disable-style,
+body[data-jp-theme-name='JupyterLab Dark']
+  .edit-drawer-footer
+  .submit-button-disable-style {
+  background-color: var(--jp-layout-color2, #3c4043) !important;
+  color: var(--jp-ui-font-color2, #9aa0a6) !important;
+}
+
+body[data-jp-theme-light='false'] .edit-drawer-footer .job-cancel-button-style,
+body[data-jp-theme-name='JupyterLab Dark']
+  .edit-drawer-footer
+  .job-cancel-button-style {
+  background-color: transparent !important;
+  color: var(--jp-ui-font-color0, #e8eaed) !important;
+}
+
+body[data-jp-theme-light='false']
+  .edit-drawer-footer
+  .job-cancel-button-style:hover,
+body[data-jp-theme-name='JupyterLab Dark']
+  .edit-drawer-footer
+  .job-cancel-button-style:hover {
+  background-color: var(--jp-layout-color2, #303134) !important;
+}
+
+.edit-drawer-container .MuiFormControlLabel-label {
+  font-size: 13px;
+  color: var(--jp-ui-font-color0, #202124);
+}
+
+body[data-jp-theme-light='false']
+  .edit-drawer-container
+  .MuiFormControlLabel-label,
+body[data-jp-theme-name='JupyterLab Dark']
+  .edit-drawer-container
+  .MuiFormControlLabel-label {
+  color: var(--jp-ui-font-color0, #e8eaed) !important;
+}
+
+body[data-jp-theme-light='false'] .edit-drawer-container .MuiCheckbox-root,
+body[data-jp-theme-light='false'] .edit-drawer-container .MuiRadio-root,
+body[data-jp-theme-name='JupyterLab Dark']
+  .edit-drawer-container
+  .MuiCheckbox-root,
+body[data-jp-theme-name='JupyterLab Dark']
+  .edit-drawer-container
+  .MuiRadio-root {
+  color: var(--jp-ui-font-color2, #9aa0a6) !important;
+}
+
+body[data-jp-theme-light='false']
+  .edit-drawer-container
+  .MuiCheckbox-root.Mui-checked,
+body[data-jp-theme-light='false']
+  .edit-drawer-container
+  .MuiRadio-root.Mui-checked,
+body[data-jp-theme-name='JupyterLab Dark']
+  .edit-drawer-container
+  .MuiCheckbox-root.Mui-checked,
+body[data-jp-theme-name='JupyterLab Dark']
+  .edit-drawer-container
+  .MuiRadio-root.Mui-checked {
+  color: #8ab4f8 !important;
+}
+
 body[data-jp-theme-light='false']
   .edit-drawer-container
   .MuiInputLabel-outlined.MuiInputLabel-shrink,
@@ -228,7 +349,7 @@ body[data-jp-theme-name='JupyterLab Dark']
 body[data-jp-theme-name='JupyterLab Dark']
   .edit-drawer-container
   .MuiFormLabel-root.MuiInputLabel-shrink {
-  background-color: var(--jp-layout-color1) !important;
+  background-color: var(--jp-layout-color0, #111111) !important;
 }
 
 body[data-jp-theme-light='false']
@@ -261,14 +382,12 @@ body[data-jp-theme-name='JupyterLab Dark']
   color: #8ab4f8 !important;
 }
 
-body[data-jp-theme-light='false']
-  .edit-drawer-container
-  .MuiOutlinedInput-root,
+body[data-jp-theme-light='false'] .edit-drawer-container .MuiOutlinedInput-root,
 body[data-jp-theme-name='JupyterLab Dark']
   .edit-drawer-container
   .MuiOutlinedInput-root {
-  background-color: var(--jp-layout-color0);
-  color: var(--jp-ui-font-color0, #e8eaed);
+  background-color: var(--jp-layout-color0, #111111) !important;
+  color: var(--jp-ui-font-color0, #e8eaed) !important;
 }
 
 body[data-jp-theme-light='false']
@@ -277,15 +396,35 @@ body[data-jp-theme-light='false']
 body[data-jp-theme-name='JupyterLab Dark']
   .edit-drawer-container
   .MuiOutlinedInput-notchedOutline {
-  border-color: var(--jp-border-color1, #5f6368);
+  border-color: var(--jp-border-color1, #5f6368) !important;
+}
+
+body[data-jp-theme-light='false']
+  .edit-drawer-container
+  .MuiOutlinedInput-root.Mui-focused:not(.Mui-error)
+  .MuiOutlinedInput-notchedOutline,
+body[data-jp-theme-name='JupyterLab Dark']
+  .edit-drawer-container
+  .MuiOutlinedInput-root.Mui-focused:not(.Mui-error)
+  .MuiOutlinedInput-notchedOutline {
+  border-color: #8ab4f8 !important;
+}
+
+body[data-jp-theme-light='false']
+  .edit-drawer-container
+  .MuiOutlinedInput-root.Mui-disabled
+  .MuiOutlinedInput-notchedOutline,
+body[data-jp-theme-name='JupyterLab Dark']
+  .edit-drawer-container
+  .MuiOutlinedInput-root.Mui-disabled
+  .MuiOutlinedInput-notchedOutline {
+  border-color: var(--jp-border-color2, #3c4043) !important;
 }
 
 body[data-jp-theme-light='false']
   .edit-drawer-container
   .MuiOutlinedInput-input,
-body[data-jp-theme-light='false']
-  .edit-drawer-container
-  .MuiSelect-select,
+body[data-jp-theme-light='false'] .edit-drawer-container .MuiSelect-select,
 body[data-jp-theme-name='JupyterLab Dark']
   .edit-drawer-container
   .MuiOutlinedInput-input,
@@ -294,6 +433,23 @@ body[data-jp-theme-name='JupyterLab Dark']
   .MuiSelect-select {
   color: var(--jp-ui-font-color0, #e8eaed) !important;
   -webkit-text-fill-color: var(--jp-ui-font-color0, #e8eaed);
+}
+
+body[data-jp-theme-light='false']
+  .edit-drawer-container
+  .MuiOutlinedInput-input.Mui-disabled,
+body[data-jp-theme-light='false']
+  .edit-drawer-container
+  .MuiSelect-select.Mui-disabled,
+body[data-jp-theme-name='JupyterLab Dark']
+  .edit-drawer-container
+  .MuiOutlinedInput-input.Mui-disabled,
+body[data-jp-theme-name='JupyterLab Dark']
+  .edit-drawer-container
+  .MuiSelect-select.Mui-disabled {
+  color: var(--jp-ui-font-color2, #9aa0a6) !important;
+  -webkit-text-fill-color: var(--jp-ui-font-color2, #9aa0a6);
+  opacity: 0.6;
 }
 
 body[data-jp-theme-light='false']
@@ -308,13 +464,11 @@ body[data-jp-theme-name='JupyterLab Dark']
   opacity: 1;
 }
 
-body[data-jp-theme-light='false']
-  .edit-drawer-container
-  .MuiSelect-icon,
+body[data-jp-theme-light='false'] .edit-drawer-container .MuiSelect-icon,
 body[data-jp-theme-name='JupyterLab Dark']
   .edit-drawer-container
   .MuiSelect-icon {
-  color: var(--jp-ui-font-color2, #9aa0a6);
+  color: var(--jp-ui-font-color0, #e8eaed) !important;
 }
 
 body[data-jp-theme-light='false'] .edit-drawer-browse-btn,
@@ -670,7 +824,7 @@ body[data-jp-theme-name='JupyterLab Dark'] .bucket-browser-item.selected {
   display: flex;
   flex-direction: column;
   gap: 16px;
-  margin-top: 8px;
+  margin-top: 16px;
 }
 
 .edit-drawer-external-link-icon {
@@ -828,12 +982,26 @@ body[data-jp-theme-name='JupyterLab Dark'] .edit-drawer-info-banner-text {
   color: var(--jp-ui-font-color2, #5f6368);
 }
 
+body[data-jp-theme-light='false'] .edit-drawer-remove-btn,
+body[data-jp-theme-name='JupyterLab Dark'] .edit-drawer-remove-btn {
+  border-color: var(--jp-border-color1, #5f6368);
+  color: var(--jp-ui-font-color2, #9aa0a6);
+}
+
+body[data-jp-theme-light='false'] .edit-drawer-remove-btn:hover,
+body[data-jp-theme-name='JupyterLab Dark'] .edit-drawer-remove-btn:hover {
+  background-color: var(--jp-layout-color2, #303134);
+  color: #f28b82;
+}
+
+body[data-jp-theme-light='false'] .edit-drawer-add-btn,
 body[data-jp-theme-name='JupyterLab Dark'] .edit-drawer-add-btn {
-  background-color: var(--jp-layout-color0);
-  border-color: var(--jp-border-color1);
+  background-color: var(--jp-layout-color0, #111111);
+  border-color: var(--jp-border-color1, #5f6368);
   color: #8ab4f8;
 }
 
+body[data-jp-theme-light='false'] .edit-drawer-add-btn:hover:not(:disabled),
 body[data-jp-theme-name='JupyterLab Dark']
   .edit-drawer-add-btn:hover:not(:disabled) {
   background-color: var(--jp-layout-color2);
