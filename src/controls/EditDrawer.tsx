@@ -122,7 +122,7 @@ export const EditDrawer: React.FC<IEditDrawerProps> = ({
   isSaveDisabled = false,
   showFooter = true,
   footerActions,
-  width = '420px',
+  width = '550px',
   paperClassName,
   className,
   headerClassName,
