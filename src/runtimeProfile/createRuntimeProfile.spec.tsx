@@ -1106,6 +1106,98 @@ describe('CreateRuntimeProfileComponent UI & Service', () => {
     expect(formatMetastoreProperties(undefined)).toEqual([]);
   });
 
+  it("shows the metastore's project, falling back to the profile's project", () => {
+    const metastoreValue = (
+      config: Parameters<typeof formatMetastoreProperties>[0]
+    ) =>
+      formatMetastoreProperties(config, 'my-project').find(
+        p => p.label === 'Metastore'
+      )?.value;
+
+    expect(metastoreValue(DEFAULT_METASTORE_CONFIG)).toBe(
+      'Lakehouse runtime catalog (project: my-project)'
+    );
+    expect(
+      metastoreValue({
+        metastore: 'Lakehouse runtime catalog',
+        metastoreType: 'lakehouse',
+        projectId: 'other-project'
+      })
+    ).toBe('Lakehouse runtime catalog (project: other-project)');
+    // Only the Hive endpoint: the metastore is in the Hive endpoint's project.
+    expect(
+      metastoreValue({
+        metastore: 'Lakehouse runtime catalog',
+        metastoreType: 'lakehouse',
+        icebergRestEndpointEnabled: false,
+        hiveEndpointEnabled: true,
+        hiveProjectId: 'hive-project'
+      })
+    ).toBe('Lakehouse runtime catalog (project: hive-project)');
+    // No endpoint: no metastore, so no project either.
+    expect(
+      metastoreValue({
+        metastore: 'None',
+        metastoreType: 'lakehouse',
+        icebergRestEndpointEnabled: false,
+        hiveEndpointEnabled: false
+      })
+    ).toBe('None');
+  });
+
+  it('shows the signed-in project in the Metastore value', async () => {
+    (authApi as jest.Mock).mockResolvedValueOnce({ project_id: 'my-project' });
+
+    await act(async () => {
+      root.render(<CreateRuntimeProfileComponent service={mockService} />);
+    });
+
+    expect(getFieldValue('Metastore')).toBe(
+      'Lakehouse runtime catalog (project: my-project)'
+    );
+  });
+
+  it('shows None for the metastore after saving with no endpoint enabled', async () => {
+    await act(async () => {
+      root.render(<CreateRuntimeProfileComponent service={mockService} />);
+    });
+
+    // Metastore configuration is the 4th section.
+    await act(async () => {
+      (
+        container.querySelectorAll(
+          '.section-detail-edit-button'
+        )[3] as HTMLButtonElement
+      ).click();
+    });
+    const icebergCheckbox = Array.from(document.body.querySelectorAll('label'))
+      .find(el => el.textContent?.trim() === 'Iceberg REST Endpoint')
+      ?.querySelector('input[type="checkbox"]') as HTMLInputElement;
+    await act(async () => {
+      icebergCheckbox.click();
+    });
+    const saveButton = document.body.querySelector(
+      '.edit-drawer-footer button'
+    ) as HTMLButtonElement;
+    expect(saveButton.disabled).toBe(false);
+    await act(async () => {
+      saveButton.click();
+    });
+
+    expect(getFieldValue('Metastore')).toBe('None');
+    expect(getFieldValue('Hive endpoint')).toBe('Disabled');
+    const summaryMetastore = Array.from(
+      container.querySelectorAll('.runtime-summary-row')
+    )
+      .find(
+        row =>
+          row.querySelector('.runtime-summary-label')?.textContent ===
+          'Metastore'
+      )
+      ?.querySelector('.runtime-summary-value')?.textContent;
+    expect(summaryMetastore).toBe('None');
+  });
+
   it('opens the Metastore drawer from the summary and uses the saved config', async () => {
     const createSpy = jest
       .spyOn(mockService, 'createRuntimeProfile')

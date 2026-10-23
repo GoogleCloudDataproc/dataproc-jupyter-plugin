@@ -16,20 +16,11 @@
  */
 
 jest.mock('../handler/handler', () => ({
-  requestAPI: jest.fn().mockResolvedValue({
-    dataproc_url: 'https://dataproc.googleapis.com/',
-    compute_url: 'https://compute.googleapis.com/compute',
-    metastore_url: 'https://metastore.googleapis.com/',
-    cloudkms_url: 'https://cloudkms.googleapis.com/',
-    cloudresourcemanager_url: 'https://cloudresourcemanager.googleapis.com/',
-    datacatalog_url: 'https://datacatalog.googleapis.com/',
-    storage_url: 'https://storage.googleapis.com/'
-  })
+  requestAPI: jest.fn()
 }));
 
 jest.mock('./utils', () => ({
-  authApi: jest.fn(),
-  loggedFetch: jest.fn()
+  authApi: jest.fn()
 }));
 
 jest.mock('@jupyterlab/apputils', () => ({
@@ -38,22 +29,16 @@ jest.mock('@jupyterlab/apputils', () => ({
 }));
 
 import { Notification } from '@jupyterlab/apputils';
+import { requestAPI } from '../handler/handler';
 import {
   extractCatalogId,
   listHiveCatalogsAPI,
   listIcebergCatalogsAPI
 } from './biglakeService';
-import { authApi, loggedFetch } from './utils';
+import { authApi } from './utils';
 
 const mockAuth = authApi as jest.Mock;
-const mockFetch = loggedFetch as jest.Mock;
-
-const jsonResponse = (body: unknown, ok = true, status = 200) => ({
-  ok,
-  status,
-  statusText: ok ? 'OK' : 'Forbidden',
-  json: async () => body
-});
+const mockRequest = requestAPI as jest.Mock;
 
 describe('biglakeService', () => {
   beforeEach(() => {
@@ -73,75 +58,55 @@ describe('biglakeService', () => {
     expect(extractCatalogId('')).toBe('');
   });
 
-  it('lists the Iceberg REST catalogs of a project', async () => {
-    mockFetch.mockResolvedValueOnce(
-      jsonResponse({
-        'iceberg-catalogs': [
-          { name: 'projects/my-project/catalogs/one' },
-          { name: 'projects/my-project/catalogs/two' }
-        ]
-      })
-    );
+  it('lists the Iceberg REST catalogs of a project through the Jupyter server', async () => {
+    mockRequest.mockResolvedValueOnce({
+      'iceberg-catalogs': [
+        { name: 'projects/my-project/catalogs/one' },
+        { name: 'projects/my-project/catalogs/two' }
+      ]
+    });
 
     await expect(listIcebergCatalogsAPI('my-project')).resolves.toEqual([
       'one',
       'two'
     ]);
-    expect(mockFetch).toHaveBeenCalledWith(
-      'https://biglake.googleapis.com/iceberg/v1/restcatalog/extensions/projects/my-project/catalogs',
-      expect.objectContaining({
-        method: 'GET',
-        headers: expect.objectContaining({
-          Authorization: expect.stringContaining('token')
-        })
-      })
+    expect(mockRequest).toHaveBeenCalledWith(
+      'biglakeCatalogs?endpoint=iceberg&project_id=my-project'
     );
   });
 
   it('reads Iceberg REST catalogs only from the iceberg-catalogs key', async () => {
-    mockFetch.mockResolvedValueOnce(
-      jsonResponse({
-        catalogs: [{ name: 'projects/my-project/catalogs/one' }]
-      })
-    );
+    mockRequest.mockResolvedValueOnce({
+      catalogs: [{ name: 'projects/my-project/catalogs/one' }]
+    });
 
     await expect(listIcebergCatalogsAPI('my-project')).resolves.toEqual([]);
   });
 
   it('skips catalogs without a name', async () => {
-    mockFetch.mockResolvedValueOnce(
-      jsonResponse({
-        'iceberg-catalogs': [{ name: 'projects/my-project/catalogs/one' }, {}]
-      })
-    );
+    mockRequest.mockResolvedValueOnce({
+      'iceberg-catalogs': [{ name: 'projects/my-project/catalogs/one' }, {}]
+    });
 
     await expect(listIcebergCatalogsAPI('my-project')).resolves.toEqual([
       'one'
     ]);
   });
 
-  it('lists the Hive catalogs of a project', async () => {
-    mockFetch.mockResolvedValueOnce(
-      jsonResponse({
-        catalogs: [
-          { name: 'projects/my-project/catalogs/hive_one' },
-          { name: 'projects/my-project/catalogs/hive_two' }
-        ]
-      })
-    );
+  it('lists the Hive catalogs of a project through the Jupyter server', async () => {
+    mockRequest.mockResolvedValueOnce({
+      catalogs: [
+        { name: 'projects/my-project/catalogs/hive_one' },
+        { name: 'projects/my-project/catalogs/hive_two' }
+      ]
+    });
 
     await expect(listHiveCatalogsAPI('my-project')).resolves.toEqual([
       'hive_one',
       'hive_two'
     ]);
-    expect(mockFetch).toHaveBeenCalledWith(
-      'https://biglake.googleapis.com/hive/v1/projects/my-project/catalogs',
-      expect.objectContaining({
-        method: 'GET',
-        headers: expect.objectContaining({
-          Authorization: expect.stringContaining('token')
-        })
-      })
+    expect(mockRequest).toHaveBeenCalledWith(
+      'biglakeCatalogs?endpoint=hive&project_id=my-project'
     );
   });
 
@@ -151,21 +116,21 @@ describe('biglakeService', () => {
   ];
 
   describe.each(listers)('%s catalogs', (label, listCatalogs) => {
-    it('falls back to the signed-in project, without a region', async () => {
-      mockFetch.mockResolvedValueOnce(jsonResponse({}));
+    it('falls back to the signed-in project', async () => {
+      mockRequest.mockResolvedValueOnce({});
 
       await expect(listCatalogs('')).resolves.toEqual([]);
-      const url: string = mockFetch.mock.calls[0][0];
-      expect(url).toContain('/projects/signed-in-project/catalogs');
-      expect(url).not.toContain('/locations/');
+      expect(mockRequest.mock.calls[0][0]).toContain(
+        'project_id=signed-in-project'
+      );
     });
 
-    it('encodes the project ID in the URL path', async () => {
-      mockFetch.mockResolvedValueOnce(jsonResponse({}));
+    it('encodes the project ID in the query', async () => {
+      mockRequest.mockResolvedValueOnce({});
 
       await listCatalogs('a/../b?x#y');
-      expect(mockFetch.mock.calls[0][0]).toContain(
-        '/projects/a%2F..%2Fb%3Fx%23y/catalogs'
+      expect(mockRequest.mock.calls[0][0]).toContain(
+        'project_id=a%2F..%2Fb%3Fx%23y'
       );
     });
 
@@ -173,23 +138,17 @@ describe('biglakeService', () => {
       mockAuth.mockResolvedValueOnce(undefined);
 
       await expect(listCatalogs('my-project')).resolves.toEqual([]);
-      expect(mockFetch).not.toHaveBeenCalled();
+      expect(mockRequest).not.toHaveBeenCalled();
     });
 
     it('shows the API error and returns no catalogs when the request fails', async () => {
-      mockFetch.mockResolvedValueOnce(
-        jsonResponse(
-          {
-            error: {
-              code: 403,
-              message: 'BigLake API has not been used in project',
-              status: 'PERMISSION_DENIED'
-            }
-          },
-          false,
-          403
-        )
-      );
+      mockRequest.mockResolvedValueOnce({
+        error: {
+          code: 403,
+          message: 'BigLake API has not been used in project',
+          status: 'PERMISSION_DENIED'
+        }
+      });
 
       await expect(listCatalogs('my-project')).resolves.toEqual([]);
       expect(Notification.emit).toHaveBeenCalledWith(
@@ -200,18 +159,20 @@ describe('biglakeService', () => {
     });
 
     it('names the endpoint when a failed request has no error message', async () => {
-      mockFetch.mockResolvedValueOnce(jsonResponse({}, false, 403));
+      mockRequest.mockResolvedValueOnce({
+        error: { code: 403, message: '', status: '' }
+      });
 
       await expect(listCatalogs('my-project')).resolves.toEqual([]);
       expect(Notification.emit).toHaveBeenCalledWith(
-        `Failed to fetch ${label} catalogs (403: Forbidden)`,
+        `Failed to fetch ${label} catalogs`,
         'error',
         { autoClose: 5000 }
       );
     });
 
     it('shows an error and returns no catalogs when the request throws', async () => {
-      mockFetch.mockRejectedValueOnce(new Error('offline'));
+      mockRequest.mockRejectedValueOnce(new Error('offline'));
 
       await expect(listCatalogs('my-project')).resolves.toEqual([]);
       expect(Notification.emit).toHaveBeenCalledWith(

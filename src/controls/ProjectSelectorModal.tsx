@@ -37,6 +37,9 @@ const searchLabIcon = new LabIcon({
   svgstr: searchIconSvg
 });
 
+// Delay before a typed search is sent to the API, as in the Settings dropdown.
+export const PROJECT_SEARCH_DEBOUNCE_MS = 500;
+
 export interface IProjectSelectorModalProps {
   open: boolean;
   selectedProjectId?: string;
@@ -52,34 +55,69 @@ export const ProjectSelectorModal: React.FC<IProjectSelectorModalProps> = ({
 }) => {
   const [projects, setProjects] = useState<IProjectInfo[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [isSearching, setIsSearching] = useState<boolean>(false);
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [chosenProjectId, setChosenProjectId] =
     useState<string>(selectedProjectId);
 
+  // Start from the current project each time the modal opens.
   useEffect(() => {
-    // Ignore the response once the modal closes or a newer request starts.
-    let active = true;
     if (open) {
       setChosenProjectId(selectedProjectId);
-      setSearchQuery('');
-      setIsLoading(true);
-      listProjectsWithDetailsAPI()
-        .then(result => {
-          if (active) {
-            setProjects(result);
-            setIsLoading(false);
-          }
-        })
-        .catch(() => {
-          if (active) {
-            setIsLoading(false);
-          }
-        });
     }
+  }, [open, selectedProjectId]);
+
+  // Start with a new list and an empty search each time the modal opens.
+  useEffect(() => {
+    if (open) {
+      setSearchQuery('');
+      setProjects([]);
+      setIsLoading(true);
+    }
+  }, [open]);
+
+  // Like the Settings project dropdown, search the API as the user types: one
+  // page holds only some of the user's projects. Matches are added to the
+  // list, which is then filtered locally.
+  useEffect(() => {
+    if (!open) {
+      return;
+    }
+    // Ignore the response once the modal closes or a newer search starts.
+    let active = true;
+    const query = searchQuery.trim();
+    const timer = setTimeout(
+      () => {
+        // A typed search keeps the list visible and shows a small spinner.
+        setIsSearching(Boolean(query));
+        listProjectsWithDetailsAPI(query)
+          .then(result => {
+            if (active) {
+              setProjects(prev => [
+                ...prev,
+                ...result.filter(
+                  project =>
+                    !prev.some(known => known.projectId === project.projectId)
+                )
+              ]);
+            }
+          })
+          .catch(() => undefined)
+          .finally(() => {
+            if (active) {
+              setIsLoading(false);
+              setIsSearching(false);
+            }
+          });
+      },
+      query ? PROJECT_SEARCH_DEBOUNCE_MS : 0
+    );
     return () => {
       active = false;
+      clearTimeout(timer);
+      setIsSearching(false);
     };
-  }, [open, selectedProjectId]);
+  }, [open, searchQuery]);
 
   const filteredProjects = useMemo(() => {
     if (!searchQuery.trim()) {
@@ -170,6 +208,13 @@ export const ProjectSelectorModal: React.FC<IProjectSelectorModalProps> = ({
             onKeyDown={handleSearchKeyDown}
             autoFocus
           />
+          {isSearching && (
+            <CircularProgress
+              size={16}
+              aria-label="Searching projects"
+              sx={{ ml: 1, flexShrink: 0 }}
+            />
+          )}
         </div>
 
         {isLoading ? (

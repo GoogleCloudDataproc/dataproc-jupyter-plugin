@@ -1000,5 +1000,45 @@ describe('RuntimeProfileDetails Component', () => {
     ).toBe('projects/p/locations/l/catalogs/hive_cat');
     expect(updatedOther.labels).toEqual({ env: 'prod' });
   });
+
+  it('does not report an existing Iceberg REST default catalog as a Hive endpoint', async () => {
+    const existingCatalog = 'projects/p/catalogs/sales';
+    const withCatalogs = (extra: Record<string, string> = {}) => ({
+      ...mockProfile,
+      runtimeConfig: {
+        ...mockProfile.runtimeConfig,
+        properties: {
+          'dataproc.lakehouse.defaultCatalog': existingCatalog,
+          'dataproc.lakehouse.catalog.sales': existingCatalog,
+          ...extra
+        }
+      }
+    });
+    const hiveEndpoint = async (profile: IRuntimeProfileTemplate) => {
+      await renderDetails(jest.fn(), undefined, profile);
+      const configHeader = container.querySelector(
+        '[aria-controls="runtime-profile-config-content"]'
+      ) as HTMLElement;
+      if (configHeader.getAttribute('aria-expanded') !== 'true') {
+        await act(async () => {
+          configHeader.click();
+        });
+      }
+      return Array.from(
+        container.querySelectorAll('.runtime-profile-details-row')
+      )
+        .find(row => row.textContent?.startsWith('Hive endpoint'))
+        ?.querySelector('.runtime-profile-details-value')?.textContent;
+    };
+
+    expect(await hiveEndpoint(withCatalogs())).toBe('Disabled');
+    expect(
+      await hiveEndpoint(
+        withCatalogs({
+          'dataproc.lakehouse.catalog.hive_cat': 'projects/p/catalogs/hive_cat'
+        })
+      )
+    ).toBe('Enabled');
+  });
 });
 
