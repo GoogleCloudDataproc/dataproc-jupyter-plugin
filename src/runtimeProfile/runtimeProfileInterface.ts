@@ -24,6 +24,7 @@ import {
   HDD_DISK_SIZES,
   SSD_DISK_SIZES
 } from '../utils/const';
+import { IRuntimeProfileTemplate } from './runtimeProfileListMapper';
 
 export {
   DEFAULT_HDD_DISK_SIZE,
@@ -288,6 +289,31 @@ export interface ICreateRuntimeProfilePayload {
   labels?: ProfileLabels;
 }
 
+/** Whether the runtime profile form creates a new profile or edits an existing one. */
+export type RuntimeProfileFormMode = 'create' | 'edit';
+
+/**
+ * Values that seed the runtime profile form. Unset values fall back to the
+ * form defaults; in edit mode they come from the selected profile.
+ */
+export interface IRuntimeProfileFormInitialValues {
+  initialDisplayName?: string;
+  initialRegion?: string;
+  initialDescription?: string;
+  initialTier?: string;
+  initialLightningEngineEnabled?: boolean;
+  initialExecutorCategory?: ExecutorCategoryType;
+  initialExecutorType?: string;
+  initialRuntimeEnvironmentConfig?: IRuntimeEnvironmentConfig;
+  initialExecutorAndDriverConfig?: IExecutorAndDriverConfig;
+  initialAutoscalingConfig?: IAutoscalingConfig;
+  initialMetastoreConfig?: IMetastoreConfig;
+  initialNetworkAndSecurityConfig?: INetworkAndSecurityConfig;
+  initialSessionLifecycleConfig?: ISessionLifecycleConfig;
+  initialSparkProperties?: SparkProperties;
+  initialLabels?: ProfileLabels;
+}
+
 export interface ISharedVpcSubnetworksResult {
   hostProjectId: string;
   subnetworks: string[];
@@ -322,4 +348,9 @@ export interface IRuntimeProfileService {
     projectId?: string,
     region?: string
   ): Promise<IRuntimeProfile>;
+  getRuntimeProfile?(name: string): Promise<IRuntimeProfileTemplate>;
+  updateRuntimeProfile?(
+    existingProfile: IRuntimeProfileTemplate,
+    payload: ICreateRuntimeProfilePayload
+  ): Promise<IRuntimeProfileTemplate>;
 }

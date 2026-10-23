@@ -74,9 +74,14 @@ import {
   normalizeMachineTypeName,
   parseDiskTierAndSize
 } from './runtimeProfileEditDrawers';
-import { RuntimeProfileService } from './runtimeProfileService';
+import {
+  RUNTIME_PROFILE_UPDATED_EVENT,
+  RuntimeProfileService
+} from './runtimeProfileService';
+import { IRuntimeProfileTemplate } from './runtimeProfileListMapper';
 import { Notification } from '@jupyterlab/apputils';
 import { authApi } from '../utils/utils';
+import { eventEmitter } from '../utils/signalEmitter';
 import {
   DATAPROC_ACCELERATED_MACHINE_TYPES,
   DATAPROC_STANDARD_MACHINE_TYPES,
@@ -1849,6 +1854,257 @@ describe('CreateRuntimeProfileComponent UI & Service', () => {
     expect(getProfileTierSummaryValue()).toBe(
       'Premium (Lightning Engine enabled)'
     );
+  });
+
+  describe('edit mode', () => {
+    const profileToEdit: IRuntimeProfileTemplate = {
+      name: 'projects/test-project/locations/us-central1/sessionTemplates/sample_profile',
+      description: 'Existing description',
+      jupyterSession: { displayName: 'Sample Profile', kernel: 'PYTHON' },
+      environmentConfig: {
+        executionConfig: {
+          subnetworkUri: 'default',
+          kmsKey: 'projects/p/locations/l/keyRings/kr/cryptoKeys/k',
+          idleTtl: '3600s',
+          ttl: '259200s',
+          authenticationConfig: {
+            userWorkloadAuthenticationType: 'END_USER_CREDENTIALS'
+          }
+        },
+        peripheralsConfig: {
+          metastoreService: 'projects/p/locations/l/services/my-metastore'
+        }
+      },
+      runtimeConfig: {
+        version: '2.2',
+        containerImage: 'gcr.io/my-project/spark:latest',
+        properties: {
+          'dataproc:dataproc.tier': 'premium',
+          'spark:spark.dataproc.engine': 'lightningEngine',
+          'spark:spark.executor.cores': '8',
+          'spark:spark.executor.memory': '64g',
+          'spark:spark.dynamicAllocation.maxExecutors': '20',
+          'spark:spark.sql.shuffle.partitions': '200'
+        }
+      },
+      labels: { env: 'dev' }
+    };
+
+    const renderEditForm = (onSuccess?: () => void) =>
+      act(async () => {
+        root.render(
+          <CreateRuntimeProfileComponent
+            service={mockService}
+            mode="edit"
+            profile={profileToEdit}
+            onSuccess={onSuccess}
+          />
+        );
+      });
+
+    const clickSave = () =>
+      act(async () => {
+        (
+          container.querySelector('button[type="submit"]') as HTMLButtonElement
+        ).click();
+      });
+
+    it('shows the Edit heading and pre-fills every field from the selected profile', async () => {
+      // The saved Settings region must not replace the profile's region
+      (authApi as jest.Mock).mockResolvedValueOnce({ region_id: 'us-east1' });
+      await renderEditForm();
+
+      expect(
+        container.querySelector('.cluster-details-title')?.textContent
+      ).toBe('Edit Runtime Profile');
+      expect(
+        (
+          container.querySelector(
+            '#runtime-profile-display-name'
+          ) as HTMLInputElement
+        ).value
+      ).toBe('Sample Profile');
+      expect(
+        (
+          container.querySelector(
+            '#runtime-profile-description'
+          ) as HTMLInputElement
+        ).value
+      ).toBe('Existing description');
+
+      const regionSelect = container.querySelector('#runtime-profile-region');
+      expect(regionSelect?.textContent).toBe('us-central1');
+      expect(regionSelect?.getAttribute('aria-disabled')).toBe('true');
+
+      const premiumTierCard = container
+        .querySelectorAll('.node-config-cards-container')[0]
+        .querySelectorAll('.node-config-card')[0];
+      expect(premiumTierCard.classList.contains('selected')).toBe(true);
+      expect(
+        (
+          container.querySelector(
+            'input[name="lightningEngine"]'
+          ) as HTMLInputElement
+        ).checked
+      ).toBe(true);
+
+      expect(getFieldValue('Runtime profile ID')).toBe('sample_profile');
+      expect(getFieldValue('Spark runtime version')).toBe('2.2');
+      expect(getFieldValue('Custom spark image')).toBe(
+        'gcr.io/my-project/spark:latest'
+      );
+      expect(getFieldValue('Tier')).toBe('Premium');
+      expect(getFieldValue('Executor type')).toBe('highmem-8 (8 vCPU, 64 GB)');
+      expect(getFieldValue('Maximum executors')).toBe('20');
+      expect(getFieldValue('Metastore')).toBe(
+        'projects/p/locations/l/services/my-metastore'
+      );
+      expect(getFieldValue('Execution identity')).toBe('User account');
+      expect(getFieldValue('Network in this project')).toBe('default');
+      expect(getFieldValue('Encryption')).toBe('Customer-managed key');
+      expect(getFieldValue('Maximum idle time')).toBe('1 hour');
+      expect(getFieldValue('Maximum session time')).toBe('3 days');
+      expect(getFieldValue('Spark properties')).toBe(
+        'spark:spark.sql.shuffle.partitions: 200'
+      );
+      expect(getFieldValue('Labels')).toBe('env: dev');
+
+      expect(
+        container.querySelector('button[type="submit"]')?.textContent
+      ).toBe('Save');
+    });
+
+    it('saves through updateRuntimeProfile and announces the saved profile', async () => {
+      const savedProfile = { ...profileToEdit, description: 'Saved' };
+      const updateSpy = jest
+        .spyOn(mockService, 'updateRuntimeProfile')
+        .mockResolvedValue(savedProfile);
+      const createSpy = jest.spyOn(mockService, 'createRuntimeProfile');
+      const onProfileUpdated = jest.fn();
+      eventEmitter.on(RUNTIME_PROFILE_UPDATED_EVENT, onProfileUpdated);
+      const onSuccess = jest.fn();
+      (authApi as jest.Mock).mockResolvedValueOnce({ region_id: 'us-east1' });
+
+      await renderEditForm(onSuccess);
+      await clickSave();
+      eventEmitter.off(RUNTIME_PROFILE_UPDATED_EVENT, onProfileUpdated);
+
+      expect(createSpy).not.toHaveBeenCalled();
+      expect(updateSpy).toHaveBeenCalledWith(
+        profileToEdit,
+        expect.objectContaining({
+          displayName: 'Sample Profile',
+          region: 'us-central1',
+          description: 'Existing description',
+          tier: 'Premium',
+          lightningEngineEnabled: true,
+          executorConfig: { executorType: 'general', machineType: 'highmem-8' },
+          sparkProperties: { 'spark:spark.sql.shuffle.partitions': '200' },
+          labels: { env: 'dev' }
+        })
+      );
+      expect(Notification.emit).toHaveBeenCalledWith(
+        'Runtime profile "Sample Profile" updated successfully.',
+        'success',
+        { autoClose: 5000 }
+      );
+      expect(onProfileUpdated).toHaveBeenCalledWith(savedProfile);
+      expect(onSuccess).toHaveBeenCalledTimes(1);
+    });
+
+    it('shows the update error, with a fallback message when none is given', async () => {
+      jest
+        .spyOn(mockService, 'updateRuntimeProfile')
+        .mockRejectedValueOnce(new Error('Permission denied'))
+        .mockRejectedValueOnce({});
+      const onSuccess = jest.fn();
+
+      await renderEditForm(onSuccess);
+      await clickSave();
+      expect(Notification.emit).toHaveBeenCalledWith(
+        'Permission denied',
+        'error',
+        { autoClose: 5000 }
+      );
+
+      await clickSave();
+      expect(Notification.emit).toHaveBeenCalledWith(
+        'Failed to update runtime profile.',
+        'error',
+        { autoClose: 5000 }
+      );
+      expect(onSuccess).not.toHaveBeenCalled();
+    });
+
+    it('keeps the Runtime Profile ID read-only in the runtime configuration drawer', async () => {
+      await renderEditForm();
+
+      await act(async () => {
+        (
+          container.querySelector(
+            '.section-detail-edit-button'
+          ) as HTMLButtonElement
+        ).click();
+      });
+
+      const profileIdInput = document.body.querySelector(
+        '#edit-runtime-profile-id'
+      ) as HTMLInputElement;
+      expect(profileIdInput.disabled).toBe(true);
+      expect(profileIdInput.value).toBe('sample_profile');
+      // The existing ID isn't re-validated against the create-time format
+      expect(
+        document.body.querySelector('#runtime-profile-id-error-text')
+      ).toBeNull();
+      const saveBtn = Array.from(
+        document.body.querySelectorAll('.edit-drawer-footer button')
+      ).find(b => b.textContent?.trim() === 'Save') as HTMLButtonElement;
+      expect(saveBtn.disabled).toBe(false);
+    });
+
+    it('keeps Metastore, Network and security, and Session lifecycle read-only until the update mapper saves them', async () => {
+      await renderEditForm();
+
+      const sectionEditButtons = Array.from(
+        container.querySelectorAll<HTMLButtonElement>(
+          '.section-detail-edit-button'
+        )
+      );
+      expect(sectionEditButtons).toHaveLength(7);
+      // Runtime config (0), Executor and driver (1), Autoscaling (2) and
+      // Other customizations (6) are saved by the update; Metastore (3),
+      // Network and security (4) and Session lifecycle (5) are not yet.
+      const expectedDisabled = [false, false, false, true, true, true, false];
+      sectionEditButtons.forEach((btn, idx) =>
+        expect(btn.getAttribute('aria-disabled')).toBe(
+          String(expectedDisabled[idx])
+        )
+      );
+
+      // A disabled section doesn't open its drawer.
+      await act(async () => {
+        sectionEditButtons[4].click();
+      });
+      expect(
+        document.body.querySelector('#edit-network-source-project')
+      ).toBeNull();
+    });
+
+    it('leaves every section editable in create mode', async () => {
+      await act(async () => {
+        root.render(<CreateRuntimeProfileComponent service={mockService} />);
+      });
+
+      const sectionEditButtons = Array.from(
+        container.querySelectorAll<HTMLButtonElement>(
+          '.section-detail-edit-button'
+        )
+      );
+      expect(sectionEditButtons).toHaveLength(7);
+      sectionEditButtons.forEach(btn =>
+        expect(btn.getAttribute('aria-disabled')).toBe('false')
+      );
+    });
   });
 
   it('should provide network, subnetwork, shared VPC, keyRing, and cryptoKey methods on RuntimeProfileService', async () => {
