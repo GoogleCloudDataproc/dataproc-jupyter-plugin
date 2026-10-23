@@ -55,6 +55,7 @@ export const ProjectSelectorModal: React.FC<IProjectSelectorModalProps> = ({
 }) => {
   const [projects, setProjects] = useState<IProjectInfo[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [isSearching, setIsSearching] = useState<boolean>(false);
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [chosenProjectId, setChosenProjectId] =
     useState<string>(selectedProjectId);
@@ -86,7 +87,9 @@ export const ProjectSelectorModal: React.FC<IProjectSelectorModalProps> = ({
     let active = true;
     const query = searchQuery.trim();
     const timer = setTimeout(
-      () =>
+      () => {
+        // A typed search keeps the list visible and shows a small spinner.
+        setIsSearching(Boolean(query));
         listProjectsWithDetailsAPI(query)
           .then(result => {
             if (active) {
@@ -103,13 +106,16 @@ export const ProjectSelectorModal: React.FC<IProjectSelectorModalProps> = ({
           .finally(() => {
             if (active) {
               setIsLoading(false);
+              setIsSearching(false);
             }
-          }),
+          });
+      },
       query ? PROJECT_SEARCH_DEBOUNCE_MS : 0
     );
     return () => {
       active = false;
       clearTimeout(timer);
+      setIsSearching(false);
     };
   }, [open, searchQuery]);
 
@@ -202,6 +208,13 @@ export const ProjectSelectorModal: React.FC<IProjectSelectorModalProps> = ({
             onKeyDown={handleSearchKeyDown}
             autoFocus
           />
+          {isSearching && (
+            <CircularProgress
+              size={16}
+              aria-label="Searching projects"
+              sx={{ ml: 1, flexShrink: 0 }}
+            />
+          )}
         </div>
 
         {isLoading ? (

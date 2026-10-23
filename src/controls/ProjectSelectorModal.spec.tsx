@@ -224,6 +224,28 @@ describe('ProjectSelectorModal', () => {
     expect(rowIds()).toContain('gamma-project');
   });
 
+  it('shows a spinner while searching and keeps the list', async () => {
+    let resolveSearch: (projects: typeof PROJECTS) => void = () => undefined;
+    mockListProjects.mockResolvedValueOnce(PROJECTS).mockReturnValueOnce(
+      new Promise(resolve => {
+        resolveSearch = resolve;
+      })
+    );
+    const spinner = () =>
+      document.body.querySelector('[aria-label="Searching projects"]');
+    await renderModal();
+
+    await typeInto(searchInput(), 'alpha');
+    await wait(PROJECT_SEARCH_DEBOUNCE_MS + 100);
+    expect(spinner()).not.toBeNull();
+    expect(rowText('Alpha')).toBe(true);
+
+    await act(async () => {
+      resolveSearch([]);
+    });
+    expect(spinner()).toBeNull();
+  });
+
   it('ignores a project list from an older request', async () => {
     let resolveFirst: (projects: typeof PROJECTS) => void = () => undefined;
     mockListProjects
