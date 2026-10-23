@@ -36,6 +36,9 @@ export default function SettingsLayout({
   settingRegistry
 }: ISettingsLayoutProps) {
   // Starts on the Spark tab when opened to show a newly created profile.
+  // Reading the request on mount is enough: the create form closes any open
+  // Settings widget (closing disposes it) and opens a new one, so a widget
+  // kept alive in the dock panel never needs to react to it.
   const [activeTab, setActiveTab] = useState<'common' | 'spark'>(() =>
     consumeRuntimeProfileListTabRequest() ? 'spark' : 'common'
   );

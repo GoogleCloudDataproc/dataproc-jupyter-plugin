@@ -222,10 +222,10 @@ body[data-jp-theme-name='JupyterLab Dark']
 }
 
 /* Dark mode adjustments (supports JupyterLab Dark and custom dark themes via data-jp-theme-light='false') */
-/* The expand/collapse SVG ships with a dark fill; make it white in dark themes. */
+/* The expand/collapse SVG ships with a dark fill; use the theme's text color in dark themes. */
 body[data-jp-theme-light='false'] .additional-config-header-container .expand-icon svg path,
 body[data-jp-theme-name='JupyterLab Dark'] .additional-config-header-container .expand-icon svg path {
-  fill: #ffffff;
+  fill: var(--jp-ui-font-color1);
 }
 body[data-jp-theme-light='false'] .section-detail-divider,
 body[data-jp-theme-name='JupyterLab Dark'] .section-detail-divider {
