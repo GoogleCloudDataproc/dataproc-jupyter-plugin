@@ -801,6 +801,7 @@ export interface IRuntimeEnvironmentEditDrawerProps {
   open: boolean;
   config: IRuntimeEnvironmentConfig;
   service?: IRuntimeProfileService;
+  /** Shows the Runtime Profile ID read-only, e.g. when editing an existing profile. */
   isProfileIdDisabled?: boolean;
   onClose: () => void;
   onSave: (updatedConfig: IRuntimeEnvironmentConfig) => void;
