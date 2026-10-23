@@ -115,7 +115,6 @@ export interface IRuntimeProfileTemplate {
       networkUri?: string;
       subnetworkUri?: string;
       networkTags?: string[];
-      serviceAccount?: string;
       kmsKey?: string;
       serviceAccount?: string;
       stagingBucket?: string;
