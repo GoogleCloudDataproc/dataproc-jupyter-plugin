@@ -1150,13 +1150,18 @@ export default function RuntimeProfileDetails({
     currentProfile.environmentConfig?.peripheralsConfig?.metastoreService ||
     'None';
   const defaultLakehouseCatalog = getProp('dataproc.lakehouse.defaultCatalog');
-  const hasHiveCatalog = Object.keys(properties).some(rawKey => {
+  // A new default catalog is stored by name, an existing one by resource.
+  const hasHiveCatalog = Object.entries(properties).some(([rawKey, value]) => {
     const key = stripPropertyPrefix(rawKey);
     if (!key.startsWith(LAKEHOUSE_CATALOG_PREFIX)) {
       return false;
     }
     const catalogName = key.slice(LAKEHOUSE_CATALOG_PREFIX.length);
-    return Boolean(catalogName) && catalogName !== defaultLakehouseCatalog;
+    return (
+      Boolean(catalogName) &&
+      catalogName !== defaultLakehouseCatalog &&
+      value !== defaultLakehouseCatalog
+    );
   });
   const hiveEndpoint = hasHiveCatalog ? 'Enabled' : 'Disabled';
   const maxIdleTime = formatDurationTtl(executionConfig?.idleTtl);
