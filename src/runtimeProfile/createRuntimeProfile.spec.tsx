@@ -214,7 +214,7 @@ describe('CreateRuntimeProfileComponent UI & Service', () => {
     expect(header.getAttribute('aria-expanded')).toBe('false');
     expect(container.querySelector('.additional-config-content')).toBeNull();
 
-    // Press Enter to expand
+    // Press Enter to expand.
     await act(async () => {
       header.dispatchEvent(
         new KeyboardEvent('keydown', { key: 'Enter', bubbles: true })
@@ -225,7 +225,7 @@ describe('CreateRuntimeProfileComponent UI & Service', () => {
       container.querySelector('.additional-config-content')
     ).not.toBeNull();
 
-    // Press Space to collapse
+    // Press Space to collapse.
     await act(async () => {
       header.dispatchEvent(
         new KeyboardEvent('keydown', { key: ' ', bubbles: true })
