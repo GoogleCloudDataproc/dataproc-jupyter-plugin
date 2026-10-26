@@ -175,7 +175,7 @@ const extension: JupyterFrontEndPlugin<void> = {
     let panelDpms: Panel | undefined, panelDatasetExplorer: Panel | undefined;
     await checkResourceManager();
 
-    // Capture the signal
+    // Capture the signal.
     eventEmitter.on('dataprocConfigChange', async (message: string) => {
       checkAllApisEnabled();
       await checkResourceManager();
