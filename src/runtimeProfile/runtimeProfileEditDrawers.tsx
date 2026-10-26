@@ -2787,15 +2787,6 @@ export const NetworkSecurityEditDrawer: React.FC<
                 <div
                   className="edit-drawer-radio-option"
                   onClick={() => setKmsKeySelectionMode('select')}
-                  role="radio"
-                  aria-checked={kmsKeySelectionMode === 'select'}
-                  tabIndex={0}
-                  onKeyDown={e => {
-                    if (e.key === 'Enter' || e.key === ' ') {
-                      e.preventDefault();
-                      setKmsKeySelectionMode('select');
-                    }
-                  }}
                 >
                   <Radio
                     id="edit-kms-mode-select"
@@ -2863,15 +2854,6 @@ export const NetworkSecurityEditDrawer: React.FC<
                 <div
                   className="edit-drawer-radio-option"
                   onClick={() => setKmsKeySelectionMode('manual')}
-                  role="radio"
-                  aria-checked={kmsKeySelectionMode === 'manual'}
-                  tabIndex={0}
-                  onKeyDown={e => {
-                    if (e.key === 'Enter' || e.key === ' ') {
-                      e.preventDefault();
-                      setKmsKeySelectionMode('manual');
-                    }
-                  }}
                 >
                   <Radio
                     id="edit-kms-mode-manual"
@@ -2906,6 +2888,7 @@ export const NetworkSecurityEditDrawer: React.FC<
                       variant="outlined"
                       size="small"
                       fullWidth
+                      InputLabelProps={{ shrink: true }}
                     />
                   </div>
                 )}
