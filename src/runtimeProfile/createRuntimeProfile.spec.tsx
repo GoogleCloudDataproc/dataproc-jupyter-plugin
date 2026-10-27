@@ -268,6 +268,37 @@ describe('CreateRuntimeProfileComponent UI & Service', () => {
     expect(container.querySelector('.additional-config-content')).toBeNull();
   });
 
+  it('hides the divider above the action buttons while Additional configuration is collapsed', async () => {
+    await act(async () => {
+      root.render(<CreateRuntimeProfileComponent service={mockService} />);
+    });
+
+    const header = container.querySelector(
+      '.additional-config-header-container'
+    ) as HTMLDivElement;
+    const buttons = container.querySelector(
+      '.runtime-profile-buttons'
+    ) as HTMLDivElement;
+    // Toggles only when needed, so the test holds whichever state the
+    // section starts in.
+    const setExpanded = async (expanded: boolean) => {
+      if ((header.getAttribute('aria-expanded') === 'true') !== expanded) {
+        await act(async () => {
+          header.click();
+        });
+      }
+      expect(header.getAttribute('aria-expanded')).toBe(String(expanded));
+    };
+
+    // Collapsed: no line directly below the header
+    await setExpanded(false);
+    expect(buttons.classList.contains('no-top-border')).toBe(true);
+
+    // Expanded: the divider above the buttons is kept
+    await setExpanded(true);
+    expect(buttons.classList.contains('no-top-border')).toBe(false);
+  });
+
   it('renders custom initial configuration values and mapped display labels in the UI', async () => {
     await act(async () => {
       root.render(
@@ -1347,6 +1378,7 @@ describe('CreateRuntimeProfileComponent UI & Service', () => {
     await act(async () => {
       root.render(<CreateRuntimeProfileComponent service={mockService} />);
     });
+    await expandAdditionalConfig();
 
     expect(getFieldValue('Metastore')).toBe(
       'Lakehouse runtime catalog (project: my-project)'
@@ -1357,6 +1389,7 @@ describe('CreateRuntimeProfileComponent UI & Service', () => {
     await act(async () => {
       root.render(<CreateRuntimeProfileComponent service={mockService} />);
     });
+    await expandAdditionalConfig();
 
     // Metastore configuration is the 4th section.
     await act(async () => {

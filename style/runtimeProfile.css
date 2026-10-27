@@ -361,6 +361,12 @@ body[data-jp-theme-name='JupyterLab Dark']
   width: 100%;
 }
 
+/* Hide the divider above the buttons while Additional configuration is
+   collapsed, so no line appears directly under its header (as when expanded) */
+.runtime-profile-buttons.no-top-border {
+  border-top: none;
+}
+
 .runtime-profile-buttons button {
   border: none;
   outline: none;

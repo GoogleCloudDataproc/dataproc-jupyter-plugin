@@ -1603,7 +1603,11 @@ export const CreateRuntimeProfileComponent: React.FC<
             </div>
 
             {/* Action Buttons */}
-            <div className="runtime-profile-buttons">
+            <div
+              className={`runtime-profile-buttons${
+                expandAdditionalConfig ? '' : ' no-top-border'
+              }`}
+            >
               <button
                 type="submit"
                 disabled={isSubmitting || hasFormErrors}
