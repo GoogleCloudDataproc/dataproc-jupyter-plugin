@@ -1799,13 +1799,16 @@ describe('CreateRuntimeProfileComponent UI & Service', () => {
       labels: { env: 'dev' }
     };
 
-    const renderEditForm = (onSuccess?: () => void) =>
+    const renderEditForm = (
+      onSuccess?: () => void,
+      profile: IRuntimeProfileTemplate = profileToEdit
+    ) =>
       act(async () => {
         root.render(
           <CreateRuntimeProfileComponent
             service={mockService}
             mode="edit"
-            profile={profileToEdit}
+            profile={profile}
             onSuccess={onSuccess}
           />
         );
@@ -1995,6 +1998,20 @@ describe('CreateRuntimeProfileComponent UI & Service', () => {
     });
 
     it('saves edited Session lifecycle and Network and security settings and keeps the rest of the profile', async () => {
+      // Saved without an authentication type, so Execution identity shows the
+      // runtime's default. It isn't edited below, so none may be added.
+      const profile: IRuntimeProfileTemplate = {
+        ...profileToEdit,
+        environmentConfig: {
+          ...profileToEdit.environmentConfig,
+          executionConfig: {
+            subnetworkUri: 'default',
+            kmsKey: 'projects/p/locations/l/keyRings/kr/cryptoKeys/k',
+            idleTtl: '3600s',
+            ttl: '259200s'
+          }
+        }
+      };
       const updateSpy = jest
         .spyOn(mockService, 'updateRuntimeProfile')
         .mockImplementation(
@@ -2005,7 +2022,7 @@ describe('CreateRuntimeProfileComponent UI & Service', () => {
               existingProfile
             ) as IRuntimeProfileTemplate
         );
-      await renderEditForm();
+      await renderEditForm(undefined, profile);
 
       const nativeInputValueSetter = Object.getOwnPropertyDescriptor(
         window.HTMLInputElement.prototype,
@@ -2064,13 +2081,12 @@ describe('CreateRuntimeProfileComponent UI & Service', () => {
       // Only the edited settings change; untouched ones (including the
       // prefixed Spark property keys) are saved exactly as they were.
       expect(savedBody).toEqual({
-        ...profileToEdit,
+        ...profile,
         environmentConfig: {
+          // The key is removed and the idle time updated. Execution identity
+          // wasn't edited, so no authenticationConfig is added.
           executionConfig: {
             subnetworkUri: 'default',
-            authenticationConfig: {
-              userWorkloadAuthenticationType: 'END_USER_CREDENTIALS'
-            },
             idleTtl: '7200s',
             ttl: '259200s'
           },

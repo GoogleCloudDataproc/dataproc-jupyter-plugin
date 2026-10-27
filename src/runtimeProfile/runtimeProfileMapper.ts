@@ -409,15 +409,13 @@ type ExecutionConfigPayload = NonNullable<
 >;
 
 /**
- * executionConfig network, encryption and identity fields for the Network and
- * security settings. Throws when a required value is missing.
+ * executionConfig.subnetworkUri for the network settings. Throws when a
+ * network is selected without a subnetwork.
  */
-export const buildNetworkExecutionConfig = (
+const buildSubnetworkUri = (
   networkConfig: INetworkAndSecurityConfig | undefined,
-  projectId: string,
   region: string
-): ExecutionConfigPayload => {
-  let subnetworkUri: string | undefined;
+): string | undefined => {
   if (networkConfig?.networkSource === 'shared_from_host') {
     const sharedSub = networkConfig.sharedSubnetwork?.trim();
     const hostProject = networkConfig.hostProjectId?.trim();
@@ -426,56 +424,87 @@ export const buildNetworkExecutionConfig = (
         'Shared subnetwork is required when shared VPC network is selected.'
       );
     }
-    subnetworkUri =
-      sharedSub.startsWith('projects/') || !hostProject
-        ? sharedSub
-        : `projects/${hostProject}/regions/${region}/subnetworks/${sharedSub}`;
-  } else if (networkConfig) {
-    subnetworkUri = networkConfig.subnetwork?.trim() || undefined;
-    const selectedNetwork = (
-      networkConfig.primaryNetwork || networkConfig.networkInThisProject
-    )?.trim();
-    if (
-      !subnetworkUri &&
-      (networkConfig.networkSource === 'project' || selectedNetwork)
-    ) {
-      throw new Error(
-        'Subnetwork is required when a project network is selected.'
-      );
-    }
+    return sharedSub.startsWith('projects/') || !hostProject
+      ? sharedSub
+      : `projects/${hostProject}/regions/${region}/subnetworks/${sharedSub}`;
   }
+  if (!networkConfig) {
+    return undefined;
+  }
+  const subnetworkUri = networkConfig.subnetwork?.trim() || undefined;
+  const selectedNetwork = (
+    networkConfig.primaryNetwork || networkConfig.networkInThisProject
+  )?.trim();
+  if (
+    !subnetworkUri &&
+    (networkConfig.networkSource === 'project' || selectedNetwork)
+  ) {
+    throw new Error(
+      'Subnetwork is required when a project network is selected.'
+    );
+  }
+  return subnetworkUri;
+};
 
-  const networkTags =
-    networkConfig?.networkTags && networkConfig.networkTags.length > 0
-      ? networkConfig.networkTags
-      : undefined;
+/** executionConfig.networkTags; unset when there are none. */
+const buildNetworkTags = (
+  networkConfig: INetworkAndSecurityConfig | undefined
+): string[] | undefined =>
+  networkConfig?.networkTags && networkConfig.networkTags.length > 0
+    ? networkConfig.networkTags
+    : undefined;
 
+/**
+ * executionConfig.kmsKey for customer-managed encryption. Throws when that is
+ * selected without a key.
+ */
+const buildKmsKey = (
+  networkConfig: INetworkAndSecurityConfig | undefined,
+  projectId: string,
+  region: string
+): string | undefined => {
+  if (networkConfig?.encryption !== 'customer_managed_key') {
+    return undefined;
+  }
+  const keyRing = networkConfig.keyRing?.trim();
+  const cryptoKey = networkConfig.cryptoKey?.trim();
+  const manualKeyName = networkConfig.kmsKeyName?.trim();
   let kmsKey: string | undefined;
-  if (networkConfig?.encryption === 'customer_managed_key') {
-    const keyRing = networkConfig.keyRing?.trim();
-    const cryptoKey = networkConfig.cryptoKey?.trim();
-    const manualKeyName = networkConfig.kmsKeyName?.trim();
-    if (
-      networkConfig.kmsKeySelectionMode !== 'manual' &&
-      keyRing &&
-      cryptoKey
-    ) {
-      kmsKey = `projects/${projectId}/locations/${region}/keyRings/${keyRing}/cryptoKeys/${cryptoKey}`;
-    } else if (manualKeyName) {
-      kmsKey = manualKeyName;
-    }
-    if (!kmsKey) {
-      throw new Error(
-        'Customer-managed encryption key (Cloud KMS key) is required when customer-managed encryption is selected.'
-      );
-    }
+  if (networkConfig.kmsKeySelectionMode !== 'manual' && keyRing && cryptoKey) {
+    kmsKey = `projects/${projectId}/locations/${region}/keyRings/${keyRing}/cryptoKeys/${cryptoKey}`;
+  } else if (manualKeyName) {
+    kmsKey = manualKeyName;
   }
+  if (!kmsKey) {
+    throw new Error(
+      'Customer-managed encryption key (Cloud KMS key) is required when customer-managed encryption is selected.'
+    );
+  }
+  return kmsKey;
+};
 
+/** executionConfig.serviceAccount; only set for the service account identity. */
+const buildServiceAccount = (
+  networkConfig: INetworkAndSecurityConfig | undefined
+): string | undefined =>
+  networkConfig?.executionIdentity === 'service_account'
+    ? networkConfig.serviceAccount?.trim() || undefined
+    : undefined;
+
+/**
+ * executionConfig network, encryption and identity fields for the Network and
+ * security settings. Throws when a required value is missing.
+ */
+export const buildNetworkExecutionConfig = (
+  networkConfig: INetworkAndSecurityConfig | undefined,
+  projectId: string,
+  region: string
+): ExecutionConfigPayload => {
+  const subnetworkUri = buildSubnetworkUri(networkConfig, region);
+  const networkTags = buildNetworkTags(networkConfig);
+  const kmsKey = buildKmsKey(networkConfig, projectId, region);
+  const serviceAccount = buildServiceAccount(networkConfig);
   const isUserAccount = networkConfig?.executionIdentity === 'user_account';
-  const serviceAccount =
-    networkConfig?.executionIdentity === 'service_account'
-      ? networkConfig.serviceAccount?.trim() || undefined
-      : undefined;
 
   return {
     ...(subnetworkUri && { subnetworkUri }),
@@ -1622,16 +1651,16 @@ const OUTPUT_ONLY_TEMPLATE_FIELDS = [
   'uuid'
 ];
 
-/** executionConfig fields owned by the Network and security settings. */
-const NETWORK_EXECUTION_CONFIG_FIELDS = [
-  'networkUri',
-  'subnetworkUri',
-  'networkTags',
-  'kmsKey',
-  'serviceAccount',
-  'authenticationConfig',
-  'authentication_config'
-];
+/**
+ * One Network and security setting for the update: the form fields it reads,
+ * the executionConfig value they map to (`build` throws when it's invalid)
+ * and how that value is written.
+ */
+interface INetworkSetting {
+  fields: (keyof INetworkAndSecurityConfig)[];
+  build: (networkConfig: INetworkAndSecurityConfig | undefined) => unknown;
+  write: (value: unknown) => void;
+}
 
 /** JSON of a value with sorted object keys, for comparisons. */
 const toComparableJson = (value: unknown): string =>
@@ -1703,18 +1732,14 @@ const pickGroupProperties = (
   return picked;
 };
 
-/** Network settings mapped to executionConfig fields, or the error that makes them invalid. */
-const tryBuildNetworkExecutionConfig = (
-  networkConfig: INetworkAndSecurityConfig | undefined,
-  projectId: string,
-  region: string
-): { config?: ExecutionConfigPayload; error?: unknown } => {
+/** The value `build` returns, or the error it throws. */
+const tryBuild = <T>(
+  build: () => T
+): { ok: true; value: T } | { ok: false; error: unknown } => {
   try {
-    return {
-      config: buildNetworkExecutionConfig(networkConfig, projectId, region)
-    };
+    return { ok: true, value: build() };
   } catch (error) {
-    return { error };
+    return { ok: false, error };
   }
 };
 
@@ -1731,6 +1756,9 @@ const tryBuildNetworkExecutionConfig = (
  *   subnetwork) and changes saved elsewhere since the form opened.
  * - A changed control rewrites every property it derives (e.g. an executor
  *   shape together with its compute tier), replacing values it couldn't show.
+ * - Network and security settings (network, network tags, encryption key,
+ *   execution identity and service account) are compared one by one, so
+ *   changing one doesn't rewrite or re-validate the others.
  * - Spark properties and labels are applied key by key.
  * - The resource name (ID and region), the session kind (`jupyterSession`
  *   with its kernel, or `sparkConnectSession`) and fields the form doesn't
@@ -1909,47 +1937,96 @@ export function mapRuntimeProfileToSessionTemplateUpdate(
     ...environmentConfig.executionConfig
   };
 
-  const initialNetwork = tryBuildNetworkExecutionConfig(
-    initialPayload.networkAndSecurityConfig,
-    projectId,
-    region
-  );
-  const editedNetwork = tryBuildNetworkExecutionConfig(
-    payload.networkAndSecurityConfig,
-    projectId,
-    region
-  );
-  // Saved settings the form can't express (e.g. a network without a
-  // subnetwork) only count as changed when the user changed the settings.
-  const isNetworkChanged =
-    initialNetwork.config && editedNetwork.config
-      ? !isSameValue(initialNetwork.config, editedNetwork.config)
-      : !isSameValue(
-          initialPayload.networkAndSecurityConfig,
-          payload.networkAndSecurityConfig
+  // Network and security, setting by setting: only a setting the user changed
+  // is written, so the others keep their saved values (even ones the form
+  // can't express, e.g. a network without a subnetwork) and aren't validated.
+  const initialNetworkConfig = initialPayload.networkAndSecurityConfig;
+  const editedNetworkConfig = payload.networkAndSecurityConfig;
+  const networkSettings: INetworkSetting[] = [
+    {
+      // network_uri and subnetwork_uri are a oneof; the form sets a subnetwork.
+      fields: [
+        'networkSource',
+        'primaryNetwork',
+        'networkInThisProject',
+        'subnetwork',
+        'sharedSubnetwork',
+        'hostProjectId'
+      ],
+      build: networkConfig => buildSubnetworkUri(networkConfig, region),
+      write: subnetworkUri => {
+        delete executionConfig.networkUri;
+        setOrDelete(executionConfig, 'subnetworkUri', subnetworkUri);
+      }
+    },
+    {
+      fields: ['networkTags'],
+      build: buildNetworkTags,
+      write: networkTags =>
+        setOrDelete(executionConfig, 'networkTags', networkTags)
+    },
+    {
+      fields: [
+        'encryption',
+        'keyRing',
+        'cryptoKey',
+        'kmsKeySelectionMode',
+        'kmsKeyName'
+      ],
+      build: networkConfig => buildKmsKey(networkConfig, projectId, region),
+      write: kmsKey => setOrDelete(executionConfig, 'kmsKey', kmsKey)
+    },
+    {
+      fields: ['executionIdentity'],
+      build: networkConfig => networkConfig?.executionIdentity,
+      write: executionIdentity => {
+        delete executionConfig.authentication_config;
+        // Explicit, because the default depends on the runtime version.
+        setOrDelete(
+          executionConfig,
+          'authenticationConfig',
+          executionIdentity
+            ? {
+                userWorkloadAuthenticationType:
+                  executionIdentity === 'user_account'
+                    ? 'END_USER_CREDENTIALS'
+                    : 'SERVICE_ACCOUNT'
+              }
+            : undefined
         );
-  if (isNetworkChanged) {
-    if (!editedNetwork.config) {
-      throw editedNetwork.error;
+      }
+    },
+    {
+      fields: ['executionIdentity', 'serviceAccount'],
+      build: buildServiceAccount,
+      write: serviceAccount =>
+        setOrDelete(executionConfig, 'serviceAccount', serviceAccount)
     }
-    NETWORK_EXECUTION_CONFIG_FIELDS.forEach(field => {
-      delete executionConfig[field];
-    });
-    const networkFields: Record<string, any> = { ...editedNetwork.config };
-    delete networkFields.authentication_config;
-    Object.assign(executionConfig, networkFields);
-    const executionIdentity =
-      payload.networkAndSecurityConfig?.executionIdentity;
-    if (executionIdentity) {
-      // Explicit, because the default depends on the runtime version.
-      executionConfig.authenticationConfig = {
-        userWorkloadAuthenticationType:
-          executionIdentity === 'user_account'
-            ? 'END_USER_CREDENTIALS'
-            : 'SERVICE_ACCOUNT'
-      };
+  ];
+  networkSettings.forEach(({ fields, build, write }) => {
+    const initial = tryBuild(() => build(initialNetworkConfig));
+    const edited = tryBuild(() => build(editedNetworkConfig));
+    // Compare what the setting writes. When that can't be built (e.g. a saved
+    // network without a subnetwork), compare its form fields instead, so it
+    // only counts as changed when the user changed them.
+    const isChanged =
+      initial.ok && edited.ok
+        ? !isSameValue(initial.value, edited.value)
+        : fields.some(
+            field =>
+              !isSameValue(
+                initialNetworkConfig?.[field],
+                editedNetworkConfig?.[field]
+              )
+          );
+    if (!isChanged) {
+      return;
     }
-  }
+    if (!edited.ok) {
+      throw edited.error;
+    }
+    write(edited.value);
+  });
 
   const initialExecution = initialControls.environmentConfig?.executionConfig;
   const editedExecution = editedControls.environmentConfig?.executionConfig;
