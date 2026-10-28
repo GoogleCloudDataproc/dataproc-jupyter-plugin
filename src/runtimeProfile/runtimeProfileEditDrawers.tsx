@@ -1709,6 +1709,17 @@ const INTERNAL_IP_DOC =
 const KMS_KEY_REGEX =
   /^projects\/[^/]+\/locations\/[^/]+\/keyRings\/[^/]+\/cryptoKeys\/[^/]+$/;
 
+const extractSubnetShortName = (val?: string): string => {
+  if (!val) {
+    return '';
+  }
+  return (
+    /projects\/(?<project>[^/]+)\/regions\/(?<region>[^/]+)\/subnetworks\/(?<subnetwork>[^/?#]+)/.exec(
+      val
+    )?.groups?.['subnetwork'] || val
+  );
+};
+
 export interface INetworkSecurityEditDrawerProps {
   open: boolean;
   config: INetworkAndSecurityConfig;
@@ -1740,17 +1751,6 @@ export const NetworkSecurityEditDrawer: React.FC<
   onClose,
   onSave
 }) => {
-  const extractSubnetShortName = (val?: string): string => {
-    if (!val) {
-      return '';
-    }
-    return (
-      /projects\/(?<project>[^/]+)\/regions\/(?<region>[^/]+)\/subnetworks\/(?<subnetwork>[^/?#]+)/.exec(
-        val
-      )?.groups?.['subnetwork'] || val
-    );
-  };
-
   const shouldResolveNetworkFromSubnetwork = Boolean(
     (config.networkSource ?? 'project') === 'project' &&
       !config.primaryNetwork &&
