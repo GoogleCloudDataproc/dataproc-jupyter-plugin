@@ -44,7 +44,8 @@ import {
 } from './runtimeProfileMapper';
 import {
   ICreateRuntimeProfilePayload,
-  IMetastoreConfig
+  IMetastoreConfig,
+  INetworkAndSecurityConfig
 } from './runtimeProfileInterface';
 import { IRuntimeProfileTemplate } from './runtimeProfileListMapper';
 import {
@@ -1635,13 +1636,48 @@ describe('runtimeProfileMapper', () => {
         };
       });
 
+      // Only the edited tags and key are written: the profile stays on the
+      // default network, and Execution identity wasn't edited, so the form's
+      // default identity isn't added.
       expect(body.environmentConfig?.executionConfig).toEqual({
         networkTags: ['new-tag'],
-        kmsKey:
-          'projects/kms-project/locations/global/keyRings/kr/cryptoKeys/k',
-        authenticationConfig: {
-          userWorkloadAuthenticationType: 'SERVICE_ACCOUNT'
-        }
+        kmsKey: 'projects/kms-project/locations/global/keyRings/kr/cryptoKeys/k'
+      });
+    });
+
+    it("doesn't save the drawer's default subnetwork for a profile on the default network, but saves a picked one", () => {
+      const defaultNetworkProfile: IRuntimeProfileTemplate = {
+        name: 'projects/test-project/locations/us-central1/sessionTemplates/default-net',
+        jupyterSession: { displayName: 'Default network', kernel: 'PYTHON' }
+      };
+      // What the Network and security drawer pre-fills for such a profile
+      const drawerNetwork: INetworkAndSecurityConfig = {
+        networkSource: 'project',
+        primaryNetwork: 'default',
+        networkInThisProject: 'default',
+        subnetwork: 'default'
+      };
+
+      const tagged = saveEdits(defaultNetworkProfile, payload => {
+        payload.networkAndSecurityConfig = {
+          ...payload.networkAndSecurityConfig,
+          ...drawerNetwork,
+          networkTags: ['new-tag']
+        };
+      });
+      expect(tagged.environmentConfig?.executionConfig).toEqual({
+        networkTags: ['new-tag']
+      });
+
+      const moved = saveEdits(defaultNetworkProfile, payload => {
+        payload.networkAndSecurityConfig = {
+          ...payload.networkAndSecurityConfig,
+          ...drawerNetwork,
+          subnetwork: 'other-subnet'
+        };
+      });
+      expect(moved.environmentConfig?.executionConfig).toEqual({
+        subnetworkUri: 'other-subnet'
       });
     });
 

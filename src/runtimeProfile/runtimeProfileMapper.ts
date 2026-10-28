@@ -1791,13 +1791,22 @@ const OUTPUT_ONLY_TEMPLATE_FIELDS = [
 /**
  * One Network and security setting for the update: the form fields it reads,
  * the executionConfig value they map to (`build` throws when it's invalid)
- * and how that value is written.
+ * and how that value is written. `comparable` maps a value to what is compared
+ * when values that differ mean the same thing.
  */
 interface INetworkSetting {
   fields: (keyof INetworkAndSecurityConfig)[];
   build: (networkConfig: INetworkAndSecurityConfig | undefined) => unknown;
+  comparable?: (value: unknown) => unknown;
   write: (value: unknown) => void;
 }
+
+/**
+ * Subnetwork the Network and security drawer shows for a profile without a
+ * saved network. The service then uses the default network, whose subnetwork
+ * has this name, so it means the same as no subnetwork.
+ */
+const DEFAULT_SUBNETWORK = 'default';
 
 /** JSON of a value with sorted object keys, for comparisons. */
 const toComparableJson = (value: unknown): string =>
@@ -2116,6 +2125,9 @@ export function mapRuntimeProfileToSessionTemplateUpdate(
         'hostProjectId'
       ],
       build: networkConfig => buildSubnetworkUri(networkConfig, region),
+      // The drawer pre-fills the default subnetwork for a profile without a
+      // saved network; keeping it isn't a change.
+      comparable: subnetworkUri => subnetworkUri ?? DEFAULT_SUBNETWORK,
       write: subnetworkUri => {
         delete executionConfig.networkUri;
         setOrDelete(executionConfig, 'subnetworkUri', subnetworkUri);
@@ -2165,30 +2177,32 @@ export function mapRuntimeProfileToSessionTemplateUpdate(
         setOrDelete(executionConfig, 'serviceAccount', serviceAccount)
     }
   ];
-  networkSettings.forEach(({ fields, build, write }) => {
-    const initial = tryBuild(() => build(initialNetworkConfig));
-    const edited = tryBuild(() => build(editedNetworkConfig));
-    // Compare what the setting writes. When that can't be built (e.g. a saved
-    // network without a subnetwork), compare its form fields instead, so it
-    // only counts as changed when the user changed them.
-    const isChanged =
-      initial.ok && edited.ok
-        ? !isSameValue(initial.value, edited.value)
-        : fields.some(
-            field =>
-              !isSameValue(
-                initialNetworkConfig?.[field],
-                editedNetworkConfig?.[field]
-              )
-          );
-    if (!isChanged) {
-      return;
+  networkSettings.forEach(
+    ({ fields, build, comparable = value => value, write }) => {
+      const initial = tryBuild(() => build(initialNetworkConfig));
+      const edited = tryBuild(() => build(editedNetworkConfig));
+      // Compare what the setting writes. When that can't be built (e.g. a
+      // saved network without a subnetwork), compare its form fields instead,
+      // so it only counts as changed when the user changed them.
+      const isChanged =
+        initial.ok && edited.ok
+          ? !isSameValue(comparable(initial.value), comparable(edited.value))
+          : fields.some(
+              field =>
+                !isSameValue(
+                  initialNetworkConfig?.[field],
+                  editedNetworkConfig?.[field]
+                )
+            );
+      if (!isChanged) {
+        return;
+      }
+      if (!edited.ok) {
+        throw edited.error;
+      }
+      write(edited.value);
     }
-    if (!edited.ok) {
-      throw edited.error;
-    }
-    write(edited.value);
-  });
+  );
 
   const initialExecution = initialControls.environmentConfig?.executionConfig;
   const editedExecution = editedControls.environmentConfig?.executionConfig;

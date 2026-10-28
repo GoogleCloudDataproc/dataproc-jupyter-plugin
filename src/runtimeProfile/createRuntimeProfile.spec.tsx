@@ -79,7 +79,10 @@ import {
   RuntimeProfileService
 } from './runtimeProfileService';
 import { IRuntimeProfileTemplate } from './runtimeProfileListMapper';
-import { mapRuntimeProfileToSessionTemplateUpdate } from './runtimeProfileMapper';
+import {
+  mapRuntimeProfileToSessionTemplateUpdate,
+  mapSessionTemplateToFormValues
+} from './runtimeProfileMapper';
 import { Notification } from '@jupyterlab/apputils';
 import { authApi } from '../utils/utils';
 import { eventEmitter } from '../utils/signalEmitter';
@@ -2089,6 +2092,102 @@ describe('CreateRuntimeProfileComponent UI & Service', () => {
           peripheralsConfig: profileToEdit.environmentConfig?.peripheralsConfig
         }
       });
+    });
+
+    it("doesn't save the form's default network or identity when other Network and security settings change", async () => {
+      // Saved without a network or an authentication type, so the drawer
+      // pre-fills the default network and the runtime's default identity.
+      const profile: IRuntimeProfileTemplate = {
+        ...profileToEdit,
+        environmentConfig: {
+          ...profileToEdit.environmentConfig,
+          executionConfig: { idleTtl: '3600s', ttl: '259200s' }
+        }
+      };
+      const updateSpy = jest
+        .spyOn(mockService, 'updateRuntimeProfile')
+        .mockImplementation(
+          async (existingProfile, payload, initialPayload) =>
+            mapRuntimeProfileToSessionTemplateUpdate(
+              payload,
+              initialPayload,
+              existingProfile
+            ) as IRuntimeProfileTemplate
+        );
+      await renderEditForm(undefined, profile);
+
+      // Network and security: only add a network tag
+      await act(async () => {
+        container
+          .querySelectorAll<HTMLButtonElement>('.section-detail-edit-button')[4]
+          .click();
+      });
+      const tagsInput = document.body.querySelector(
+        '#edit-network-tags'
+      ) as HTMLInputElement;
+      await act(async () => {
+        Object.getOwnPropertyDescriptor(
+          window.HTMLInputElement.prototype,
+          'value'
+        )?.set?.call(tagsInput, 'new-tag');
+        tagsInput.dispatchEvent(new Event('input', { bubbles: true }));
+      });
+      const drawerSaveBtn = Array.from(
+        tagsInput
+          .closest('.MuiDrawer-root')!
+          .querySelectorAll('.edit-drawer-footer button')
+      ).find(b => b.textContent?.trim() === 'Save') as HTMLButtonElement;
+      await act(async () => {
+        drawerSaveBtn.click();
+      });
+
+      await clickSave();
+
+      expect(updateSpy).toHaveBeenCalledTimes(1);
+      const savedBody = await updateSpy.mock.results[0].value;
+      // Only the tag is added: no subnetwork and no authenticationConfig.
+      expect(savedBody).toEqual({
+        ...profile,
+        environmentConfig: {
+          executionConfig: {
+            networkTags: ['new-tag'],
+            idleTtl: '3600s',
+            ttl: '259200s'
+          },
+          peripheralsConfig: profileToEdit.environmentConfig?.peripheralsConfig
+        }
+      });
+    });
+
+    it('diffs the update against the opened profile, not values loaded after the first render', async () => {
+      // The signed-in project and the Settings region load after the first
+      // render; neither may change what Save compares against.
+      (authApi as jest.Mock).mockResolvedValueOnce({
+        project_id: 'other-project',
+        region_id: 'us-east1'
+      });
+      const updateSpy = jest
+        .spyOn(mockService, 'updateRuntimeProfile')
+        .mockResolvedValue(profileToEdit);
+      await renderEditForm();
+      await clickSave();
+
+      expect(updateSpy).toHaveBeenCalledTimes(1);
+      const [, payload, initialPayload] = updateSpy.mock.calls[0];
+      const values = mapSessionTemplateToFormValues(profileToEdit);
+      expect(initialPayload).toEqual(
+        expect.objectContaining({
+          region: values.initialRegion,
+          autoscalingConfig: values.initialAutoscalingConfig,
+          metastoreConfig: values.initialMetastoreConfig,
+          networkAndSecurityConfig: values.initialNetworkAndSecurityConfig,
+          sessionLifecycleConfig: values.initialSessionLifecycleConfig,
+          sparkProperties: values.initialSparkProperties,
+          labels: values.initialLabels
+        })
+      );
+      // Nothing was edited, so Save sends the same values
+      expect(payload).toEqual(initialPayload);
     });
 
     it('leaves every section editable in create mode', async () => {

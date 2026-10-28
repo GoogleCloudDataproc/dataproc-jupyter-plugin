@@ -760,6 +760,10 @@ export const CreateRuntimeProfileComponent: React.FC<
   // The form's values when an existing profile is opened. Saving applies only
   // the changes made since then, so settings the user didn't touch (including
   // ones the form can't show) keep their saved values.
+  // Every value buildPayload reads is set from the initial values above when
+  // its state is created; no effect fills one in after the first render (the
+  // loading effect only sets the region in create mode). Keep it that way, or
+  // this snapshot would hold defaults instead of the opened profile.
   const [initialPayload] = useState<ICreateRuntimeProfilePayload | undefined>(
     () =>
       isEditMode
