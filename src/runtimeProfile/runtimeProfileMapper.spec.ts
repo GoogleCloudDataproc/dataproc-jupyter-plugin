@@ -1551,21 +1551,68 @@ describe('runtimeProfileMapper', () => {
       });
     });
 
-    it('does not check network settings the user left alone, but rejects an invalid network edit', () => {
+    it('rewrites only the network and security setting the user changed', () => {
+      const body = saveEdits(savedProfile, payload => {
+        payload.networkAndSecurityConfig = {
+          ...payload.networkAndSecurityConfig,
+          encryption: 'google_managed',
+          kmsKeySelectionMode: undefined,
+          kmsKeyName: undefined
+        };
+      });
+
+      // Only the key is removed. savedProfile has no authenticationConfig, and
+      // Execution identity wasn't edited, so none is added.
+      expect(body.environmentConfig?.executionConfig).toEqual({
+        subnetworkUri: 'default',
+        networkTags: ['old-tag'],
+        serviceAccount: 'old-sa@test-project.iam.gserviceaccount.com',
+        stagingBucket: 'old-bucket',
+        idleTtl: '3600s',
+        ttl: '259200s'
+      });
+    });
+
+    it('keeps a network without a subnetwork when other settings change, but rejects a network edit without one', () => {
       // A network without a subnetwork can't be entered in the form
-      const body = saveEdits(unusualProfile, payload => {
+      const described = saveEdits(unusualProfile, payload => {
         payload.description = 'Notes';
       });
-      expect(body.description).toBe('Notes');
-      expect(body.environmentConfig).toEqual({
+      expect(described.description).toBe('Notes');
+      expect(described.environmentConfig).toEqual({
         executionConfig: { networkUri: 'custom-vpc' }
+      });
+
+      // Tags, encryption and identity are saved without touching the network
+      const kmsKey =
+        'projects/test-project/locations/us-central1/keyRings/kr/cryptoKeys/k';
+      const edited = saveEdits(unusualProfile, payload => {
+        payload.networkAndSecurityConfig = {
+          ...payload.networkAndSecurityConfig,
+          networkTags: ['new-tag'],
+          encryption: 'customer_managed_key',
+          kmsKeySelectionMode: 'manual',
+          kmsKeyName: kmsKey,
+          executionIdentity: 'user_account'
+        };
+      });
+      expect(edited.environmentConfig).toEqual({
+        executionConfig: {
+          networkUri: 'custom-vpc',
+          networkTags: ['new-tag'],
+          kmsKey,
+          authenticationConfig: {
+            userWorkloadAuthenticationType: 'END_USER_CREDENTIALS'
+          }
+        }
       });
 
       expect(() =>
         saveEdits(unusualProfile, payload => {
           payload.networkAndSecurityConfig = {
             ...payload.networkAndSecurityConfig,
-            networkTags: ['new-tag']
+            primaryNetwork: 'other-vpc',
+            networkInThisProject: 'other-vpc'
           };
         })
       ).toThrow('Subnetwork is required when a project network is selected.');
