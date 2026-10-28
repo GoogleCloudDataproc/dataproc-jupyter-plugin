@@ -332,7 +332,7 @@ export const formatAutoscalingProperties = (
   return [
     {
       label: 'Autoscaling',
-      value: isEnabled ? 'Enabled' : 'Disabled'
+      value: isEnabled ? 'On' : 'Off'
     },
     {
       label: 'Initial executors',
