@@ -1796,6 +1796,10 @@ export const NetworkSecurityEditDrawer: React.FC<
     useState<boolean>(false);
   const [hasFetchedSharedSubnetworks, setHasFetchedSharedSubnetworks] =
     useState<boolean>(false);
+  const [resolvedProject, setResolvedProject] = useState<string>(
+    projectId || ''
+  );
+  const [resolvedRegion, setResolvedRegion] = useState<string>(region || '');
 
   useEffect(() => {
     if (open) {
@@ -1871,6 +1875,12 @@ export const NetworkSecurityEditDrawer: React.FC<
     const fetchProjectNetworks = async () => {
       const credentials = await authApi().catch(() => undefined);
       const targetProject = projectId || credentials?.project_id || '';
+      const targetRegion = region || credentials?.region_id || '';
+
+      if (isMounted) {
+        setResolvedProject(targetProject);
+        setResolvedRegion(targetRegion);
+      }
 
       if (service?.getNetworks && !networkOptions) {
         setIsLoadingNetworks(true);
@@ -1929,6 +1939,11 @@ export const NetworkSecurityEditDrawer: React.FC<
         const credentials = await authApi().catch(() => undefined);
         const targetProject = projectId || credentials?.project_id || '';
         const targetRegion = region || credentials?.region_id || '';
+
+        if (isMounted) {
+          setResolvedProject(targetProject);
+          setResolvedRegion(targetRegion);
+        }
 
         const sharedResult = await service.getSharedVpcSubnetworks!(
           targetProject,
@@ -1992,6 +2007,11 @@ export const NetworkSecurityEditDrawer: React.FC<
         const credentials = await authApi().catch(() => undefined);
         const targetProject = projectId || credentials?.project_id || '';
         const targetRegion = region || credentials?.region_id || '';
+
+        if (isMounted) {
+          setResolvedProject(targetProject);
+          setResolvedRegion(targetRegion);
+        }
 
         const rings = await service.getKeyRings!(targetProject, targetRegion);
         if (isMounted && Array.isArray(rings)) {
@@ -2281,6 +2301,18 @@ export const NetworkSecurityEditDrawer: React.FC<
     const isManualKmsMode =
       encryption === 'customer_managed_key' && kmsKeySelectionMode === 'manual';
 
+    let finalKmsKeyName: string | undefined;
+    if (isSelectKmsMode && keyRing && cryptoKey) {
+      const proj = projectId || resolvedProject;
+      const reg = region || resolvedRegion;
+      finalKmsKeyName =
+        proj && reg
+          ? `projects/${proj}/locations/${reg}/keyRings/${keyRing}/cryptoKeys/${cryptoKey}`
+          : undefined;
+    } else if (isManualKmsMode) {
+      finalKmsKeyName = kmsKeyName.trim() || undefined;
+    }
+
     onSave({
       ...config,
       networkSource,
@@ -2307,7 +2339,7 @@ export const NetworkSecurityEditDrawer: React.FC<
         encryption === 'customer_managed_key' ? kmsKeySelectionMode : undefined,
       keyRing: isSelectKmsMode ? keyRing || undefined : undefined,
       cryptoKey: isSelectKmsMode ? cryptoKey || undefined : undefined,
-      kmsKeyName: isManualKmsMode ? kmsKeyName.trim() || undefined : undefined
+      kmsKeyName: finalKmsKeyName
     });
   };
 
