@@ -2029,6 +2029,7 @@ describe('CreateRuntimeProfileComponent UI & Service', () => {
       // The saved Settings region must not replace the profile's region
       (authApi as jest.Mock).mockResolvedValueOnce({ region_id: 'us-east1' });
       await renderEditForm();
+      await expandAdditionalConfig();
 
       expect(
         container.querySelector('.cluster-details-title')?.textContent
@@ -2159,6 +2160,7 @@ describe('CreateRuntimeProfileComponent UI & Service', () => {
 
     it('keeps the Runtime Profile ID read-only in the runtime configuration drawer', async () => {
       await renderEditForm();
+      await expandAdditionalConfig();
 
       await act(async () => {
         (
@@ -2185,6 +2187,7 @@ describe('CreateRuntimeProfileComponent UI & Service', () => {
 
     it('keeps Metastore read-only until the update saves it', async () => {
       await renderEditForm();
+      await expandAdditionalConfig();
 
       const sectionEditButtons = Array.from(
         container.querySelectorAll<HTMLButtonElement>(
@@ -2227,6 +2230,7 @@ describe('CreateRuntimeProfileComponent UI & Service', () => {
             ) as IRuntimeProfileTemplate
         );
       await renderEditForm(undefined, profile);
+      await expandAdditionalConfig();
 
       const nativeInputValueSetter = Object.getOwnPropertyDescriptor(
         window.HTMLInputElement.prototype,
@@ -2303,6 +2307,7 @@ describe('CreateRuntimeProfileComponent UI & Service', () => {
       await act(async () => {
         root.render(<CreateRuntimeProfileComponent service={mockService} />);
       });
+      await expandAdditionalConfig();
 
       const sectionEditButtons = Array.from(
         container.querySelectorAll<HTMLButtonElement>(
