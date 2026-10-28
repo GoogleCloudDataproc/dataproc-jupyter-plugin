@@ -262,6 +262,12 @@
   font-weight: 600;
 }
 
+body[data-jp-theme-name='JupyterLab Dark'] .submit-button-disable-style,
+body[data-jp-theme-light='false'] .submit-button-disable-style {
+  background: var(--jp-layout-color3);
+  color: var(--jp-ui-font-color3);
+}
+
 .submit-button-style {
   margin-right: 10px;
   background: var(--jp-brand-color1);

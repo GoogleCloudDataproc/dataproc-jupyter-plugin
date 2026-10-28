@@ -1844,16 +1844,25 @@ export const NetworkSecurityEditDrawer: React.FC<
           initialCryptoKey = parts[7] || '';
         }
       }
-      setKeyRing(initialKeyRing);
-      setCryptoKey(initialCryptoKey);
-      setKmsKeySelectionMode(
+
+      const resolvedKmsMode: 'select' | 'manual' =
         config.kmsKeySelectionMode ??
-          (config.kmsKeyName && !config.keyRing ? 'manual' : 'select')
-      );
-      setKmsKeyName(config.kmsKeyName ?? '');
-      setIsValidManualKey(
-        !config.kmsKeyName || KMS_KEY_REGEX.test(config.kmsKeyName)
-      );
+        (config.kmsKeyName && !initialKeyRing ? 'manual' : 'select');
+      setKmsKeySelectionMode(resolvedKmsMode);
+
+      if (resolvedKmsMode === 'manual') {
+        setKeyRing('');
+        setCryptoKey('');
+        setKmsKeyName(config.kmsKeyName ?? '');
+        setIsValidManualKey(
+          !config.kmsKeyName || KMS_KEY_REGEX.test(config.kmsKeyName)
+        );
+      } else {
+        setKeyRing(initialKeyRing);
+        setCryptoKey(initialCryptoKey);
+        setKmsKeyName('');
+        setIsValidManualKey(true);
+      }
     }
   }, [open, config]);
 
@@ -2288,18 +2297,21 @@ export const NetworkSecurityEditDrawer: React.FC<
       .map(t => t.trim())
       .filter(Boolean);
 
+    const isSelectKmsMode =
+      encryption === 'customer_managed_key' && kmsKeySelectionMode === 'select';
+    const isManualKmsMode =
+      encryption === 'customer_managed_key' && kmsKeySelectionMode === 'manual';
+
     let finalKmsKeyName: string | undefined;
-    if (encryption === 'customer_managed_key') {
-      if (kmsKeySelectionMode === 'select' && keyRing && cryptoKey) {
-        const proj = projectId || resolvedProject;
-        const reg = region || resolvedRegion;
-        finalKmsKeyName =
-          proj && reg
-            ? `projects/${proj}/locations/${reg}/keyRings/${keyRing}/cryptoKeys/${cryptoKey}`
-            : kmsKeyName.trim() || undefined;
-      } else {
-        finalKmsKeyName = kmsKeyName.trim() || undefined;
-      }
+    if (isSelectKmsMode && keyRing && cryptoKey) {
+      const proj = projectId || resolvedProject;
+      const reg = region || resolvedRegion;
+      finalKmsKeyName =
+        proj && reg
+          ? `projects/${proj}/locations/${reg}/keyRings/${keyRing}/cryptoKeys/${cryptoKey}`
+          : undefined;
+    } else if (isManualKmsMode) {
+      finalKmsKeyName = kmsKeyName.trim() || undefined;
     }
 
     onSave({
@@ -2326,16 +2338,8 @@ export const NetworkSecurityEditDrawer: React.FC<
       encryption,
       kmsKeySelectionMode:
         encryption === 'customer_managed_key' ? kmsKeySelectionMode : undefined,
-      keyRing:
-        encryption === 'customer_managed_key' &&
-        kmsKeySelectionMode === 'select'
-          ? keyRing || undefined
-          : undefined,
-      cryptoKey:
-        encryption === 'customer_managed_key' &&
-        kmsKeySelectionMode === 'select'
-          ? cryptoKey || undefined
-          : undefined,
+      keyRing: isSelectKmsMode ? keyRing || undefined : undefined,
+      cryptoKey: isSelectKmsMode ? cryptoKey || undefined : undefined,
       kmsKeyName: finalKmsKeyName
     });
   };
@@ -2730,21 +2734,7 @@ export const NetworkSecurityEditDrawer: React.FC<
       <div className="edit-drawer-field-group">
         <div className="edit-drawer-section-heading">Encryption</div>
         <div className="edit-drawer-helper-text">
-          Encrypt cluster persistent disk data and optionally job argument data.{' '}
-          <span
-            role="button"
-            tabIndex={0}
-            className="section-detail-link"
-            onClick={() => openExternalLink(SECURITY_KEY)}
-            onKeyDown={e => {
-              if (e.key === 'Enter' || e.key === ' ') {
-                e.preventDefault();
-                openExternalLink(SECURITY_KEY);
-              }
-            }}
-          >
-            Learn more
-          </span>
+          Encrypt cluster persistent disk data and optionally job argument data.
         </div>
 
         <div className="edit-drawer-radio-group">
@@ -2802,14 +2792,35 @@ export const NetworkSecurityEditDrawer: React.FC<
               <div className="edit-drawer-option-content">
                 <div className="edit-drawer-option-title">Cloud KMS key</div>
                 <div className="edit-drawer-helper-text">
-                  Keys owned by customers
+                  Keys owned by customers{' '}
+                  <span
+                    role="button"
+                    tabIndex={0}
+                    className="section-detail-link"
+                    onClick={e => {
+                      e.stopPropagation();
+                      openExternalLink(SECURITY_KEY);
+                    }}
+                    onKeyDown={e => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        openExternalLink(SECURITY_KEY);
+                      }
+                    }}
+                  >
+                    Learn more
+                  </span>
                 </div>
               </div>
             </div>
 
             {encryption === 'customer_managed_key' && (
               <div className="edit-drawer-nested-fields">
-                <div className="edit-drawer-radio-option">
+                <div
+                  className="edit-drawer-radio-option"
+                  onClick={() => setKmsKeySelectionMode('select')}
+                >
                   <Radio
                     id="edit-kms-mode-select"
                     checked={kmsKeySelectionMode === 'select'}
@@ -2817,19 +2828,26 @@ export const NetworkSecurityEditDrawer: React.FC<
                     size="small"
                     color="primary"
                   />
+                  <div className="edit-drawer-option-content">
+                    <div className="edit-drawer-option-title">
+                      Select a Cloud KMS key
+                    </div>
+                  </div>
+                </div>
+
+                {kmsKeySelectionMode === 'select' && (
                   <div
                     className="edit-drawer-row"
                     style={{ flex: 1, width: '100%' }}
                   >
                     <FormControl size="small" fullWidth variant="outlined">
-                      <InputLabel id="edit-kms-keyring-label" shrink>
-                        Key rings
+                      <InputLabel id="edit-kms-keyring-label">
+                        Key Ring *
                       </InputLabel>
                       <Select
                         labelId="edit-kms-keyring-label"
                         id="edit-kms-keyring"
-                        label="Key rings"
-                        notched
+                        label="Key Ring *"
                         value={keyRing}
                         onChange={e => {
                           setKmsKeySelectionMode('select');
@@ -2845,14 +2863,11 @@ export const NetworkSecurityEditDrawer: React.FC<
                     </FormControl>
 
                     <FormControl size="small" fullWidth variant="outlined">
-                      <InputLabel id="edit-kms-key-label" shrink>
-                        Keys
-                      </InputLabel>
+                      <InputLabel id="edit-kms-key-label">Key *</InputLabel>
                       <Select
                         labelId="edit-kms-key-label"
                         id="edit-kms-key"
-                        label="Keys"
-                        notched
+                        label="Key *"
                         value={cryptoKey}
                         onChange={e => {
                           setKmsKeySelectionMode('select');
@@ -2867,9 +2882,12 @@ export const NetworkSecurityEditDrawer: React.FC<
                       </Select>
                     </FormControl>
                   </div>
-                </div>
+                )}
 
-                <div className="edit-drawer-radio-option">
+                <div
+                  className="edit-drawer-radio-option"
+                  onClick={() => setKmsKeySelectionMode('manual')}
+                >
                   <Radio
                     id="edit-kms-mode-manual"
                     checked={kmsKeySelectionMode === 'manual'}
@@ -2877,24 +2895,36 @@ export const NetworkSecurityEditDrawer: React.FC<
                     size="small"
                     color="primary"
                   />
-                  <div style={{ flex: 1, width: '100%' }}>
+                  <div className="edit-drawer-option-content">
+                    <div className="edit-drawer-option-title">
+                      Enter key manually
+                    </div>
+                  </div>
+                </div>
+
+                {kmsKeySelectionMode === 'manual' && (
+                  <div className="edit-drawer-field-group">
+                    <div className="edit-drawer-helper-text">
+                      Enter the resource name of the key you want to use. Key
+                      resource names can be found using the Key Management
+                      Service.
+                      <br />
+                      {KEY_MESSAGE}
+                    </div>
                     <TextField
                       id="edit-kms-key-name"
                       label="Cloud KMS key"
                       placeholder="Enter key manually"
                       value={kmsKeyName}
                       onChange={e => handleManualKmsKeyChange(e.target.value)}
-                      error={
-                        kmsKeySelectionMode === 'manual' && !isValidManualKey
-                      }
+                      error={!isValidManualKey}
                       variant="outlined"
                       size="small"
                       fullWidth
                       InputLabelProps={{ shrink: true }}
                     />
                   </div>
-                </div>
-                <div className="edit-drawer-helper-text">{KEY_MESSAGE}</div>
+                )}
               </div>
             )}
           </div>
@@ -3566,6 +3596,7 @@ export const OtherCustomizationEditDrawer: React.FC<
                     size="small"
                     fullWidth
                     error={Boolean(sparkKeyError)}
+                    InputLabelProps={{ shrink: true }}
                   />
                   {sparkKeyError && (
                     <div
@@ -3595,6 +3626,7 @@ export const OtherCustomizationEditDrawer: React.FC<
                     variant="outlined"
                     size="small"
                     fullWidth
+                    InputLabelProps={{ shrink: true }}
                   />
                 </div>
                 <button
@@ -3649,6 +3681,7 @@ export const OtherCustomizationEditDrawer: React.FC<
                     size="small"
                     fullWidth
                     error={Boolean(keyError)}
+                    InputLabelProps={{ shrink: true }}
                   />
                   {keyError && (
                     <div
@@ -3679,6 +3712,7 @@ export const OtherCustomizationEditDrawer: React.FC<
                     size="small"
                     fullWidth
                     error={Boolean(valueError)}
+                    InputLabelProps={{ shrink: true }}
                   />
                   {valueError && (
                     <div
