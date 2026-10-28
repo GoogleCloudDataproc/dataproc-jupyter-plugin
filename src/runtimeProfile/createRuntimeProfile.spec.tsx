@@ -1215,7 +1215,7 @@ describe('CreateRuntimeProfileComponent UI & Service', () => {
       (executorCards[1] as HTMLDivElement).click();
     });
 
-    expect(getFieldValue('Executor type')).toBe('L4 (4 cores)');
+    expect(getFieldValue('Executor type')).toBe('L4 (4 vCPU)');
   });
 
   it('initializes executor category and type from a valid initial config machine id', async () => {
@@ -1233,7 +1233,7 @@ describe('CreateRuntimeProfileComponent UI & Service', () => {
       .querySelectorAll('.node-config-cards-container')[1]
       .querySelectorAll('.node-config-card');
     expect(executorCards[1].classList.contains('selected')).toBe(true);
-    expect(getFieldValue('Executor type')).toBe('L4 (8 cores)');
+    expect(getFieldValue('Executor type')).toBe('L4 (8 vCPU)');
   });
 
   it('opens RuntimeEnvironmentEditDrawer and updates runtime configuration on save', async () => {
@@ -1737,8 +1737,8 @@ describe('CreateRuntimeProfileComponent UI & Service', () => {
     expect(normalizeMachineTypeName('standard-4 (4 vCPU, 16 GB)')).toBe(
       'standard-4'
     );
-    expect(normalizeMachineTypeName('L4 (4 cores)')).toBe('l4-4');
-    expect(normalizeMachineTypeName('A100 (40 GB)')).toBe('a100-40');
+    expect(normalizeMachineTypeName('L4 (4 vCPU)')).toBe('l4-4');
+    expect(normalizeMachineTypeName('A100 40GB (12 vCPU)')).toBe('a100-40');
     expect(normalizeMachineTypeName('highmem-4')).toBe('highmem-4');
     expect(normalizeMachineTypeName('')).toBe('highmem-4');
   });
@@ -1983,7 +1983,7 @@ describe('CreateRuntimeProfileComponent UI & Service', () => {
       useDifferentDriverConfig: false
     });
     expect(acceleratedRows.find(r => r.label === 'Executor node')?.value).toBe(
-      'L4 (4 cores), 375 GB SSD'
+      'L4 (4 vCPU), 375 GB SSD'
     );
 
     const emptyRows = formatRuntimeProfileSummaryProperties({
@@ -2699,8 +2699,8 @@ describe('CreateRuntimeProfileComponent UI & Service', () => {
     expect(MACHINE_SHAPE_DCU['a100-40']).toBe(15.7);
     expect(MACHINE_SHAPE_DCU['a100-80']).toBe(31.6);
     expect(getShapeDcu('highmem-4 (4 vCPU, 32 GB)')).toBe(5.6);
-    expect(getShapeDcu('L4 (4 cores)')).toBe(4);
-    expect(getShapeDcu('A100 (80 GB)')).toBe(31.6);
+    expect(getShapeDcu('L4 (4 vCPU)')).toBe(4);
+    expect(getShapeDcu('A100 80GB (12 vCPU)')).toBe(31.6);
     expect(getShapeDcu('unknown-shape')).toBe(0);
     expect(getShapeDcu('')).toBe(0);
 
