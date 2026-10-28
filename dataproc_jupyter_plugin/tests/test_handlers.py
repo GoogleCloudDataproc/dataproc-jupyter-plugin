@@ -333,10 +333,54 @@ async def test_biglake_catalogs_handler(jp_fetch, monkeypatch, endpoint, path):
 
     response = await jp_fetch("dataproc-plugin", "biglakeCatalogs", params=params)
 
-    # MockClientSession answers with the request it received.
+    assert response.headers["Content-Type"].startswith("application/json")
+    # MockAsyncHTTPClient answers with the request it received.
     payload = json.loads(response.body)
     assert payload["api_endpoint"] == f"https://biglake.googleapis.com/{path}"
     assert payload["headers"]["Authorization"] == "Bearer mock-token"
+
+
+async def test_biglake_catalogs_handler_returns_biglake_errors(jp_fetch, monkeypatch):
+    mocks.patch_mocks(monkeypatch)
+    error = {
+        "error": {
+            "code": 403,
+            "message": "Permission denied on project my-project.",
+            "status": "PERMISSION_DENIED",
+        }
+    }
+    monkeypatch.setattr(
+        "dataproc_jupyter_plugin.handlers.AsyncHTTPClient",
+        lambda: mocks.MockAsyncHTTPClient(error, code=403),
+    )
+    params = {"endpoint": "hive", "project_id": "my-project"}
+
+    response = await jp_fetch("dataproc-plugin", "biglakeCatalogs", params=params)
+
+    # BigLake's own message reaches the UI, not the generic failure.
+    assert json.loads(response.body) == error
+
+
+@pytest.mark.parametrize(
+    "body,code",
+    [
+        (b"<html>Bad Gateway</html>", 502),  # Not JSON
+        ([], 200),  # JSON, but not an object
+    ],
+)
+async def test_biglake_catalogs_handler_rejects_unexpected_responses(
+    jp_fetch, monkeypatch, body, code
+):
+    mocks.patch_mocks(monkeypatch)
+    monkeypatch.setattr(
+        "dataproc_jupyter_plugin.handlers.AsyncHTTPClient",
+        lambda: mocks.MockAsyncHTTPClient(body, code=code),
+    )
+    params = {"endpoint": "hive", "project_id": "my-project"}
+
+    response = await jp_fetch("dataproc-plugin", "biglakeCatalogs", params=params)
+
+    assert json.loads(response.body)["error"]["code"] == 500
 
 
 @pytest.mark.parametrize(

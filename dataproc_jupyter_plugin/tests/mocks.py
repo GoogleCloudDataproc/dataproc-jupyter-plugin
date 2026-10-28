@@ -12,8 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import json
+
 import aiohttp
 from google.cloud import jupyter_config
+from tornado.httpclient import HTTPClientError
 
 from dataproc_jupyter_plugin import credentials
 
@@ -80,7 +83,36 @@ class MockClientSession:
         )
 
 
+class MockHTTPResponse:
+    def __init__(self, body, code=200):
+        self.code = code
+        self.body = body if isinstance(body, bytes) else json.dumps(body).encode()
+
+
+class MockAsyncHTTPClient:
+    """Tornado's AsyncHTTPClient. Answers with the request it received, or
+    with the given body and status code."""
+
+    def __init__(self, body=None, code=200):
+        self._body = body
+        self._code = code
+
+    async def fetch(self, url, headers=None, raise_error=True):
+        body = self._body
+        if body is None:
+            body = {"api_endpoint": url, "headers": headers}
+        response = MockHTTPResponse(body, self._code)
+        # Like Tornado, an error status raises unless raise_error is False.
+        if raise_error and self._code >= 400:
+            raise HTTPClientError(self._code, response=response)
+        return response
+
+
 def patch_mocks(monkeypatch):
     monkeypatch.setattr(credentials, "get_cached", mock_credentials)
     monkeypatch.setattr(jupyter_config, "async_get_gcloud_config", mock_config)
     monkeypatch.setattr(aiohttp, "ClientSession", MockClientSession)
+    # Patched only where the handlers use it, so jp_fetch still makes real requests.
+    monkeypatch.setattr(
+        "dataproc_jupyter_plugin.handlers.AsyncHTTPClient", MockAsyncHTTPClient
+    )

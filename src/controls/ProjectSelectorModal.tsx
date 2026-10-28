@@ -86,10 +86,11 @@ export const ProjectSelectorModal: React.FC<IProjectSelectorModalProps> = ({
     // Ignore the response once the modal closes or a newer search starts.
     let active = true;
     const query = searchQuery.trim();
+    // A typed search keeps the list visible and shows a small spinner, from the
+    // first keystroke rather than after the debounce.
+    setIsSearching(Boolean(query));
     const timer = setTimeout(
       () => {
-        // A typed search keeps the list visible and shows a small spinner.
-        setIsSearching(Boolean(query));
         listProjectsWithDetailsAPI(query)
           .then(result => {
             if (active) {

@@ -18,7 +18,6 @@ import subprocess
 from urllib.parse import quote
 
 
-import aiohttp
 from google.cloud.jupyter_config.config import (
     async_run_gcloud_subcommand,
     clear_gcloud_cache,
@@ -28,6 +27,7 @@ from google.cloud.jupyter_config.config import (
 from jupyter_server.base.handlers import APIHandler
 from jupyter_server.serverapp import ServerApp
 from jupyter_server.utils import url_path_join
+from tornado.httpclient import AsyncHTTPClient
 from traitlets import Bool, Undefined, Unicode
 from traitlets.config import SingletonConfigurable
 
@@ -272,14 +272,20 @@ class BigLakeCatalogsHandler(APIHandler):
             project = quote(project_id, safe="")
             url = f"{biglake_url.rstrip('/')}/{path.format(project=project)}"
             headers = {"Authorization": f"Bearer {creds['access_token']}"}
-            async with aiohttp.ClientSession() as session:
-                async with session.get(url, headers=headers) as response:
-                    data = await response.json()
+            # raise_error=False returns BigLake's JSON error responses (403, 404,
+            # ...) as is, so the UI shows BigLake's message.
+            response = await AsyncHTTPClient().fetch(
+                url, headers=headers, raise_error=False
+            )
+            data = json.loads(response.body)
+            # finish() serializes dicts only.
+            if not isinstance(data, dict):
+                raise ValueError(f"Unexpected BigLake response ({response.code})")
         except Exception:
             self.log.exception("Error fetching BigLake catalogs")
             message = "Failed to fetch catalogs. See the Jupyter server log for details."
             data = {"error": {"code": 500, "message": message}}
-        self.finish(json.dumps(data))
+        self.finish(data)
 
 
 def setup_handlers(web_app):

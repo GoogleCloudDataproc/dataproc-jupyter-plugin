@@ -236,7 +236,12 @@ describe('ProjectSelectorModal', () => {
     await renderModal();
 
     await typeInto(searchInput(), 'alpha');
+    // Shown from the first keystroke, before the debounced request is sent.
+    expect(spinner()).not.toBeNull();
+    expect(mockListProjects).toHaveBeenCalledTimes(1);
+
     await wait(PROJECT_SEARCH_DEBOUNCE_MS + 100);
+    expect(mockListProjects).toHaveBeenLastCalledWith('alpha');
     expect(spinner()).not.toBeNull();
     expect(rowText('Alpha')).toBe(true);
 
