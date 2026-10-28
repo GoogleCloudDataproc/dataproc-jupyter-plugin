@@ -661,6 +661,12 @@ const extension: JupyterFrontEndPlugin<void> = {
 
     const createRuntimeProfileComponentCommand =
       'create-runtime-profile-component';
+    // Open edit tabs by profile resource name: editing a profile again shows
+    // its open tab instead of a second copy of the form.
+    const editRuntimeProfileWidgets = new Map<
+      string,
+      MainAreaWidget<CreateRuntimeProfile>
+    >();
     if (runtimeProfileUiEnabled) {
       commands.addCommand(createRuntimeProfileComponentCommand, {
         caption: 'Create Runtime Profile',
@@ -674,6 +680,13 @@ const extension: JupyterFrontEndPlugin<void> = {
             args?.['mode'] === 'edit'
               ? (args['profile'] as IRuntimeProfileTemplate | undefined)
               : undefined;
+          const openEditWidget = profileToEdit
+            ? editRuntimeProfileWidgets.get(profileToEdit.name)
+            : undefined;
+          if (openEditWidget && !openEditWidget.isDisposed) {
+            app.shell.activateById(openEditWidget.id);
+            return;
+          }
           const content = new CreateRuntimeProfile(
             app as JupyterLab,
             launcher as ILauncher,
@@ -686,6 +699,15 @@ const extension: JupyterFrontEndPlugin<void> = {
             ? 'Edit Runtime Profile'
             : 'Create Runtime Profile';
           widget.title.icon = iconServerless;
+          if (profileToEdit) {
+            const profileName = profileToEdit.name;
+            editRuntimeProfileWidgets.set(profileName, widget);
+            widget.disposed.connect(() => {
+              if (editRuntimeProfileWidgets.get(profileName) === widget) {
+                editRuntimeProfileWidgets.delete(profileName);
+              }
+            });
+          }
           app.shell.add(widget, 'main');
         }
       });

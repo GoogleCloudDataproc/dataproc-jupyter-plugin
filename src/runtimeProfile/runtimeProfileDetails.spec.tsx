@@ -243,8 +243,9 @@ describe('RuntimeProfileDetails Component', () => {
     const propAndLabelLines = Array.from(
       container.querySelectorAll('.runtime-profile-details-spark-prop-line')
     ).map(el => el.textContent);
+    // Tier and Lightning Engine have their own controls, so they aren't
+    // listed with the Spark properties.
     expect(propAndLabelLines).toEqual([
-      'dataproc.tier: premium',
       'spark.sql.catalog.biglake: org.apache.iceberg.spark.SparkCatalog',
       'spark.sql.catalog.biglake.type: hadoop',
       'env: dev',
@@ -960,7 +961,6 @@ describe('RuntimeProfileDetails Component', () => {
     const customSparkProps =
       buildOtherCustomizationSparkPropertiesFromTemplate(mockProfile);
     expect(customSparkProps).toEqual({
-      'dataproc.tier': 'premium',
       'spark.sql.catalog.biglake': 'org.apache.iceberg.spark.SparkCatalog',
       'spark.sql.catalog.biglake.type': 'hadoop'
     });

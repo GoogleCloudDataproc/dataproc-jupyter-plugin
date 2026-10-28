@@ -173,7 +173,7 @@ describe('MetastoreEditDrawer interactions', () => {
     });
   };
 
-  // Sets an input's value the way React expects, so onChange fires.
+  // Sets an input's value the way React expects, onChange fires.
   const typeInto = async (element: HTMLInputElement, value: string) => {
     const setValue = Object.getOwnPropertyDescriptor(
       HTMLInputElement.prototype,

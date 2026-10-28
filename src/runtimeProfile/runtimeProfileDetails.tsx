@@ -46,16 +46,20 @@ import {
   IRuntimeEnvironmentConfig,
   ISessionLifecycleConfig,
   ProfileLabels,
-  SparkProperties,
-  TimeUnit
+  SparkProperties
 } from './runtimeProfileInterface';
 import {
   DEFAULT_DISK_SIZE,
   extractRuntimeVersion,
+  FORM_DERIVED_PROPERTY_KEYS,
   isAcceleratedMachine,
+  LAKEHOUSE_DEFAULT_CATALOG_PROPERTY,
+  LAKEHOUSE_PROJECT_PROPERTY,
   parseDiskSpec,
   parseDiskTierAndSize,
-  parseMachineTypeSpec
+  parseMachineTypeSpec,
+  parseTtlToQuantityAndUnit,
+  toTtlDurationString
 } from './runtimeProfileMapper';
 import { RuntimeProfileService } from './runtimeProfileService';
 import { LOG_LEVEL, safeLog } from '../utils/loggingService';
@@ -151,26 +155,14 @@ export const formatDurationTtl = (ttl?: string): string => {
 
 const LAKEHOUSE_CATALOG_PREFIX = 'dataproc.lakehouse.catalog.';
 
+// Properties edited by their own drawers (tier, Lightning Engine, driver and
+// executor shapes and disks, autoscaling) or by the Metastore settings, so
+// they aren't listed with the user's own Spark properties.
 const HANDLED_SPARK_PROPERTY_KEYS = new Set<string>([
-  DATAPROC_LIGHTNING_ENGINE_PROPERTY,
-  'spark.driver.cores',
-  'spark.driver.memory',
-  'spark.dataproc.driver.disk.tier',
-  'spark.dataproc.driver.disk.size',
-  'spark.dataproc.driver.compute.tier',
+  ...Array.from(FORM_DERIVED_PROPERTY_KEYS),
   'spark.dataproc.driver.resource.accelerator.type',
-  'spark.executor.cores',
-  'spark.executor.memory',
-  'spark.dataproc.executor.disk.tier',
-  'spark.dataproc.executor.disk.size',
-  'spark.dataproc.executor.compute.tier',
-  'spark.dataproc.executor.resource.accelerator.type',
-  'spark.dynamicAllocation.enabled',
-  'spark.dynamicAllocation.initialExecutors',
-  'spark.dynamicAllocation.minExecutors',
-  'spark.dynamicAllocation.maxExecutors',
-  'dataproc.lakehouse.defaultCatalog',
-  'spark.dataproc.lakehouse.project'
+  LAKEHOUSE_DEFAULT_CATALOG_PROPERTY,
+  LAKEHOUSE_PROJECT_PROPERTY
 ]);
 
 const EXECUTOR_AND_DRIVER_PROPERTY_KEYS = [
@@ -626,87 +618,6 @@ export const applyAutoscalingUpdateToTemplate = (
   };
 };
 
-const UNIT_SECONDS_MAP: Record<TimeUnit, number> = {
-  seconds: 1,
-  s: 1,
-  minutes: 60,
-  m: 60,
-  hours: 3600,
-  h: 3600,
-  days: 86400,
-  d: 86400
-};
-
-const parseTtlToQuantityAndUnit = (
-  ttl: string | undefined,
-  defaultQty: number,
-  defaultUnit: TimeUnit
-): { quantity: number; unit: TimeUnit } => {
-  const trimmed = ttl?.trim() || '';
-  if (!trimmed) {
-    return { quantity: defaultQty, unit: defaultUnit };
-  }
-  const secMatch = /^(\d+)\s*s$/i.exec(trimmed);
-  if (secMatch) {
-    const secs = Number(secMatch[1]);
-    if (secs > 0) {
-      if (secs % 86400 === 0) {
-        return { quantity: secs / 86400, unit: 'days' };
-      }
-      if (secs % 3600 === 0) {
-        return { quantity: secs / 3600, unit: 'hours' };
-      }
-      if (secs % 60 === 0) {
-        return { quantity: secs / 60, unit: 'minutes' };
-      }
-      return { quantity: secs, unit: 'seconds' };
-    }
-  }
-  const genericMatch = /^(\d+)\s*([a-zA-Z]+)$/.exec(trimmed);
-  if (genericMatch) {
-    const qty = parseInt(genericMatch[1], 10);
-    const rawUnit = genericMatch[2].toLowerCase();
-    if (!Number.isNaN(qty) && qty > 0) {
-      if (rawUnit.startsWith('d')) {
-        return { quantity: qty, unit: 'days' };
-      }
-      if (rawUnit.startsWith('h')) {
-        return { quantity: qty, unit: 'hours' };
-      }
-      if (rawUnit.startsWith('m')) {
-        return { quantity: qty, unit: 'minutes' };
-      }
-      if (rawUnit.startsWith('s')) {
-        return { quantity: qty, unit: 'seconds' };
-      }
-    }
-  }
-  return { quantity: defaultQty, unit: defaultUnit };
-};
-
-const toTtlDurationString = (
-  quantity?: number,
-  unit?: TimeUnit,
-  fallbackText?: string
-): string | undefined => {
-  if (
-    typeof quantity === 'number' &&
-    !Number.isNaN(quantity) &&
-    quantity > 0 &&
-    unit
-  ) {
-    const multiplier = UNIT_SECONDS_MAP[unit] ?? 60;
-    return `${quantity * multiplier}s`;
-  }
-  if (fallbackText && fallbackText.trim()) {
-    const parsed = parseTtlToQuantityAndUnit(fallbackText, 0, 'seconds');
-    if (parsed.quantity > 0) {
-      return `${parsed.quantity * UNIT_SECONDS_MAP[parsed.unit]}s`;
-    }
-  }
-  return undefined;
-};
-
 export const buildSessionLifecycleConfigFromTemplate = (
   profile: IRuntimeProfileTemplate
 ): ISessionLifecycleConfig => {
@@ -1122,7 +1033,10 @@ export default function RuntimeProfileDetails({
     },
     { label: 'Name', value: shortName },
     { label: 'Region', value: region },
-    { label: 'Create time', value: formatCreateTime(currentProfile.createTime) },
+    {
+      label: 'Create time',
+      value: formatCreateTime(currentProfile.createTime)
+    },
     { label: 'Creator', value: currentProfile.creator || '' },
     {
       label: 'Last used',
@@ -1480,4 +1394,3 @@ export default function RuntimeProfileDetails({
     </div>
   );
 }
-

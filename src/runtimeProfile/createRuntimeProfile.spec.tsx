@@ -79,6 +79,10 @@ import {
   RuntimeProfileService
 } from './runtimeProfileService';
 import { IRuntimeProfileTemplate } from './runtimeProfileListMapper';
+import {
+  mapRuntimeProfileToSessionTemplateUpdate,
+  mapSessionTemplateToFormValues
+} from './runtimeProfileMapper';
 import { Notification } from '@jupyterlab/apputils';
 import { authApi } from '../utils/utils';
 import { eventEmitter } from '../utils/signalEmitter';
@@ -2127,13 +2131,16 @@ describe('CreateRuntimeProfileComponent UI & Service', () => {
       labels: { env: 'dev' }
     };
 
-    const renderEditForm = (onSuccess?: () => void) =>
+    const renderEditForm = (
+      onSuccess?: () => void,
+      profile: IRuntimeProfileTemplate = profileToEdit
+    ) =>
       act(async () => {
         root.render(
           <CreateRuntimeProfileComponent
             service={mockService}
             mode="edit"
-            profile={profileToEdit}
+            profile={profile}
             onSuccess={onSuccess}
           />
         );
@@ -2150,6 +2157,7 @@ describe('CreateRuntimeProfileComponent UI & Service', () => {
       // The saved Settings region must not replace the profile's region
       (authApi as jest.Mock).mockResolvedValueOnce({ region_id: 'us-east1' });
       await renderEditForm();
+      await expandAdditionalConfig();
 
       expect(
         container.querySelector('.cluster-details-title')?.textContent
@@ -2227,8 +2235,11 @@ describe('CreateRuntimeProfileComponent UI & Service', () => {
       eventEmitter.off(RUNTIME_PROFILE_UPDATED_EVENT, onProfileUpdated);
 
       expect(createSpy).not.toHaveBeenCalled();
-      expect(updateSpy).toHaveBeenCalledWith(
-        profileToEdit,
+      expect(updateSpy).toHaveBeenCalledTimes(1);
+      const [savedProfileArg, payload, initialPayload] =
+        updateSpy.mock.calls[0];
+      expect(savedProfileArg).toBe(profileToEdit);
+      expect(payload).toEqual(
         expect.objectContaining({
           displayName: 'Sample Profile',
           region: 'us-central1',
@@ -2240,6 +2251,8 @@ describe('CreateRuntimeProfileComponent UI & Service', () => {
           labels: { env: 'dev' }
         })
       );
+      // Nothing was edited, so the values match those the form opened with
+      expect(initialPayload).toEqual(payload);
       expect(Notification.emit).toHaveBeenCalledWith(
         'Runtime profile "Sample Profile" updated successfully.',
         'success',
@@ -2275,6 +2288,7 @@ describe('CreateRuntimeProfileComponent UI & Service', () => {
 
     it('keeps the Runtime Profile ID read-only in the runtime configuration drawer', async () => {
       await renderEditForm();
+      await expandAdditionalConfig();
 
       await act(async () => {
         (
@@ -2299,8 +2313,9 @@ describe('CreateRuntimeProfileComponent UI & Service', () => {
       expect(saveBtn.disabled).toBe(false);
     });
 
-    it('keeps Metastore, Network and security, and Session lifecycle read-only until the update mapper saves them', async () => {
+    it('lets every section be edited', async () => {
       await renderEditForm();
+      await expandAdditionalConfig();
 
       const sectionEditButtons = Array.from(
         container.querySelectorAll<HTMLButtonElement>(
@@ -2308,29 +2323,212 @@ describe('CreateRuntimeProfileComponent UI & Service', () => {
         )
       );
       expect(sectionEditButtons).toHaveLength(7);
-      // Runtime config (0), Executor and driver (1), Autoscaling (2) and
-      // Other customizations (6) are saved by the update; Metastore (3),
-      // Network and security (4) and Session lifecycle (5) are not yet.
-      const expectedDisabled = [false, false, false, true, true, true, false];
-      sectionEditButtons.forEach((btn, idx) =>
-        expect(btn.getAttribute('aria-disabled')).toBe(
-          String(expectedDisabled[idx])
-        )
+      sectionEditButtons.forEach(btn =>
+        expect(btn.getAttribute('aria-disabled')).toBe('false')
+      );
+    });
+
+    it('saves edited Session lifecycle and Network and security settings and keeps the rest of the profile', async () => {
+      // Saved without an authentication type, so Execution identity shows the
+      // runtime's default. It isn't edited below, so none may be added.
+      const profile: IRuntimeProfileTemplate = {
+        ...profileToEdit,
+        environmentConfig: {
+          ...profileToEdit.environmentConfig,
+          executionConfig: {
+            subnetworkUri: 'default',
+            kmsKey: 'projects/p/locations/l/keyRings/kr/cryptoKeys/k',
+            idleTtl: '3600s',
+            ttl: '259200s'
+          }
+        }
+      };
+      const updateSpy = jest
+        .spyOn(mockService, 'updateRuntimeProfile')
+        .mockImplementation(
+          async (existingProfile, payload, initialPayload) =>
+            mapRuntimeProfileToSessionTemplateUpdate(
+              payload,
+              initialPayload,
+              existingProfile
+            ) as IRuntimeProfileTemplate
+        );
+      await renderEditForm(undefined, profile);
+      await expandAdditionalConfig();
+
+      const nativeInputValueSetter = Object.getOwnPropertyDescriptor(
+        window.HTMLInputElement.prototype,
+        'value'
+      )?.set;
+      // Closed drawers can stay mounted, so use the Save button of the drawer
+      // that contains `fieldSelector`.
+      const getDrawerSaveBtn = (fieldSelector: string) =>
+        Array.from(
+          document.body
+            .querySelector(fieldSelector)!
+            .closest('.MuiDrawer-root')!
+            .querySelectorAll('.edit-drawer-footer button')
+        ).find(b => b.textContent?.trim() === 'Save') as HTMLButtonElement;
+      const sectionEditButtons = container.querySelectorAll<HTMLButtonElement>(
+        '.section-detail-edit-button'
       );
 
-      // A disabled section doesn't open its drawer.
+      // Session lifecycle: max idle time 1 hour -> 2 hours
+      await act(async () => {
+        sectionEditButtons[5].click();
+      });
+      const idleQtyInput = document.body.querySelector(
+        '#edit-max-idle-time-quantity'
+      ) as HTMLInputElement;
+      expect(idleQtyInput.value).toBe('1');
+      await act(async () => {
+        nativeInputValueSetter?.call(idleQtyInput, '2');
+        idleQtyInput.dispatchEvent(new Event('input', { bubbles: true }));
+      });
+      await act(async () => {
+        getDrawerSaveBtn('#edit-max-idle-time-quantity').click();
+      });
+      expect(getFieldValue('Maximum idle time')).toBe('2 hours');
+
+      // Network and security: customer-managed key -> Google-managed key
       await act(async () => {
         sectionEditButtons[4].click();
       });
-      expect(
-        document.body.querySelector('#edit-network-source-project')
-      ).toBeNull();
+      await act(async () => {
+        (
+          document.body.querySelector(
+            '#edit-encryption-google-managed'
+          ) as HTMLInputElement
+        ).click();
+      });
+      await act(async () => {
+        getDrawerSaveBtn('#edit-encryption-google-managed').click();
+      });
+      expect(getFieldValue('Encryption')).toBe('Google-managed key');
+
+      await clickSave();
+
+      expect(updateSpy).toHaveBeenCalledTimes(1);
+      const savedBody = await updateSpy.mock.results[0].value;
+      // Only the edited settings change; untouched ones (including the
+      // prefixed Spark property keys) are saved exactly as they were.
+      expect(savedBody).toEqual({
+        ...profile,
+        environmentConfig: {
+          // The key is removed and the idle time updated. Execution identity
+          // wasn't edited, so no authenticationConfig is added.
+          executionConfig: {
+            subnetworkUri: 'default',
+            idleTtl: '7200s',
+            ttl: '259200s'
+          },
+          peripheralsConfig: profileToEdit.environmentConfig?.peripheralsConfig
+        }
+      });
+    });
+
+    it("doesn't save the form's default network or identity when other Network and security settings change", async () => {
+      // Saved without a network or an authentication type, so the drawer
+      // pre-fills the default network and the runtime's default identity.
+      const profile: IRuntimeProfileTemplate = {
+        ...profileToEdit,
+        environmentConfig: {
+          ...profileToEdit.environmentConfig,
+          executionConfig: { idleTtl: '3600s', ttl: '259200s' }
+        }
+      };
+      const updateSpy = jest
+        .spyOn(mockService, 'updateRuntimeProfile')
+        .mockImplementation(
+          async (existingProfile, payload, initialPayload) =>
+            mapRuntimeProfileToSessionTemplateUpdate(
+              payload,
+              initialPayload,
+              existingProfile
+            ) as IRuntimeProfileTemplate
+        );
+      await renderEditForm(undefined, profile);
+      await expandAdditionalConfig();
+
+      // Network and security: only add a network tag
+      await act(async () => {
+        container
+          .querySelectorAll<HTMLButtonElement>('.section-detail-edit-button')[4]
+          .click();
+      });
+      const tagsInput = document.body.querySelector(
+        '#edit-network-tags'
+      ) as HTMLInputElement;
+      await act(async () => {
+        Object.getOwnPropertyDescriptor(
+          window.HTMLInputElement.prototype,
+          'value'
+        )?.set?.call(tagsInput, 'new-tag');
+        tagsInput.dispatchEvent(new Event('input', { bubbles: true }));
+      });
+      const drawerSaveBtn = Array.from(
+        tagsInput
+          .closest('.MuiDrawer-root')!
+          .querySelectorAll('.edit-drawer-footer button')
+      ).find(b => b.textContent?.trim() === 'Save') as HTMLButtonElement;
+      await act(async () => {
+        drawerSaveBtn.click();
+      });
+
+      await clickSave();
+
+      expect(updateSpy).toHaveBeenCalledTimes(1);
+      const savedBody = await updateSpy.mock.results[0].value;
+      // Only the tag is added: no subnetwork and no authenticationConfig.
+      expect(savedBody).toEqual({
+        ...profile,
+        environmentConfig: {
+          executionConfig: {
+            networkTags: ['new-tag'],
+            idleTtl: '3600s',
+            ttl: '259200s'
+          },
+          peripheralsConfig: profileToEdit.environmentConfig?.peripheralsConfig
+        }
+      });
+    });
+
+    it('diffs the update against the opened profile, not values loaded after the first render', async () => {
+      // The signed-in project and the Settings region load after the first
+      // render; neither may change what Save compares against.
+      (authApi as jest.Mock).mockResolvedValueOnce({
+        project_id: 'other-project',
+        region_id: 'us-east1'
+      });
+      const updateSpy = jest
+        .spyOn(mockService, 'updateRuntimeProfile')
+        .mockResolvedValue(profileToEdit);
+      await renderEditForm();
+      await clickSave();
+
+      expect(updateSpy).toHaveBeenCalledTimes(1);
+      const [, payload, initialPayload] = updateSpy.mock.calls[0];
+      const values = mapSessionTemplateToFormValues(profileToEdit);
+      expect(initialPayload).toEqual(
+        expect.objectContaining({
+          region: values.initialRegion,
+          autoscalingConfig: values.initialAutoscalingConfig,
+          metastoreConfig: values.initialMetastoreConfig,
+          networkAndSecurityConfig: values.initialNetworkAndSecurityConfig,
+          sessionLifecycleConfig: values.initialSessionLifecycleConfig,
+          sparkProperties: values.initialSparkProperties,
+          labels: values.initialLabels
+        })
+      );
+      // Nothing was edited, so Save sends the same values
+      expect(payload).toEqual(initialPayload);
     });
 
     it('leaves every section editable in create mode', async () => {
       await act(async () => {
         root.render(<CreateRuntimeProfileComponent service={mockService} />);
       });
+      await expandAdditionalConfig();
 
       const sectionEditButtons = Array.from(
         container.querySelectorAll<HTMLButtonElement>(
