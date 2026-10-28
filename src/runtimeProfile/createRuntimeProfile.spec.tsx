@@ -2323,6 +2323,7 @@ describe('CreateRuntimeProfileComponent UI & Service', () => {
             ) as IRuntimeProfileTemplate
         );
       await renderEditForm(undefined, profile);
+      await expandAdditionalConfig();
 
       // Network and security: only add a network tag
       await act(async () => {
