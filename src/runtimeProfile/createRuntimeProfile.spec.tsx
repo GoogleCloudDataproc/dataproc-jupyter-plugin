@@ -107,8 +107,11 @@ import {
   EXECUTOR_CATEGORY_ACCELERATED_SUB2,
   EXECUTOR_CATEGORY_ACCELERATED_SUB3,
   EXECUTOR_SHAPES_SUBHEADING,
-  EXECUTOR_ACCELERATED_SHAPES_SUBHEADING
+  EXECUTOR_ACCELERATED_SHAPES_SUBHEADING,
+  SETTINGS_COMMAND_ID,
+  SETTINGS_WIDGET_TITLE
 } from '../utils/const';
+import { consumeRuntimeProfileListTabRequest } from './runtimeProfileNavigation';
 
 describe('CreateRuntimeProfileComponent UI & Service', () => {
   let mockService: RuntimeProfileService;
@@ -147,7 +150,20 @@ describe('CreateRuntimeProfileComponent UI & Service', () => {
       ?.textContent?.trim();
   };
 
-  it('renders Additional configuration expanded by default with all 7 SectionDetail sections', async () => {
+  // Additional configuration is collapsed by default; open it so its
+  // sections and Edit buttons are in the DOM.
+  const expandAdditionalConfig = async () => {
+    const header = container.querySelector(
+      '.additional-config-header-container'
+    ) as HTMLDivElement | null;
+    if (header && header.getAttribute('aria-expanded') !== 'true') {
+      await act(async () => {
+        header.click();
+      });
+    }
+  };
+
+  it('renders Additional configuration collapsed by default and shows all 7 SectionDetail sections when expanded', async () => {
     await act(async () => {
       root.render(<CreateRuntimeProfileComponent service={mockService} />);
     });
@@ -156,6 +172,10 @@ describe('CreateRuntimeProfileComponent UI & Service', () => {
       '.additional-config-header-container'
     );
     expect(header).not.toBeNull();
+    expect(header?.getAttribute('aria-expanded')).toBe('false');
+    expect(container.querySelector('.additional-config-content')).toBeNull();
+
+    await expandAdditionalConfig();
     expect(header?.getAttribute('aria-expanded')).toBe('true');
 
     const sectionTitles = Array.from(
@@ -194,14 +214,14 @@ describe('CreateRuntimeProfileComponent UI & Service', () => {
     expect(getFieldValue('Python package repository')).toBe(
       'Google managed PyPI pull-through cache'
     );
-    expect(getFieldValue('Autoscaling')).toBe('Enabled');
+    expect(getFieldValue('Autoscaling')).toBe('On');
     expect(getFieldValue('Metastore')).toBe('Lakehouse runtime catalog');
     expect(getFieldValue('Hive endpoint')).toBe('Disabled');
     expect(getFieldValue('Maximum idle time')).toBe('None');
     expect(getFieldValue('Maximum session time')).toBe('None');
   });
 
-  it('collapses and re-expands Additional configuration on click and keyboard Enter/Space', async () => {
+  it('expands and collapses Additional configuration on click and keyboard Enter/Space', async () => {
     await act(async () => {
       root.render(<CreateRuntimeProfileComponent service={mockService} />);
     });
@@ -209,6 +229,14 @@ describe('CreateRuntimeProfileComponent UI & Service', () => {
     const header = container.querySelector(
       '.additional-config-header-container'
     ) as HTMLDivElement;
+    expect(header.getAttribute('aria-expanded')).toBe('false');
+    expect(container.querySelector('.additional-config-content')).toBeNull();
+
+    // Click to expand
+    await act(async () => {
+      header.click();
+    });
+    expect(header.getAttribute('aria-expanded')).toBe('true');
     expect(
       container.querySelector('.additional-config-content')
     ).not.toBeNull();
@@ -220,7 +248,7 @@ describe('CreateRuntimeProfileComponent UI & Service', () => {
     expect(header.getAttribute('aria-expanded')).toBe('false');
     expect(container.querySelector('.additional-config-content')).toBeNull();
 
-    // Press Enter to expand
+    // Press Enter to expand.
     await act(async () => {
       header.dispatchEvent(
         new KeyboardEvent('keydown', { key: 'Enter', bubbles: true })
@@ -231,7 +259,7 @@ describe('CreateRuntimeProfileComponent UI & Service', () => {
       container.querySelector('.additional-config-content')
     ).not.toBeNull();
 
-    // Press Space to collapse
+    // Press Space to collapse.
     await act(async () => {
       header.dispatchEvent(
         new KeyboardEvent('keydown', { key: ' ', bubbles: true })
@@ -290,6 +318,7 @@ describe('CreateRuntimeProfileComponent UI & Service', () => {
         />
       );
     });
+    await expandAdditionalConfig();
 
     expect(getFieldValue('Runtime profile ID')).toBe('custom-runtime-id');
     expect(getFieldValue('Spark runtime version')).toBe('2.2 LTS');
@@ -308,7 +337,7 @@ describe('CreateRuntimeProfileComponent UI & Service', () => {
     // Executor type always reflects the shape selected in the dropdown
     expect(getFieldValue('Executor type')).toBe('highmem-4 (4 vCPU, 32 GB)');
     expect(getFieldValue('Executor disk')).toBe('SSD 400 GB');
-    expect(getFieldValue('Autoscaling')).toBe('Disabled');
+    expect(getFieldValue('Autoscaling')).toBe('Off');
     expect(getFieldValue('Initial executors')).toBe('4');
     expect(getFieldValue('Minimum executors')).toBe('2');
     expect(getFieldValue('Maximum executors')).toBe('50');
@@ -338,6 +367,7 @@ describe('CreateRuntimeProfileComponent UI & Service', () => {
         />
       );
     });
+    await expandAdditionalConfig();
 
     const backBtn = container.querySelector(
       '.back-arrow-icon'
@@ -450,6 +480,7 @@ describe('CreateRuntimeProfileComponent UI & Service', () => {
     await act(async () => {
       root.render(<CreateRuntimeProfileComponent service={mockService} />);
     });
+    await expandAdditionalConfig();
 
     const displayNameLabel = container.querySelector(
       'label[for="runtime-profile-display-name"]'
@@ -502,6 +533,7 @@ describe('CreateRuntimeProfileComponent UI & Service', () => {
     await act(async () => {
       root.render(<CreateRuntimeProfileComponent service={mockService} />);
     });
+    await expandAdditionalConfig();
 
     const learnMoreLinks = container.querySelectorAll(
       '.runtime-profile-learn-more'
@@ -659,6 +691,7 @@ describe('CreateRuntimeProfileComponent UI & Service', () => {
     await act(async () => {
       root.render(<CreateRuntimeProfileComponent service={mockService} />);
     });
+    await expandAdditionalConfig();
 
     const cardContainers = container.querySelectorAll(
       '.node-config-cards-container'
@@ -708,6 +741,7 @@ describe('CreateRuntimeProfileComponent UI & Service', () => {
     await act(async () => {
       root.render(<CreateRuntimeProfileComponent service={mockService} />);
     });
+    await expandAdditionalConfig();
 
     const cardContainers = container.querySelectorAll(
       '.node-config-cards-container'
@@ -768,6 +802,7 @@ describe('CreateRuntimeProfileComponent UI & Service', () => {
     await act(async () => {
       root.render(<CreateRuntimeProfileComponent service={mockService} />);
     });
+    await expandAdditionalConfig();
 
     expect(getFieldValue('Executor type')).toBe('highmem-4 (4 vCPU, 32 GB)');
 
@@ -805,6 +840,7 @@ describe('CreateRuntimeProfileComponent UI & Service', () => {
         />
       );
     });
+    await expandAdditionalConfig();
 
     const submitButton = container.querySelector(
       'button[type="submit"]'
@@ -832,6 +868,158 @@ describe('CreateRuntimeProfileComponent UI & Service', () => {
     expect(onSuccess).toHaveBeenCalled();
   });
 
+  it('lists only standard-* executor types on Standard tier and all general types on Premium', async () => {
+    await act(async () => {
+      root.render(<CreateRuntimeProfileComponent service={mockService} />);
+    });
+
+    const openExecutorTypeMenu = async () => {
+      const trigger = container.querySelector(
+        '.machine-type-select-wrapper [aria-haspopup="listbox"]'
+      ) as HTMLElement;
+      await act(async () => {
+        trigger.dispatchEvent(
+          new MouseEvent('mousedown', { bubbles: true, button: 0 })
+        );
+      });
+      return Array.from(
+        document.body.querySelectorAll('li[role="option"][data-value]')
+      ).map(option => option.getAttribute('data-value'));
+    };
+    const closeMenu = async () => {
+      await act(async () => {
+        document.body
+          .querySelector('.MuiBackdrop-root')
+          ?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+      });
+    };
+
+    // Premium: standard and highmem shapes
+    expect(await openExecutorTypeMenu()).toEqual([
+      'standard-4',
+      'standard-8',
+      'standard-16',
+      'highmem-4',
+      'highmem-8',
+      'highmem-16'
+    ]);
+    await closeMenu();
+
+    // Standard tier: no highmem shapes
+    const standardTierCard = container
+      .querySelectorAll('.node-config-cards-container')[0]
+      .querySelectorAll('.node-config-card')[1] as HTMLDivElement;
+    await act(async () => {
+      standardTierCard.click();
+    });
+    expect(await openExecutorTypeMenu()).toEqual([
+      'standard-4',
+      'standard-8',
+      'standard-16'
+    ]);
+    const subheaders = Array.from(
+      document.body.querySelectorAll('.machine-type-group-header')
+    ).map(header => header.textContent);
+    expect(subheaders).toEqual(['Standard']);
+  });
+
+  it('disables the Create button while the form has a validation error', async () => {
+    await act(async () => {
+      root.render(<CreateRuntimeProfileComponent service={mockService} />);
+    });
+
+    const submitButton = container.querySelector(
+      'button[type="submit"]'
+    ) as HTMLButtonElement;
+    const displayNameInput = container.querySelector(
+      '#runtime-profile-display-name'
+    ) as HTMLInputElement;
+    const setValue = Object.getOwnPropertyDescriptor(
+      window.HTMLInputElement.prototype,
+      'value'
+    )?.set;
+    expect(submitButton.disabled).toBe(false);
+
+    await act(async () => {
+      setValue?.call(displayNameInput, '');
+      displayNameInput.dispatchEvent(new Event('input', { bubbles: true }));
+    });
+    expect(container.textContent).toContain('Display name is required');
+    expect(submitButton.disabled).toBe(true);
+    expect(submitButton.classList.contains('submit-button-disable-style')).toBe(
+      true
+    );
+
+    await act(async () => {
+      setValue?.call(displayNameInput, 'valid-name');
+      displayNameInput.dispatchEvent(new Event('input', { bubbles: true }));
+    });
+    expect(submitButton.disabled).toBe(false);
+    expect(submitButton.classList.contains('submit-button-style')).toBe(true);
+  });
+
+  it('returns to the Settings listing page after a profile is created', async () => {
+    jest
+      .spyOn(mockService, 'createRuntimeProfile')
+      .mockResolvedValue({ displayName: 'created', region: 'us-central1' });
+
+    const formWidget = { id: 'form-widget', close: jest.fn() };
+    const settingsWidget = {
+      id: 'settings-widget',
+      title: { label: SETTINGS_WIDGET_TITLE },
+      close: jest.fn()
+    };
+    const otherWidget = {
+      id: 'other',
+      title: { label: 'Notebook' },
+      close: jest.fn()
+    };
+    const mockApp = {
+      shell: {
+        activeWidget: formWidget,
+        widgets: jest.fn(() => [otherWidget, settingsWidget][Symbol.iterator]())
+      },
+      commands: { execute: jest.fn().mockResolvedValue(undefined) }
+    } as any;
+
+    await act(async () => {
+      root.render(
+        <CreateRuntimeProfileComponent app={mockApp} service={mockService} />
+      );
+    });
+    await act(async () => {
+      (
+        container.querySelector('button[type="submit"]') as HTMLButtonElement
+      ).click();
+    });
+
+    // The open Settings widget is replaced by a fresh one, so the listing
+    // reloads with the new profile, and the form is closed
+    expect(mockApp.shell.widgets).toHaveBeenCalledWith('main');
+    expect(settingsWidget.close).toHaveBeenCalledTimes(1);
+    expect(otherWidget.close).not.toHaveBeenCalled();
+    expect(mockApp.commands.execute).toHaveBeenCalledWith(SETTINGS_COMMAND_ID);
+    expect(formWidget.close).toHaveBeenCalledTimes(1);
+    // ...and the fresh Settings layout is asked to start on the Spark tab
+    expect(consumeRuntimeProfileListTabRequest()).toBe(true);
+
+    // Without an open Settings widget, one is simply opened via its command
+    mockApp.shell.widgets.mockImplementation(() =>
+      [otherWidget][Symbol.iterator]()
+    );
+    mockApp.commands.execute.mockClear();
+    await act(async () => {
+      (
+        container.querySelector('button[type="submit"]') as HTMLButtonElement
+      ).click();
+    });
+    expect(settingsWidget.close).toHaveBeenCalledTimes(1);
+    expect(otherWidget.close).not.toHaveBeenCalled();
+    expect(mockApp.commands.execute).toHaveBeenCalledWith(SETTINGS_COMMAND_ID);
+    expect(formWidget.close).toHaveBeenCalledTimes(2);
+    expect(consumeRuntimeProfileListTabRequest()).toBe(true);
+  });
+
   it('pre-selects the region saved in Settings when it is in the list', async () => {
     (authApi as jest.Mock).mockResolvedValueOnce({ region_id: 'us-east1' });
     const createSpy = jest
@@ -841,6 +1029,7 @@ describe('CreateRuntimeProfileComponent UI & Service', () => {
     await act(async () => {
       root.render(<CreateRuntimeProfileComponent service={mockService} />);
     });
+    await expandAdditionalConfig();
     await act(async () => {
       (
         container.querySelector('button[type="submit"]') as HTMLButtonElement
@@ -863,6 +1052,7 @@ describe('CreateRuntimeProfileComponent UI & Service', () => {
     await act(async () => {
       root.render(<CreateRuntimeProfileComponent service={mockService} />);
     });
+    await expandAdditionalConfig();
 
     expect(Notification.emit).toHaveBeenCalledWith(
       'Permission denied',
@@ -879,6 +1069,7 @@ describe('CreateRuntimeProfileComponent UI & Service', () => {
     await act(async () => {
       root.render(<CreateRuntimeProfileComponent service={mockService} />);
     });
+    await expandAdditionalConfig();
 
     expect(Notification.emit).toHaveBeenCalledWith('Auth failed', 'error', {
       autoClose: 5000
@@ -893,6 +1084,7 @@ describe('CreateRuntimeProfileComponent UI & Service', () => {
     await act(async () => {
       root.render(<CreateRuntimeProfileComponent service={mockService} />);
     });
+    await expandAdditionalConfig();
 
     await selectExecutorType('highmem-16');
     expect(getFieldValue('Executor type')).toContain('highmem-16');
@@ -929,6 +1121,7 @@ describe('CreateRuntimeProfileComponent UI & Service', () => {
         />
       );
     });
+    await expandAdditionalConfig();
 
     const acceleratedCard = container
       .querySelectorAll('.node-config-cards-container')[1]
@@ -981,6 +1174,7 @@ describe('CreateRuntimeProfileComponent UI & Service', () => {
         />
       );
     });
+    await expandAdditionalConfig();
 
     expect(getFieldValue('Executor type')).toBe('highmem-4 (4 vCPU, 32 GB)');
 
@@ -1003,6 +1197,7 @@ describe('CreateRuntimeProfileComponent UI & Service', () => {
         />
       );
     });
+    await expandAdditionalConfig();
 
     const executorCards = container
       .querySelectorAll('.node-config-cards-container')[1]
@@ -1019,6 +1214,7 @@ describe('CreateRuntimeProfileComponent UI & Service', () => {
     await act(async () => {
       root.render(<CreateRuntimeProfileComponent service={mockService} />);
     });
+    await expandAdditionalConfig();
 
     const editButtons = container.querySelectorAll(
       '.section-detail-edit-button'
@@ -1115,6 +1311,7 @@ describe('CreateRuntimeProfileComponent UI & Service', () => {
     await act(async () => {
       root.render(<CreateRuntimeProfileComponent service={mockService} />);
     });
+    await expandAdditionalConfig();
 
     // Metastore configuration is the 4th section.
     await act(async () => {
@@ -1172,6 +1369,7 @@ describe('CreateRuntimeProfileComponent UI & Service', () => {
     await act(async () => {
       root.render(<CreateRuntimeProfileComponent service={mockService} />);
     });
+    await expandAdditionalConfig();
 
     // Open Runtime configuration edit drawer
     const editButtons = container.querySelectorAll(
@@ -1287,6 +1485,7 @@ describe('CreateRuntimeProfileComponent UI & Service', () => {
     await act(async () => {
       root.render(<CreateRuntimeProfileComponent service={mockService} />);
     });
+    await expandAdditionalConfig();
 
     const editButtons = container.querySelectorAll(
       '.section-detail-edit-button'
@@ -1468,6 +1667,7 @@ describe('CreateRuntimeProfileComponent UI & Service', () => {
     await act(async () => {
       root.render(<CreateRuntimeProfileComponent service={mockService} />);
     });
+    await expandAdditionalConfig();
 
     const editButtons = container.querySelectorAll(
       '.section-detail-edit-button'
@@ -1495,6 +1695,7 @@ describe('CreateRuntimeProfileComponent UI & Service', () => {
     await act(async () => {
       root.render(<CreateRuntimeProfileComponent service={mockService} />);
     });
+    await expandAdditionalConfig();
 
     const editButtons = container.querySelectorAll(
       '.section-detail-edit-button'
@@ -1612,6 +1813,7 @@ describe('CreateRuntimeProfileComponent UI & Service', () => {
         />
       );
     });
+    await expandAdditionalConfig();
     expect(container.innerHTML).toContain(
       'data-testid="runtime-profile-summary-section"'
     );
@@ -1692,6 +1894,7 @@ describe('CreateRuntimeProfileComponent UI & Service', () => {
         />
       );
     });
+    await expandAdditionalConfig();
 
     const getSummaryRowValue = (label: string): string | undefined => {
       const rows = Array.from(
@@ -1721,6 +1924,7 @@ describe('CreateRuntimeProfileComponent UI & Service', () => {
     await act(async () => {
       root.render(<CreateRuntimeProfileComponent service={mockService} />);
     });
+    await expandAdditionalConfig();
 
     const getProfileTierSummaryValue = (): string | undefined => {
       const rows = Array.from(
@@ -2137,6 +2341,7 @@ describe('CreateRuntimeProfileComponent UI & Service', () => {
     await act(async () => {
       root.render(<CreateRuntimeProfileComponent service={mockService} />);
     });
+    await expandAdditionalConfig();
 
     // Open Network and security edit drawer (index 4)
     const editButtons = container.querySelectorAll(
@@ -2206,6 +2411,17 @@ describe('CreateRuntimeProfileComponent UI & Service', () => {
       cmekRadio.click();
     });
     expect(getSaveBtn()?.disabled).toBe(true);
+    expect(document.body.textContent).toContain('Select a Cloud KMS key');
+    expect(document.body.textContent).toContain('Enter key manually');
+
+    const keyRingLabel = document.body.querySelector('#edit-kms-keyring-label');
+    const keyLabel = document.body.querySelector('#edit-kms-key-label');
+    expect(keyRingLabel?.textContent).toBe('Key Ring *');
+    expect(keyLabel?.textContent).toBe('Key *');
+    expect(keyRingLabel?.classList.contains('MuiInputLabel-shrink')).toBe(
+      false
+    );
+    expect(keyLabel?.classList.contains('MuiInputLabel-shrink')).toBe(false);
 
     // Switch back to Google-managed encryption key
     const googleManagedRadio = document.body.querySelector(
@@ -2225,6 +2441,7 @@ describe('CreateRuntimeProfileComponent UI & Service', () => {
     await act(async () => {
       root.render(<CreateRuntimeProfileComponent service={mockService} />);
     });
+    await expandAdditionalConfig();
 
     const editButtons = container.querySelectorAll(
       '.section-detail-edit-button'
@@ -2408,6 +2625,7 @@ describe('CreateRuntimeProfileComponent UI & Service', () => {
     await act(async () => {
       root.render(<CreateRuntimeProfileComponent service={mockService} />);
     });
+    await expandAdditionalConfig();
 
     await act(async () => {
       root.render(
@@ -2428,8 +2646,9 @@ describe('CreateRuntimeProfileComponent UI & Service', () => {
         />
       );
     });
+    await expandAdditionalConfig();
 
-    expect(getFieldValue('Autoscaling')).toBe('Disabled');
+    expect(getFieldValue('Autoscaling')).toBe('Off');
     expect(getFieldValue('Initial executors')).toBe('6');
     expect(getFieldValue('Maximum idle time')).toBe('45 minutes');
     expect(getFieldValue('Maximum session time')).toBe('5 days');
@@ -2631,6 +2850,7 @@ describe('CreateRuntimeProfileComponent UI & Service', () => {
     await act(async () => {
       root.render(<CreateRuntimeProfileComponent service={mockService} />);
     });
+    await expandAdditionalConfig();
 
     const pricingSection = container.querySelector(
       '[data-testid="runtime-pricing-estimate-section"]'
@@ -2667,6 +2887,7 @@ describe('CreateRuntimeProfileComponent UI & Service', () => {
         />
       );
     });
+    await expandAdditionalConfig();
 
     const updatedPricingSection = container.querySelector(
       '[data-testid="runtime-pricing-estimate-section"]'

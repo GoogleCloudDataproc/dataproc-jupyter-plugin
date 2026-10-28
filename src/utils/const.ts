@@ -371,7 +371,7 @@ export const DATAPROC_STANDARD_MACHINE_TYPES = [
 export const DATAPROC_ACCELERATED_MACHINE_TYPES = [
   {
     name: 'l4-4',
-    label: 'L4 (4 cores)',
+    label: 'L4 (4 vCPU)',
     vCPUs: 4,
     memory: '13384m',
     acceleratorType: 'l4',
@@ -380,7 +380,7 @@ export const DATAPROC_ACCELERATED_MACHINE_TYPES = [
   },
   {
     name: 'l4-8',
-    label: 'L4 (8 cores)',
+    label: 'L4 (8 vCPU)',
     vCPUs: 8,
     memory: '26768m',
     acceleratorType: 'l4',
@@ -389,7 +389,7 @@ export const DATAPROC_ACCELERATED_MACHINE_TYPES = [
   },
   {
     name: 'l4-12',
-    label: 'L4 (12 cores)',
+    label: 'L4 (12 vCPU)',
     vCPUs: 12,
     memory: '40152m',
     acceleratorType: 'l4',
@@ -398,7 +398,7 @@ export const DATAPROC_ACCELERATED_MACHINE_TYPES = [
   },
   {
     name: 'l4-16',
-    label: 'L4 (16 cores)',
+    label: 'L4 (16 vCPU)',
     vCPUs: 16,
     memory: '53536m',
     acceleratorType: 'l4',
@@ -407,7 +407,7 @@ export const DATAPROC_ACCELERATED_MACHINE_TYPES = [
   },
   {
     name: 'l4-24',
-    label: 'L4 (24 cores)',
+    label: 'L4 (24 vCPU)',
     vCPUs: 24,
     memory: '113072m',
     acceleratorType: 'l4',
@@ -416,7 +416,7 @@ export const DATAPROC_ACCELERATED_MACHINE_TYPES = [
   },
   {
     name: 'l4-48',
-    label: 'L4 (48 cores)',
+    label: 'L4 (48 vCPU)',
     vCPUs: 48,
     memory: '160608m',
     acceleratorType: 'l4',
@@ -425,7 +425,7 @@ export const DATAPROC_ACCELERATED_MACHINE_TYPES = [
   },
   {
     name: 'l4-96',
-    label: 'L4 (96 cores)',
+    label: 'L4 (96 vCPU)',
     vCPUs: 96,
     memory: '321216m',
     acceleratorType: 'l4',
@@ -434,7 +434,7 @@ export const DATAPROC_ACCELERATED_MACHINE_TYPES = [
   },
   {
     name: 'a100-40',
-    label: 'A100 (40 GB)',
+    label: 'A100 40GB (12 vCPU)',
     vCPUs: 12,
     memory: '78040m',
     acceleratorType: 'a100-40',
@@ -443,7 +443,7 @@ export const DATAPROC_ACCELERATED_MACHINE_TYPES = [
   },
   {
     name: 'a100-80',
-    label: 'A100 (80 GB)',
+    label: 'A100 80GB (12 vCPU)',
     vCPUs: 12,
     memory: '165080m',
     acceleratorType: 'a100-80',
@@ -457,6 +457,15 @@ export const DATAPROC_ACCELERATED_MACHINE_TYPES = [
  */
 export const RUNTIME_PROFILE_INTRO_TEXT =
   'A runtime profile is a reusable set of Serverless Spark runtime settings, such as executor configuration. You can create interactive notebooks and submit workloads with a runtime profile.';
+
+/**
+ * Navigation between the runtime profile form and the listing page, which
+ * lives on the Spark tab of the Google Cloud Settings widget.
+ */
+/** Title of the Google Cloud Settings main-area widget. */
+export const SETTINGS_WIDGET_TITLE = 'Config Setup';
+/** Command that opens the Google Cloud Settings widget. */
+export const SETTINGS_COMMAND_ID = 'cloud-dataproc-settings:configure';
 
 /**
  * Tier section constants

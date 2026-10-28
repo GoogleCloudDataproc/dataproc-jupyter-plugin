@@ -20,6 +20,7 @@ import { JupyterLab } from '@jupyterlab/application';
 import { ISettingRegistry } from '@jupyterlab/settingregistry';
 import Common from './common';
 import RuntimeProfileList from '../runtimeProfile/runtimeProfileList';
+import { consumeRuntimeProfileListTabRequest } from '../runtimeProfile/runtimeProfileNavigation';
 
 interface ISettingsLayoutProps {
   configError: boolean;
@@ -34,14 +35,18 @@ export default function SettingsLayout({
   app,
   settingRegistry
 }: ISettingsLayoutProps) {
-  const [activeTab, setActiveTab] = useState<'common' | 'spark'>('common');
+  // Starts on the Spark tab when opened to show a newly created profile.
+  // Reading the request on mount is enough: the create form closes any open
+  // Settings widget (closing disposes it) and opens a new one, so a widget
+  // kept alive in the dock panel never needs to react to it.
+  const [activeTab, setActiveTab] = useState<'common' | 'spark'>(() =>
+    consumeRuntimeProfileListTabRequest() ? 'spark' : 'common'
+  );
 
   return (
     <div className="settings-layout-container">
       <div className="settings-sidebar">
-        <div className="settings-sidebar-header">
-          Google Cloud Settings
-        </div>
+        <div className="settings-sidebar-header">Google Cloud Settings</div>
         <div
           className={`settings-tab ${activeTab === 'common' ? 'active' : ''}`}
           onClick={() => setActiveTab('common')}
@@ -67,9 +72,7 @@ export default function SettingsLayout({
           />
         )}
 
-        {activeTab === 'spark' && (
-          <RuntimeProfileList app={app} />
-        )}
+        {activeTab === 'spark' && <RuntimeProfileList app={app} />}
       </div>
     </div>
   );

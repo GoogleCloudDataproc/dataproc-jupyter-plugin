@@ -20,6 +20,7 @@
 import React, { act } from 'react';
 import { createRoot, Root } from 'react-dom/client';
 import SettingsLayout from './settingsLayout';
+import { requestRuntimeProfileListTab } from '../runtimeProfile/runtimeProfileNavigation';
 
 jest.mock('./common', () => () => (
   <div data-testid="mock-common-view">Common Settings View</div>
@@ -49,10 +50,7 @@ describe('SettingsLayout Component', () => {
   it('should render sidebar tabs and default to Common tab', () => {
     act(() => {
       root.render(
-        <SettingsLayout
-          configError={false}
-          setConfigError={jest.fn()}
-        />
+        <SettingsLayout configError={false} setConfigError={jest.fn()} />
       );
     });
 
@@ -66,10 +64,7 @@ describe('SettingsLayout Component', () => {
   it('should switch to Spark tab when clicked and render RuntimeProfileList', () => {
     act(() => {
       root.render(
-        <SettingsLayout
-          configError={false}
-          setConfigError={jest.fn()}
-        />
+        <SettingsLayout configError={false} setConfigError={jest.fn()} />
       );
     });
 
@@ -92,10 +87,7 @@ describe('SettingsLayout Component', () => {
   it('should switch back to Common tab when clicked', () => {
     act(() => {
       root.render(
-        <SettingsLayout
-          configError={false}
-          setConfigError={jest.fn()}
-        />
+        <SettingsLayout configError={false} setConfigError={jest.fn()} />
       );
     });
 
@@ -118,5 +110,27 @@ describe('SettingsLayout Component', () => {
     expect(commonTab.classList.contains('active')).toBe(true);
     expect(container.textContent).toContain('Common Settings View');
     expect(container.textContent).not.toContain('Runtime Profile List View');
+  });
+
+  it('starts on the Spark tab when opened to show a created runtime profile', () => {
+    requestRuntimeProfileListTab();
+    act(() => {
+      root.render(
+        <SettingsLayout configError={false} setConfigError={jest.fn()} />
+      );
+    });
+    expect(container.textContent).toContain('Runtime Profile List View');
+
+    // The request is one-shot: the next layout starts on Common again
+    act(() => {
+      root.unmount();
+    });
+    root = createRoot(container);
+    act(() => {
+      root.render(
+        <SettingsLayout configError={false} setConfigError={jest.fn()} />
+      );
+    });
+    expect(container.textContent).toContain('Common Settings View');
   });
 });
