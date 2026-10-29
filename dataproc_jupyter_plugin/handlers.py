@@ -15,7 +15,6 @@
 import json
 import re
 import subprocess
-from urllib.parse import quote
 
 
 from google.cloud.jupyter_config.config import (
@@ -27,7 +26,6 @@ from google.cloud.jupyter_config.config import (
 from jupyter_server.base.handlers import APIHandler
 from jupyter_server.serverapp import ServerApp
 from jupyter_server.utils import url_path_join
-from tornado.httpclient import AsyncHTTPClient
 from traitlets import Bool, Undefined, Unicode
 from traitlets.config import SingletonConfigurable
 
@@ -42,6 +40,7 @@ from dataproc_jupyter_plugin.controllers.version import (
     UpdatePackage,
     tornado
 )
+from dataproc_jupyter_plugin.services import biglake
 
 
 from importlib.metadata import version, PackageNotFoundError
@@ -239,53 +238,45 @@ class ResourceManagerHandler(APIHandler):
             self.finish({"status": "ERROR", "error": er.stderr})
 
 
-# Catalog list paths of the Lakehouse runtime catalog endpoints.
-BIGLAKE_CATALOG_PATHS = {
-    "iceberg": "iceberg/v1/restcatalog/extensions/projects/{project}/catalogs",
-    "hive": "hive/v1/projects/{project}/catalogs",
-}
-
-
 class BigLakeCatalogsHandler(APIHandler):
     """Lists a project's catalogs from a Lakehouse runtime catalog endpoint.
 
     These BigLake endpoints don't answer the browser's CORS preflight, so the
-    server calls them. Errors are returned in BigLake's error shape.
+    server calls them. Errors keep their HTTP status and are returned in
+    BigLake's error shape, so the UI shows their message.
     """
 
     @tornado.web.authenticated
     async def get(self):
-        path = BIGLAKE_CATALOG_PATHS.get(self.get_argument("endpoint", ""))
-        project_id = self.get_argument("project_id", "")
+        status, body = await self._list_catalogs(
+            self.get_argument("endpoint", ""), self.get_argument("project_id", "")
+        )
+        self.set_status(status)
+        self.finish(body)
+
+    async def _list_catalogs(self, endpoint, project_id):
+        """Returns the (status, body) pair to send to the UI."""
         # The project ID becomes a URL path segment, so "." and ".." are rejected too.
         if (
-            not path
+            endpoint not in biglake.CATALOG_ENDPOINTS
             or not re.fullmatch(constants.PROJECT_REGEXP, project_id)
             or project_id in (".", "..")
         ):
             message = f"Unsupported catalog endpoint or project ID: {project_id}"
-            self.finish({"error": {"code": 400, "message": message}})
-            return
+            return biglake.error_response(400, message)
         try:
-            creds = await credentials.get_cached()
-            biglake_url = await urls.gcp_service_url(constants.BIGLAKE_SERVICE_NAME)
-            project = quote(project_id, safe="")
-            url = f"{biglake_url.rstrip('/')}/{path.format(project=project)}"
-            headers = {"Authorization": f"Bearer {creds['access_token']}"}
-            # raise_error=False returns BigLake's JSON error responses (403, 404,
-            # ...) as is, so the UI shows BigLake's message.
-            response = await AsyncHTTPClient().fetch(
-                url, headers=headers, raise_error=False
+            access_token = (await credentials.get_cached()).get("access_token")
+            # Without a token, BigLake would only answer with a technical 401.
+            if not access_token:
+                message = "Not signed in to Google Cloud. Sign in with gcloud auth login and try again."
+                return biglake.error_response(401, message)
+            return await biglake.list_catalogs(
+                self.log, endpoint, project_id, access_token
             )
-            data = json.loads(response.body)
-            # finish() serializes dicts only.
-            if not isinstance(data, dict):
-                raise ValueError(f"Unexpected BigLake response ({response.code})")
         except Exception:
             self.log.exception("Error fetching BigLake catalogs")
             message = "Failed to fetch catalogs. See the Jupyter server log for details."
-            data = {"error": {"code": 500, "message": message}}
-        self.finish(data)
+            return biglake.error_response(500, message)
 
 
 def setup_handlers(web_app):

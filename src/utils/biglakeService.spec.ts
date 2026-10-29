@@ -29,6 +29,7 @@ jest.mock('@jupyterlab/apputils', () => ({
 }));
 
 import { Notification } from '@jupyterlab/apputils';
+import { ServerConnection } from '@jupyterlab/services';
 import { requestAPI } from '../handler/handler';
 import {
   extractCatalogId,
@@ -141,27 +142,25 @@ describe('biglakeService', () => {
       expect(mockRequest).not.toHaveBeenCalled();
     });
 
-    it('shows the API error and returns no catalogs when the request fails', async () => {
-      mockRequest.mockResolvedValueOnce({
-        error: {
-          code: 403,
-          message: 'BigLake API has not been used in project',
-          status: 'PERMISSION_DENIED'
-        }
-      });
+    it("shows BigLake's error and returns no catalogs when the request fails", async () => {
+      // On an error status, requestAPI throws with the message the server sends.
+      mockRequest.mockRejectedValueOnce(
+        new ServerConnection.ResponseError(
+          { status: 403, statusText: 'Forbidden' } as Response,
+          'BigLake API has not been used in project'
+        )
+      );
 
       await expect(listCatalogs('my-project')).resolves.toEqual([]);
       expect(Notification.emit).toHaveBeenCalledWith(
-        'BigLake API has not been used in project',
+        `Failed to fetch ${label} catalogs: BigLake API has not been used in project`,
         'error',
         { autoClose: 5000 }
       );
     });
 
-    it('names the endpoint when a failed request has no error message', async () => {
-      mockRequest.mockResolvedValueOnce({
-        error: { code: 403, message: '', status: '' }
-      });
+    it('names the endpoint when the error has no message', async () => {
+      mockRequest.mockRejectedValueOnce(new Error(''));
 
       await expect(listCatalogs('my-project')).resolves.toEqual([]);
       expect(Notification.emit).toHaveBeenCalledWith(
@@ -176,7 +175,7 @@ describe('biglakeService', () => {
 
       await expect(listCatalogs('my-project')).resolves.toEqual([]);
       expect(Notification.emit).toHaveBeenCalledWith(
-        `Error fetching ${label} catalogs: Error: offline`,
+        `Failed to fetch ${label} catalogs: offline`,
         'error',
         { autoClose: 5000 }
       );

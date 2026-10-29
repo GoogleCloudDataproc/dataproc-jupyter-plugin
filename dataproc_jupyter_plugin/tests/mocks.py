@@ -90,29 +90,43 @@ class MockHTTPResponse:
 
 
 class MockAsyncHTTPClient:
-    """Tornado's AsyncHTTPClient. Answers with the request it received, or
-    with the given body and status code."""
+    """Tornado's AsyncHTTPClient. Answers the requests in turn with the given
+    (body, code) pairs or by raising the given exceptions, then with an empty
+    object. Records the requests."""
 
-    def __init__(self, body=None, code=200):
-        self._body = body
-        self._code = code
+    def __init__(self, *responses):
+        self._responses = list(responses)
+        self.requests = []
 
-    async def fetch(self, url, headers=None, raise_error=True):
-        body = self._body
-        if body is None:
-            body = {"api_endpoint": url, "headers": headers}
-        response = MockHTTPResponse(body, self._code)
+    def __call__(self):
+        # Like AsyncHTTPClient(), which returns Tornado's shared client.
+        return self
+
+    async def fetch(self, url, raise_error=True, **kwargs):
+        self.requests.append({"url": url, **kwargs})
+        answer = self._responses.pop(0) if self._responses else ({}, 200)
+        if isinstance(answer, Exception):
+            raise answer
+        body, code = answer
+        response = MockHTTPResponse(body, code)
         # Like Tornado, an error status raises unless raise_error is False.
-        if raise_error and self._code >= 400:
-            raise HTTPClientError(self._code, response=response)
+        if raise_error and code >= 400:
+            raise HTTPClientError(code, response=response)
         return response
+
+
+def patch_biglake_client(monkeypatch, *responses):
+    """Answers the BigLake requests with a MockAsyncHTTPClient, and returns it."""
+    client = MockAsyncHTTPClient(*responses)
+    # Patched only where BigLake is called, so jp_fetch still makes real requests.
+    monkeypatch.setattr(
+        "dataproc_jupyter_plugin.services.biglake.AsyncHTTPClient", client
+    )
+    return client
 
 
 def patch_mocks(monkeypatch):
     monkeypatch.setattr(credentials, "get_cached", mock_credentials)
     monkeypatch.setattr(jupyter_config, "async_get_gcloud_config", mock_config)
     monkeypatch.setattr(aiohttp, "ClientSession", MockClientSession)
-    # Patched only where the handlers use it, so jp_fetch still makes real requests.
-    monkeypatch.setattr(
-        "dataproc_jupyter_plugin.handlers.AsyncHTTPClient", MockAsyncHTTPClient
-    )
+    patch_biglake_client(monkeypatch)

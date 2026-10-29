@@ -51,7 +51,12 @@ export async function requestAPI<T>(
   }
 
   if (!response.ok) {
-    throw new ServerConnection.ResponseError(response, data.message);
+    // Google API errors, such as BigLake's that the server forwards, keep
+    // their message under `error`.
+    throw new ServerConnection.ResponseError(
+      response,
+      data?.message ?? data?.error?.message
+    );
   }
 
   return data;

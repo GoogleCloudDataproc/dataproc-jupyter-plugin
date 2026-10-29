@@ -84,25 +84,23 @@ const listLakehouseCatalogIds = async <T extends ILakehouseErrorResponse>(
 
     // These BigLake endpoints don't answer CORS preflight requests, so the
     // browser can't call them; the Jupyter server makes the request instead.
+    // Errors come back with an error status, so requestAPI throws with their
+    // message, such as BigLake's own.
     const params = new URLSearchParams({ endpoint, project_id: targetProject });
     const data = await requestAPI<T>(`biglakeCatalogs?${params.toString()}`);
-
-    if (data?.error) {
-      Notification.emit(
-        data.error.message || `Failed to fetch ${label} catalogs`,
-        'error',
-        { autoClose: 5000 }
-      );
-      return [];
-    }
 
     return (readCatalogs(data) ?? [])
       .map(catalog => extractCatalogId(catalog.name))
       .filter(catalogId => catalogId !== '');
   } catch (error) {
-    Notification.emit(`Error fetching ${label} catalogs: ${error}`, 'error', {
-      autoClose: 5000
-    });
+    const reason = error instanceof Error ? error.message : String(error);
+    Notification.emit(
+      reason
+        ? `Failed to fetch ${label} catalogs: ${reason}`
+        : `Failed to fetch ${label} catalogs`,
+      'error',
+      { autoClose: 5000 }
+    );
     return [];
   }
 };
