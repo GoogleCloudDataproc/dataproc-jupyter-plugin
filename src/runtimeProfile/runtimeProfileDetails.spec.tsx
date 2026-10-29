@@ -243,8 +243,9 @@ describe('RuntimeProfileDetails Component', () => {
     const propAndLabelLines = Array.from(
       container.querySelectorAll('.runtime-profile-details-spark-prop-line')
     ).map(el => el.textContent);
+    // Tier and Lightning Engine have their own controls, so they aren't
+    // listed with the Spark properties.
     expect(propAndLabelLines).toEqual([
-      'dataproc.tier: premium',
       'spark.sql.catalog.biglake: org.apache.iceberg.spark.SparkCatalog',
       'spark.sql.catalog.biglake.type: hadoop',
       'env: dev',
@@ -511,6 +512,53 @@ describe('RuntimeProfileDetails Component', () => {
     });
     expect(RuntimeProfileService.updateRuntimeProfile).toHaveBeenCalledTimes(6);
     expect(onUpdateSuccessMock).toHaveBeenCalledTimes(5);
+  });
+
+  it('should enable the header Edit button when onEdit is provided and keep unsupported section edit icons disabled', async () => {
+    const onEditMock = jest.fn();
+    await act(async () => {
+      root.render(
+        <RuntimeProfileDetails
+          profile={mockProfile}
+          onBack={jest.fn()}
+          onEdit={onEditMock}
+        />
+      );
+    });
+
+    const editBtn = Array.from(
+      container.querySelectorAll('.secondary-action-btn')
+    ).find(btn => btn.textContent?.includes('Edit')) as HTMLButtonElement;
+    expect(editBtn.disabled).toBe(false);
+
+    act(() => {
+      editBtn.click();
+    });
+    expect(onEditMock).toHaveBeenCalledTimes(1);
+
+    // Configuration is collapsed by default; expand it to reach the
+    // subsection edit buttons.
+    const configHeader = container.querySelector(
+      '[aria-controls="runtime-profile-config-content"]'
+    ) as HTMLElement;
+    act(() => {
+      configHeader.click();
+    });
+
+    // Runtime configuration (0), Executor and driver configuration (1),
+    // Autoscaling (2), Session lifecycle (5) and Other customizations (6)
+    // have their own edit drawers in the details view; Metastore (3) and
+    // Network and security (4) are read-only.
+    const subsectionEditBtns = Array.from(
+      container.querySelectorAll<HTMLButtonElement>(
+        '.runtime-profile-details-subsection-edit-btn'
+      )
+    );
+    expect(subsectionEditBtns).toHaveLength(7);
+    const expectedDisabled = [false, false, false, true, true, false, false];
+    subsectionEditBtns.forEach((btn, idx) =>
+      expect(btn.disabled).toBe(expectedDisabled[idx])
+    );
   });
 
   it('should open delete modal, handle Escape/Cancel, and delete or notify on error', async () => {
@@ -913,7 +961,6 @@ describe('RuntimeProfileDetails Component', () => {
     const customSparkProps =
       buildOtherCustomizationSparkPropertiesFromTemplate(mockProfile);
     expect(customSparkProps).toEqual({
-      'dataproc.tier': 'premium',
       'spark.sql.catalog.biglake': 'org.apache.iceberg.spark.SparkCatalog',
       'spark.sql.catalog.biglake.type': 'hadoop'
     });
@@ -952,6 +999,46 @@ describe('RuntimeProfileDetails Component', () => {
       ]
     ).toBe('projects/p/locations/l/catalogs/hive_cat');
     expect(updatedOther.labels).toEqual({ env: 'prod' });
+  });
+
+  it('does not report an existing Iceberg REST default catalog as a Hive endpoint', async () => {
+    const existingCatalog = 'projects/p/catalogs/sales';
+    const withCatalogs = (extra: Record<string, string> = {}) => ({
+      ...mockProfile,
+      runtimeConfig: {
+        ...mockProfile.runtimeConfig,
+        properties: {
+          'dataproc.lakehouse.defaultCatalog': existingCatalog,
+          'dataproc.lakehouse.catalog.sales': existingCatalog,
+          ...extra
+        }
+      }
+    });
+    const hiveEndpoint = async (profile: IRuntimeProfileTemplate) => {
+      await renderDetails(jest.fn(), undefined, profile);
+      const configHeader = container.querySelector(
+        '[aria-controls="runtime-profile-config-content"]'
+      ) as HTMLElement;
+      if (configHeader.getAttribute('aria-expanded') !== 'true') {
+        await act(async () => {
+          configHeader.click();
+        });
+      }
+      return Array.from(
+        container.querySelectorAll('.runtime-profile-details-row')
+      )
+        .find(row => row.textContent?.startsWith('Hive endpoint'))
+        ?.querySelector('.runtime-profile-details-value')?.textContent;
+    };
+
+    expect(await hiveEndpoint(withCatalogs())).toBe('Disabled');
+    expect(
+      await hiveEndpoint(
+        withCatalogs({
+          'dataproc.lakehouse.catalog.hive_cat': 'projects/p/catalogs/hive_cat'
+        })
+      )
+    ).toBe('Enabled');
   });
 });
 

@@ -35,7 +35,10 @@ jest.mock('../utils/projectService', () => ({
 
 import React, { act } from 'react';
 import { createRoot, Root } from 'react-dom/client';
-import { ProjectSelectorModal } from './ProjectSelectorModal';
+import {
+  PROJECT_SEARCH_DEBOUNCE_MS,
+  ProjectSelectorModal
+} from './ProjectSelectorModal';
 import { listProjectsWithDetailsAPI } from '../utils/projectService';
 
 const mockListProjects = listProjectsWithDetailsAPI as jest.Mock;
@@ -63,9 +66,9 @@ describe('ProjectSelectorModal', () => {
     container.remove();
   });
 
-  const wait = () =>
+  const wait = (ms = 0) =>
     act(async () => {
-      await new Promise(resolve => setTimeout(resolve, 0));
+      await new Promise(resolve => setTimeout(resolve, ms));
     });
 
   const click = async (element: Element | null) => {
@@ -205,6 +208,49 @@ describe('ProjectSelectorModal', () => {
     expect(onSelect).not.toHaveBeenCalled();
   });
 
+  it('searches the API as the user types and adds the matches', async () => {
+    const gamma = { projectId: 'gamma-project', name: 'Gamma' };
+    mockListProjects
+      .mockResolvedValueOnce(PROJECTS)
+      .mockResolvedValueOnce([gamma]);
+    await renderModal();
+    expect(mockListProjects).toHaveBeenCalledWith('');
+
+    // Gamma isn't in the first page; only the API search finds it.
+    await typeInto(searchInput(), 'gam');
+    await wait(PROJECT_SEARCH_DEBOUNCE_MS + 100);
+
+    expect(mockListProjects).toHaveBeenLastCalledWith('gam');
+    expect(rowIds()).toContain('gamma-project');
+  });
+
+  it('shows a spinner while searching and keeps the list', async () => {
+    let resolveSearch: (projects: typeof PROJECTS) => void = () => undefined;
+    mockListProjects.mockResolvedValueOnce(PROJECTS).mockReturnValueOnce(
+      new Promise(resolve => {
+        resolveSearch = resolve;
+      })
+    );
+    const spinner = () =>
+      document.body.querySelector('[aria-label="Searching projects"]');
+    await renderModal();
+
+    await typeInto(searchInput(), 'alpha');
+    // Shown from the first keystroke, before the debounced request is sent.
+    expect(spinner()).not.toBeNull();
+    expect(mockListProjects).toHaveBeenCalledTimes(1);
+
+    await wait(PROJECT_SEARCH_DEBOUNCE_MS + 100);
+    expect(mockListProjects).toHaveBeenLastCalledWith('alpha');
+    expect(spinner()).not.toBeNull();
+    expect(rowText('Alpha')).toBe(true);
+
+    await act(async () => {
+      resolveSearch([]);
+    });
+    expect(spinner()).toBeNull();
+  });
+
   it('ignores a project list from an older request', async () => {
     let resolveFirst: (projects: typeof PROJECTS) => void = () => undefined;
     mockListProjects
@@ -215,16 +261,19 @@ describe('ProjectSelectorModal', () => {
       )
       .mockResolvedValueOnce([PROJECTS[1]]);
 
-    await renderModal('alpha-project');
-    // A new selectedProjectId re-runs the effect, so a second request starts.
-    await renderModal('beta-project');
+    await renderModal();
+    // Searching starts a second request while the first is still pending.
+    await typeInto(searchInput(), 'beta');
+    await wait(PROJECT_SEARCH_DEBOUNCE_MS + 100);
     expect(mockListProjects).toHaveBeenCalledTimes(2);
-    expect(rowIds()).toEqual(['beta-project']);
 
     await act(async () => {
       resolveFirst(PROJECTS);
     });
-    expect(rowIds()).toEqual(['beta-project']);
+    // "project" matches every listed project: the late first page was dropped.
+    await typeInto(searchInput(), 'project');
+    expect(rowText('Beta')).toBe(true);
+    expect(rowText('Alpha')).toBe(false);
   });
 
   it('Enter picks the top match and a second Enter confirms it', async () => {

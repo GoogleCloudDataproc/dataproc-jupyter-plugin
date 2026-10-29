@@ -16,10 +16,8 @@
  */
 
 import { Notification } from '@jupyterlab/apputils';
-import { API_HEADER_BEARER, API_HEADER_CONTENT_TYPE } from './const';
-import { authApi, loggedFetch } from './utils';
-
-const BIGLAKE_API_URL = 'https://biglake.googleapis.com';
+import { requestAPI } from '../handler/handler';
+import { authApi } from './utils';
 
 /**
  * A Lakehouse runtime catalog. Catalogs are project-scoped, so the name looks
@@ -47,6 +45,9 @@ export interface IHiveCatalogsResponse extends ILakehouseErrorResponse {
   catalogs?: ILakehouseCatalog[];
 }
 
+/** Lakehouse runtime catalog endpoints listed by the `biglakeCatalogs` route. */
+type LakehouseCatalogEndpoint = 'iceberg' | 'hive';
+
 /**
  * Extracts short catalog ID from full resource name
  * e.g., 'projects/test-proj/catalogs/iceberg_catalog_01' -> 'iceberg_catalog_01'
@@ -67,7 +68,7 @@ export const extractCatalogId = (catalogResourceName: string): string => {
 const listLakehouseCatalogIds = async <T extends ILakehouseErrorResponse>(
   projectId: string,
   label: string,
-  buildPath: (encodedProjectId: string) => string,
+  endpoint: LakehouseCatalogEndpoint,
   readCatalogs: (data: T) => ILakehouseCatalog[] | undefined
 ): Promise<string[]> => {
   try {
@@ -81,34 +82,25 @@ const listLakehouseCatalogIds = async <T extends ILakehouseErrorResponse>(
       return [];
     }
 
-    // The project ID can be typed by the user, so encode it for the path.
-    const url = BIGLAKE_API_URL + buildPath(encodeURIComponent(targetProject));
-
-    const resp = await loggedFetch(url, {
-      method: 'GET',
-      headers: {
-        'Content-Type': API_HEADER_CONTENT_TYPE,
-        Authorization: API_HEADER_BEARER + credentials.access_token
-      }
-    });
-
-    const data = (await resp.json()) as T;
-
-    if (!resp.ok || data?.error) {
-      const errorMsg =
-        data?.error?.message ||
-        `Failed to fetch ${label} catalogs (${resp.status}: ${resp.statusText})`;
-      Notification.emit(errorMsg, 'error', { autoClose: 5000 });
-      return [];
-    }
+    // These BigLake endpoints don't answer CORS preflight requests, so the
+    // browser can't call them; the Jupyter server makes the request instead.
+    // Errors come back with an error status, so requestAPI throws with their
+    // message, such as BigLake's own.
+    const params = new URLSearchParams({ endpoint, project_id: targetProject });
+    const data = await requestAPI<T>(`biglakeCatalogs?${params.toString()}`);
 
     return (readCatalogs(data) ?? [])
       .map(catalog => extractCatalogId(catalog.name))
       .filter(catalogId => catalogId !== '');
   } catch (error) {
-    Notification.emit(`Error fetching ${label} catalogs: ${error}`, 'error', {
-      autoClose: 5000
-    });
+    const reason = error instanceof Error ? error.message : String(error);
+    Notification.emit(
+      reason
+        ? `Failed to fetch ${label} catalogs: ${reason}`
+        : `Failed to fetch ${label} catalogs`,
+      'error',
+      { autoClose: 5000 }
+    );
     return [];
   }
 };
@@ -120,8 +112,7 @@ export const listIcebergCatalogsAPI = (projectId: string): Promise<string[]> =>
   listLakehouseCatalogIds<IIcebergCatalogsResponse>(
     projectId,
     'Iceberg REST',
-    project =>
-      `/iceberg/v1/restcatalog/extensions/projects/${project}/catalogs`,
+    'iceberg',
     data => data['iceberg-catalogs']
   );
 
@@ -130,6 +121,6 @@ export const listHiveCatalogsAPI = (projectId: string): Promise<string[]> =>
   listLakehouseCatalogIds<IHiveCatalogsResponse>(
     projectId,
     'Hive',
-    project => `/hive/v1/projects/${project}/catalogs`,
+    'hive',
     data => data.catalogs
   );

@@ -32,13 +32,25 @@ import {
   DEFAULT_SSD_DISK_SIZE,
   DISK_TIER_HDD,
   DISK_TIER_SSD,
+  ExecutorCategoryType,
   HDD_DISK_SIZES,
+  IAutoscalingConfig,
   ICreateRuntimeProfilePayload,
   IExecutorAndDriverConfig,
   IExecutorAndDriverDraftConfig,
   IMachineTypeOption,
-  SSD_DISK_SIZES
+  IMetastoreConfig,
+  INetworkAndSecurityConfig,
+  IRuntimeProfileFormInitialValues,
+  ISessionLifecycleConfig,
+  SSD_DISK_SIZES,
+  SparkProperties,
+  TimeUnit
 } from './runtimeProfileInterface';
+import {
+  IRuntimeProfileTemplate,
+  parseRuntimeProfileResourceName
+} from './runtimeProfileListMapper';
 
 // Lakehouse runtime catalog properties. Like DATAPROC_TIER_PROPERTY, the keys
 // without the `spark.` prefix are read by the Dataproc service, not by Spark.
@@ -279,6 +291,340 @@ export const getLakehouseCatalogResource = (
   catalogId: string
 ): string => `projects/${project}/catalogs/${catalogId}`;
 
+/** Property key without the `spark:` / `dataproc:` prefix the API may return. */
+const normalizePropertyKey = (key: string): string =>
+  key.replace(/^(?:spark|dataproc):/, '');
+
+/** Value of a property under its plain key or its `spark:` / `dataproc:` prefixed key. */
+const findPropertyValue = (
+  properties: Record<string, string>,
+  key: string
+): string | undefined =>
+  properties[key] ??
+  properties[`spark:${key}`] ??
+  properties[`dataproc:${key}`];
+
+/** Seconds in each session lifecycle time unit. */
+export const TTL_UNIT_SECONDS: Record<TimeUnit, number> = {
+  seconds: 1,
+  s: 1,
+  minutes: 60,
+  m: 60,
+  hours: 3600,
+  h: 3600,
+  days: 86400,
+  d: 86400
+};
+
+/**
+ * Splits a TTL such as '3600s' or '2 hours' into its largest whole unit, e.g.
+ * 1 hour. Empty or unreadable values return the given defaults.
+ */
+export const parseTtlToQuantityAndUnit = (
+  ttl: string | undefined,
+  defaultQty: number,
+  defaultUnit: TimeUnit
+): { quantity: number; unit: TimeUnit } => {
+  const trimmed = ttl?.trim() || '';
+  if (!trimmed) {
+    return { quantity: defaultQty, unit: defaultUnit };
+  }
+  const secMatch = /^(\d+)\s*s$/i.exec(trimmed);
+  if (secMatch) {
+    const secs = Number(secMatch[1]);
+    if (secs > 0) {
+      if (secs % 86400 === 0) {
+        return { quantity: secs / 86400, unit: 'days' };
+      }
+      if (secs % 3600 === 0) {
+        return { quantity: secs / 3600, unit: 'hours' };
+      }
+      if (secs % 60 === 0) {
+        return { quantity: secs / 60, unit: 'minutes' };
+      }
+      return { quantity: secs, unit: 'seconds' };
+    }
+  }
+  const genericMatch = /^(\d+)\s*([a-zA-Z]+)$/.exec(trimmed);
+  if (genericMatch) {
+    const qty = parseInt(genericMatch[1], 10);
+    const rawUnit = genericMatch[2].toLowerCase();
+    if (!Number.isNaN(qty) && qty > 0) {
+      if (rawUnit.startsWith('d')) {
+        return { quantity: qty, unit: 'days' };
+      }
+      if (rawUnit.startsWith('h')) {
+        return { quantity: qty, unit: 'hours' };
+      }
+      if (rawUnit.startsWith('m')) {
+        return { quantity: qty, unit: 'minutes' };
+      }
+      if (rawUnit.startsWith('s')) {
+        return { quantity: qty, unit: 'seconds' };
+      }
+    }
+  }
+  return { quantity: defaultQty, unit: defaultUnit };
+};
+
+/**
+ * Duration for executionConfig.idleTtl / ttl, e.g. 60 minutes -> '3600s'.
+ * Undefined when the time is unset or reads as 'None'.
+ */
+export const toTtlDurationString = (
+  quantity?: number,
+  unit?: TimeUnit,
+  fallbackText?: string
+): string | undefined => {
+  if (
+    typeof quantity === 'number' &&
+    !Number.isNaN(quantity) &&
+    quantity > 0 &&
+    unit
+  ) {
+    const multiplier = TTL_UNIT_SECONDS[unit] ?? 60;
+    return `${quantity * multiplier}s`;
+  }
+  if (fallbackText && fallbackText.trim()) {
+    const parsed = parseTtlToQuantityAndUnit(fallbackText, 0, 'seconds');
+    if (parsed.quantity > 0) {
+      return `${parsed.quantity * TTL_UNIT_SECONDS[parsed.unit]}s`;
+    }
+  }
+  return undefined;
+};
+
+/** Bucket name for executionConfig.stagingBucket; empty or 'Auto' means unset. */
+const normalizeStagingBucket = (bucket?: string): string | undefined => {
+  const name = bucket
+    ?.trim()
+    .replace(/^gs:\/\//, '')
+    .replace(/\/+$/, '');
+  return name && name.toLowerCase() !== 'auto' ? name : undefined;
+};
+
+/**
+ * Lakehouse runtime catalog properties for the metastore settings, in the
+ * order they are applied. Empty unless the Lakehouse runtime catalog is
+ * selected; the untouched default config sends nothing, so the service uses
+ * the Lakehouse runtime catalog in the profile's project.
+ */
+export const buildLakehouseProperties = (
+  metastoreConfig: IMetastoreConfig | undefined,
+  projectId: string,
+  region: string
+): Record<string, string> => {
+  const lakehouseProperties: Record<string, string> = {};
+  if (metastoreConfig?.metastoreType !== 'lakehouse') {
+    return lakehouseProperties;
+  }
+  // When two rules produce the same key, the first one wins.
+  const add = (key: string, value: string): void => {
+    if (lakehouseProperties[key] === undefined) {
+      lakehouseProperties[key] = value;
+    }
+  };
+  const isIcebergEnabled = metastoreConfig.icebergRestEndpointEnabled ?? true;
+  const isHiveEnabled = Boolean(metastoreConfig.hiveEndpointEnabled);
+  const hiveProject = metastoreConfig.hiveProjectId || projectId;
+
+  if (isIcebergEnabled) {
+    const icebergProject = metastoreConfig.projectId || projectId;
+    add(LAKEHOUSE_PROJECT_PROPERTY, icebergProject);
+
+    if (metastoreConfig.catalogSelectionMode === 'existing') {
+      // An existing catalog becomes the default catalog.
+      if (metastoreConfig.catalogId) {
+        const catalogResource = getLakehouseCatalogResource(
+          icebergProject,
+          metastoreConfig.catalogId
+        );
+        add(
+          LAKEHOUSE_CATALOG_PROPERTY_PREFIX + metastoreConfig.catalogId,
+          catalogResource
+        );
+        add(LAKEHOUSE_DEFAULT_CATALOG_PROPERTY, catalogResource);
+      }
+    } else {
+      // New default catalog, created by the service in the project above.
+      const catalogName =
+        metastoreConfig.catalogName || getDefaultLakehouseCatalogName(region);
+      if (catalogName) {
+        add(
+          LAKEHOUSE_CATALOG_PROPERTY_PREFIX + catalogName,
+          getLakehouseCatalogResource(icebergProject, catalogName)
+        );
+        add(LAKEHOUSE_DEFAULT_CATALOG_PROPERTY, catalogName);
+      }
+    }
+  } else if (isHiveEnabled) {
+    // Hive only: the Lakehouse project is the Hive endpoint's project.
+    add(LAKEHOUSE_PROJECT_PROPERTY, hiveProject);
+  }
+
+  // The Hive endpoint registers its catalog but never sets the default
+  // catalog, which belongs to the Iceberg REST endpoint.
+  if (isHiveEnabled && metastoreConfig.hiveCatalogName) {
+    add(
+      LAKEHOUSE_CATALOG_PROPERTY_PREFIX + metastoreConfig.hiveCatalogName,
+      getLakehouseCatalogResource(
+        hiveProject,
+        metastoreConfig.hiveCatalogId || metastoreConfig.hiveCatalogName
+      )
+    );
+  }
+  return lakehouseProperties;
+};
+
+/** Dataproc Metastore service for peripheralsConfig, when one is selected. */
+export const getDataprocMetastoreService = (
+  metastoreConfig?: IMetastoreConfig
+): string | undefined =>
+  metastoreConfig?.metastoreType === 'dataproc' &&
+  metastoreConfig.dataprocMetastoreService &&
+  metastoreConfig.dataprocMetastoreService !== METASTORE_NONE
+    ? metastoreConfig.dataprocMetastoreService
+    : undefined;
+
+type ExecutionConfigPayload = NonNullable<
+  NonNullable<
+    ISessionTemplateApiPayload['environmentConfig']
+  >['executionConfig']
+>;
+
+/**
+ * executionConfig.subnetworkUri for the network settings. Throws when a
+ * network is selected without a subnetwork.
+ */
+const buildSubnetworkUri = (
+  networkConfig: INetworkAndSecurityConfig | undefined,
+  region: string
+): string | undefined => {
+  if (networkConfig?.networkSource === 'shared_from_host') {
+    const sharedSub = networkConfig.sharedSubnetwork?.trim();
+    const hostProject = networkConfig.hostProjectId?.trim();
+    if (!sharedSub) {
+      throw new Error(
+        'Shared subnetwork is required when shared VPC network is selected.'
+      );
+    }
+    return sharedSub.startsWith('projects/') || !hostProject
+      ? sharedSub
+      : `projects/${hostProject}/regions/${region}/subnetworks/${sharedSub}`;
+  }
+  if (!networkConfig) {
+    return undefined;
+  }
+  const subnetworkUri = networkConfig.subnetwork?.trim() || undefined;
+  const selectedNetwork = (
+    networkConfig.primaryNetwork || networkConfig.networkInThisProject
+  )?.trim();
+  // Without a selected network the service uses the default network, so a
+  // subnetwork is only required once a network is chosen.
+  if (!subnetworkUri && selectedNetwork) {
+    throw new Error(
+      'Subnetwork is required when a project network is selected.'
+    );
+  }
+  return subnetworkUri;
+};
+
+/** executionConfig.networkTags; unset when there are none. */
+const buildNetworkTags = (
+  networkConfig: INetworkAndSecurityConfig | undefined
+): string[] | undefined =>
+  networkConfig?.networkTags && networkConfig.networkTags.length > 0
+    ? networkConfig.networkTags
+    : undefined;
+
+/**
+ * executionConfig.kmsKey for customer-managed encryption. Throws when that is
+ * selected without a key.
+ */
+const buildKmsKey = (
+  networkConfig: INetworkAndSecurityConfig | undefined,
+  projectId: string,
+  region: string
+): string | undefined => {
+  if (networkConfig?.encryption !== 'customer_managed_key') {
+    return undefined;
+  }
+  const keyRing = networkConfig.keyRing?.trim();
+  const cryptoKey = networkConfig.cryptoKey?.trim();
+  const manualKeyName = networkConfig.kmsKeyName?.trim();
+  let kmsKey: string | undefined;
+  if (networkConfig.kmsKeySelectionMode !== 'manual' && keyRing && cryptoKey) {
+    kmsKey = `projects/${projectId}/locations/${region}/keyRings/${keyRing}/cryptoKeys/${cryptoKey}`;
+  } else if (manualKeyName) {
+    kmsKey = manualKeyName;
+  }
+  if (!kmsKey) {
+    throw new Error(
+      'Customer-managed encryption key (Cloud KMS key) is required when customer-managed encryption is selected.'
+    );
+  }
+  return kmsKey;
+};
+
+/** executionConfig.serviceAccount; only set for the service account identity. */
+const buildServiceAccount = (
+  networkConfig: INetworkAndSecurityConfig | undefined
+): string | undefined =>
+  networkConfig?.executionIdentity === 'service_account'
+    ? networkConfig.serviceAccount?.trim() || undefined
+    : undefined;
+
+/**
+ * executionConfig network, encryption and identity fields for the Network and
+ * security settings. Throws when a required value is missing.
+ */
+export const buildNetworkExecutionConfig = (
+  networkConfig: INetworkAndSecurityConfig | undefined,
+  projectId: string,
+  region: string
+): ExecutionConfigPayload => {
+  const subnetworkUri = buildSubnetworkUri(networkConfig, region);
+  const networkTags = buildNetworkTags(networkConfig);
+  const kmsKey = buildKmsKey(networkConfig, projectId, region);
+  const serviceAccount = buildServiceAccount(networkConfig);
+  const isUserAccount = networkConfig?.executionIdentity === 'user_account';
+
+  return {
+    ...(subnetworkUri && { subnetworkUri }),
+    ...(networkTags && { networkTags }),
+    ...(kmsKey && { kmsKey }),
+    ...(serviceAccount && { serviceAccount }),
+    ...(isUserAccount && {
+      authentication_config: {
+        user_workload_authentication_type: 'END_USER_CREDENTIALS'
+      }
+    })
+  };
+};
+
+/** executionConfig idleTtl / ttl for the Session lifecycle settings. */
+export const buildSessionLifecycleTtls = (
+  lifecycleConfig?: ISessionLifecycleConfig
+): Pick<ExecutionConfigPayload, 'idleTtl' | 'ttl'> => {
+  if (!lifecycleConfig) {
+    return {};
+  }
+  const idleTtl = toTtlDurationString(
+    lifecycleConfig.maxIdleTimeQuantity,
+    lifecycleConfig.maxIdleTimeUnit,
+    lifecycleConfig.maxIdleTime
+  );
+  const ttl = toTtlDurationString(
+    lifecycleConfig.maxSessionTimeQuantity,
+    lifecycleConfig.maxSessionTimeUnit,
+    lifecycleConfig.maxSessionTime
+  );
+  return {
+    ...(idleTtl && { idleTtl }),
+    ...(ttl && { ttl })
+  };
+};
+
 /**
  * Maps ICreateRuntimeProfilePayload to Dataproc SessionTemplate API payload schema
  */
@@ -300,9 +646,20 @@ export function mapRuntimeProfileToSessionTemplate(
     ...(payload.sparkProperties || {})
   };
 
+  // Derived values never override the user's sparkProperties, whether the
+  // user wrote the key with or without a `spark:` / `dataproc:` prefix.
   /** Sets a derived property only if the user did not provide it in sparkProperties. */
   const setIfAbsent = (key: string, value?: string): void => {
-    if (value !== undefined && properties[key] === undefined) {
+    if (
+      value !== undefined &&
+      findPropertyValue(properties, key) === undefined
+    ) {
+      properties[key] = value;
+    }
+  };
+  /** Sets a derived property unless the properties already have a value for it. */
+  const setIfEmpty = (key: string, value: string): void => {
+    if (!findPropertyValue(properties, key)) {
       properties[key] = value;
     }
   };
@@ -351,29 +708,25 @@ export function mapRuntimeProfileToSessionTemplate(
     executorAndDriverConfig?.driverMachineType
   );
   if (driverMachine) {
-    if (!properties['spark.driver.cores']) {
-      properties['spark.driver.cores'] = String(driverMachine.cores);
-    }
-    if (!properties['spark.driver.memory']) {
-      properties['spark.driver.memory'] = driverMachine.memory;
-    }
+    setIfEmpty('spark.driver.cores', String(driverMachine.cores));
+    setIfEmpty('spark.driver.memory', driverMachine.memory);
   }
 
   const driverDisk = parseDiskSpec(
     executorAndDriverConfig?.driverDisk,
     DEFAULT_DISK_SIZE
   );
-  if (driverDisk.tier && !properties['spark.dataproc.driver.disk.tier']) {
+  if (
+    driverDisk.tier &&
+    !findPropertyValue(properties, 'spark.dataproc.driver.disk.tier')
+  ) {
     properties['spark.dataproc.driver.disk.tier'] = driverDisk.tier;
-    if (
-      driverDisk.tier === 'premium' &&
-      !properties['spark.dataproc.driver.compute.tier']
-    ) {
-      properties['spark.dataproc.driver.compute.tier'] = 'premium';
+    if (driverDisk.tier === 'premium') {
+      setIfEmpty('spark.dataproc.driver.compute.tier', 'premium');
     }
   }
-  if (driverDisk.size && !properties['spark.dataproc.driver.disk.size']) {
-    properties['spark.dataproc.driver.disk.size'] = driverDisk.size;
+  if (driverDisk.size) {
+    setIfEmpty('spark.dataproc.driver.disk.size', driverDisk.size);
   }
 
   // Executor machine type & accelerator properties
@@ -384,12 +737,8 @@ export function mapRuntimeProfileToSessionTemplate(
 
   const executorMachine = parseMachineTypeSpec(executorMachineType);
   if (executorMachine) {
-    if (!properties['spark.executor.cores']) {
-      properties['spark.executor.cores'] = String(executorMachine.cores);
-    }
-    if (!properties['spark.executor.memory']) {
-      properties['spark.executor.memory'] = executorMachine.memory;
-    }
+    setIfEmpty('spark.executor.cores', String(executorMachine.cores));
+    setIfEmpty('spark.executor.memory', executorMachine.memory);
     // High-memory shapes (e.g. highmem-4 with 32 GB RAM for 4 cores = 8 GB/core) exceed the
     // Standard compute tier memory limit of 7,424 MB per core (including 40% memoryOverhead).
     // Dataproc Serverless requires 'premium' compute tier for highmem executor shapes.
@@ -399,29 +748,24 @@ export function mapRuntimeProfileToSessionTemplate(
         (memoryToMb(executorMachine.memory) * 1.4) / executorMachine.cores >
           7424);
 
-    if (
-      (isHighmemShape || executorMachine.acceleratorType) &&
-      !properties['spark.dataproc.executor.compute.tier']
-    ) {
-      properties['spark.dataproc.executor.compute.tier'] = 'premium';
+    if (isHighmemShape || executorMachine.acceleratorType) {
+      setIfEmpty('spark.dataproc.executor.compute.tier', 'premium');
     }
 
     if (executorMachine.acceleratorType) {
-      if (!properties['spark.dataproc.executor.resource.accelerator.type']) {
-        properties['spark.dataproc.executor.resource.accelerator.type'] =
-          executorMachine.acceleratorType;
-      }
+      setIfEmpty(
+        'spark.dataproc.executor.resource.accelerator.type',
+        executorMachine.acceleratorType
+      );
     }
   }
 
   if (payload.executorConfig?.executorType === 'accelerated') {
-    if (!properties['spark.dataproc.executor.compute.tier']) {
-      properties['spark.dataproc.executor.compute.tier'] = 'premium';
-    }
-    if (!properties['spark.dataproc.executor.resource.accelerator.type']) {
-      properties['spark.dataproc.executor.resource.accelerator.type'] =
-        DATAPROC_DEFAULT_ACCELERATOR;
-    }
+    setIfEmpty('spark.dataproc.executor.compute.tier', 'premium');
+    setIfEmpty(
+      'spark.dataproc.executor.resource.accelerator.type',
+      DATAPROC_DEFAULT_ACCELERATOR
+    );
   }
 
   // Executor disk properties
@@ -429,69 +773,17 @@ export function mapRuntimeProfileToSessionTemplate(
     executorAndDriverConfig?.executorDisk,
     DEFAULT_DISK_SIZE
   );
-  if (executorDisk.tier && !properties['spark.dataproc.executor.disk.tier']) {
-    properties['spark.dataproc.executor.disk.tier'] = executorDisk.tier;
+  if (executorDisk.tier) {
+    setIfEmpty('spark.dataproc.executor.disk.tier', executorDisk.tier);
   }
-  if (executorDisk.size && !properties['spark.dataproc.executor.disk.size']) {
-    properties['spark.dataproc.executor.disk.size'] = executorDisk.size;
+  if (executorDisk.size) {
+    setIfEmpty('spark.dataproc.executor.disk.size', executorDisk.size);
   }
 
-  // Lakehouse runtime catalog. The untouched default config sends nothing, so
-  // the service uses the Lakehouse runtime catalog in the profile's project.
-  // Derived values never override the user's sparkProperties.
-  const metastoreConfig = payload.metastoreConfig;
-  if (metastoreConfig?.metastoreType === 'lakehouse') {
-    const isIcebergEnabled = metastoreConfig.icebergRestEndpointEnabled ?? true;
-    const isHiveEnabled = Boolean(metastoreConfig.hiveEndpointEnabled);
-    const hiveProject = metastoreConfig.hiveProjectId || projectId;
-
-    if (isIcebergEnabled) {
-      const icebergProject = metastoreConfig.projectId || projectId;
-      setIfAbsent(LAKEHOUSE_PROJECT_PROPERTY, icebergProject);
-
-      if (metastoreConfig.catalogSelectionMode === 'existing') {
-        // An existing catalog becomes the default catalog.
-        if (metastoreConfig.catalogId) {
-          const catalogResource = getLakehouseCatalogResource(
-            icebergProject,
-            metastoreConfig.catalogId
-          );
-          setIfAbsent(
-            LAKEHOUSE_CATALOG_PROPERTY_PREFIX + metastoreConfig.catalogId,
-            catalogResource
-          );
-          setIfAbsent(LAKEHOUSE_DEFAULT_CATALOG_PROPERTY, catalogResource);
-        }
-      } else {
-        // New default catalog, created by the service in the project above.
-        const catalogName =
-          metastoreConfig.catalogName ||
-          getDefaultLakehouseCatalogName(targetRegion);
-        if (catalogName) {
-          setIfAbsent(
-            LAKEHOUSE_CATALOG_PROPERTY_PREFIX + catalogName,
-            getLakehouseCatalogResource(icebergProject, catalogName)
-          );
-          setIfAbsent(LAKEHOUSE_DEFAULT_CATALOG_PROPERTY, catalogName);
-        }
-      }
-    } else if (isHiveEnabled) {
-      // Hive only: the Lakehouse project is the Hive endpoint's project.
-      setIfAbsent(LAKEHOUSE_PROJECT_PROPERTY, hiveProject);
-    }
-
-    // The Hive endpoint registers its catalog but never sets the default
-    // catalog, which belongs to the Iceberg REST endpoint.
-    if (isHiveEnabled && metastoreConfig.hiveCatalogName) {
-      setIfAbsent(
-        LAKEHOUSE_CATALOG_PROPERTY_PREFIX + metastoreConfig.hiveCatalogName,
-        getLakehouseCatalogResource(
-          hiveProject,
-          metastoreConfig.hiveCatalogId || metastoreConfig.hiveCatalogName
-        )
-      );
-    }
-  }
+  // Lakehouse runtime catalog
+  Object.entries(
+    buildLakehouseProperties(payload.metastoreConfig, projectId, targetRegion)
+  ).forEach(([key, value]) => setIfAbsent(key, value));
 
   // Runtime Config
   const runtimeVersion = extractRuntimeVersion(
@@ -526,95 +818,20 @@ export function mapRuntimeProfileToSessionTemplate(
   };
 
   // Dataproc Metastore service
-  const metastoreService =
-    metastoreConfig?.metastoreType === 'dataproc' &&
-    metastoreConfig.dataprocMetastoreService &&
-    metastoreConfig.dataprocMetastoreService !== METASTORE_NONE
-      ? metastoreConfig.dataprocMetastoreService
-      : undefined;
+  const metastoreService = getDataprocMetastoreService(payload.metastoreConfig);
 
-  // Execution Config (Network & Security)
-  let subnetworkUri: string | undefined;
-  if (payload.networkAndSecurityConfig?.networkSource === 'shared_from_host') {
-    const sharedSub = payload.networkAndSecurityConfig.sharedSubnetwork?.trim();
-    const hostProject = payload.networkAndSecurityConfig.hostProjectId?.trim();
-    if (!sharedSub) {
-      throw new Error(
-        'Shared subnetwork is required when shared VPC network is selected.'
-      );
-    }
-    subnetworkUri =
-      sharedSub.startsWith('projects/') || !hostProject
-        ? sharedSub
-        : `projects/${hostProject}/regions/${targetRegion}/subnetworks/${sharedSub}`;
-  } else if (payload.networkAndSecurityConfig) {
-    subnetworkUri =
-      payload.networkAndSecurityConfig.subnetwork?.trim() || undefined;
-    const selectedNetwork = (
-      payload.networkAndSecurityConfig.primaryNetwork ||
-      payload.networkAndSecurityConfig.networkInThisProject
-    )?.trim();
-    if (
-      !subnetworkUri &&
-      (payload.networkAndSecurityConfig.networkSource === 'project' ||
-        selectedNetwork)
-    ) {
-      throw new Error(
-        'Subnetwork is required when a project network is selected.'
-      );
-    }
-  }
-
-  const networkTags =
-    payload.networkAndSecurityConfig?.networkTags &&
-    payload.networkAndSecurityConfig.networkTags.length > 0
-      ? payload.networkAndSecurityConfig.networkTags
-      : undefined;
-
-  let kmsKey: string | undefined;
-  if (payload.networkAndSecurityConfig?.encryption === 'customer_managed_key') {
-    const keyRing = payload.networkAndSecurityConfig.keyRing?.trim();
-    const cryptoKey = payload.networkAndSecurityConfig.cryptoKey?.trim();
-    const manualKeyName = payload.networkAndSecurityConfig.kmsKeyName?.trim();
-    if (
-      payload.networkAndSecurityConfig.kmsKeySelectionMode !== 'manual' &&
-      keyRing &&
-      cryptoKey
-    ) {
-      kmsKey = `projects/${projectId}/locations/${targetRegion}/keyRings/${keyRing}/cryptoKeys/${cryptoKey}`;
-    } else if (manualKeyName) {
-      kmsKey = manualKeyName;
-    }
-    if (!kmsKey) {
-      throw new Error(
-        'Customer-managed encryption key (Cloud KMS key) is required when customer-managed encryption is selected.'
-      );
-    }
-  }
-
-  const isUserAccount =
-    payload.networkAndSecurityConfig?.executionIdentity === 'user_account';
-  const isServiceAccount =
-    payload.networkAndSecurityConfig?.executionIdentity === 'service_account';
-
-  const serviceAccount = isServiceAccount
-    ? payload.networkAndSecurityConfig?.serviceAccount?.trim() || undefined
-    : undefined;
-
-  const executionConfig: NonNullable<
-    NonNullable<
-      ISessionTemplateApiPayload['environmentConfig']
-    >['executionConfig']
-  > = {
-    ...(subnetworkUri && { subnetworkUri }),
-    ...(networkTags && { networkTags }),
-    ...(kmsKey && { kmsKey }),
-    ...(serviceAccount && { serviceAccount }),
-    ...(isUserAccount && {
-      authentication_config: {
-        user_workload_authentication_type: 'END_USER_CREDENTIALS'
-      }
-    })
+  // Execution Config (Network & Security, staging bucket, session lifecycle)
+  const stagingBucket = normalizeStagingBucket(
+    payload.runtimeEnvironmentConfig?.stagingBucket
+  );
+  const executionConfig: ExecutionConfigPayload = {
+    ...buildNetworkExecutionConfig(
+      payload.networkAndSecurityConfig,
+      projectId,
+      targetRegion
+    ),
+    ...(stagingBucket && { stagingBucket }),
+    ...buildSessionLifecycleTtls(payload.sessionLifecycleConfig)
   };
 
   const hasExecutionConfig = Object.keys(executionConfig).length > 0;
@@ -680,7 +897,7 @@ export const parseDiskTierAndSize = (
 };
 
 /**
- * Normalizes a machine type string or display label (e.g. 'highmem-4 (4 vCPU, 32 GB)' or 'L4 (4 cores)')
+ * Normalizes a machine type string or display label (e.g. 'highmem-4 (4 vCPU, 32 GB)' or 'L4 (4 vCPU)')
  * to its canonical machine type name (e.g. 'highmem-4' or 'l4-4').
  */
 export const normalizeMachineTypeName = (
@@ -1073,3 +1290,935 @@ export const getDiskHelperText = (
   }
   return DISK_HELPER_TEXT_DEFAULT;
 };
+
+/**
+ * A group of Spark properties that one form control derives (see
+ * mapRuntimeProfileToSessionTemplate). When an edit changes the control, the
+ * whole group is rewritten, so values that belong together (e.g. an executor
+ * shape and the compute tier it needs) stay consistent.
+ */
+interface IPropertyGroup {
+  keys: string[];
+  owns: (key: string) => boolean;
+  /** Set only by its control; a value typed in Spark properties is ignored. */
+  isControlOnly?: boolean;
+}
+
+const propertyGroup = (
+  keys: string[],
+  isControlOnly = false
+): IPropertyGroup => {
+  const keySet = new Set(keys);
+  return { keys, owns: key => keySet.has(key), isControlOnly };
+};
+
+const CONTROL_PROPERTY_GROUPS: IPropertyGroup[] = [
+  propertyGroup([DATAPROC_TIER_PROPERTY], true),
+  propertyGroup([DATAPROC_LIGHTNING_ENGINE_PROPERTY], true),
+  propertyGroup(['spark.dynamicAllocation.enabled']),
+  propertyGroup(['spark.dynamicAllocation.initialExecutors']),
+  propertyGroup(['spark.dynamicAllocation.minExecutors']),
+  propertyGroup(['spark.dynamicAllocation.maxExecutors']),
+  propertyGroup(['spark.driver.cores', 'spark.driver.memory']),
+  propertyGroup([
+    'spark.dataproc.driver.disk.tier',
+    'spark.dataproc.driver.disk.size',
+    'spark.dataproc.driver.compute.tier'
+  ]),
+  propertyGroup([
+    'spark.executor.cores',
+    'spark.executor.memory',
+    'spark.dataproc.executor.compute.tier',
+    'spark.dataproc.executor.resource.accelerator.type'
+  ]),
+  propertyGroup([
+    'spark.dataproc.executor.disk.tier',
+    'spark.dataproc.executor.disk.size'
+  ])
+];
+
+/** Spark properties that mapRuntimeProfileToSessionTemplate derives from form controls. */
+export const FORM_DERIVED_PROPERTY_KEYS: ReadonlySet<string> = new Set(
+  CONTROL_PROPERTY_GROUPS.reduce<string[]>(
+    (keys, group) => keys.concat(group.keys),
+    []
+  )
+);
+
+/** Known machine type with the given Spark cores and memory, e.g. 4 and '32g' -> highmem-4. */
+const findMachineType = (
+  cores: string | undefined,
+  memory: string | undefined,
+  category: ExecutorCategoryType
+): IMachineTypeOption | undefined => {
+  const memoryMb = memory ? memoryToMb(memory) : 0;
+  if (!cores || !memoryMb) {
+    return undefined;
+  }
+  return KNOWN_MACHINE_TYPES.find(
+    machine =>
+      machine.category === category &&
+      String(machine.vCPUs) === cores &&
+      memoryToMb(machine.memory) === memoryMb
+  );
+};
+
+/**
+ * Disk label that parseDiskSpec reads back to the same tier and size, e.g.
+ * 'standard' + '400g' -> 'Standard persistent disk, 400 GB'. Undefined when the
+ * values can't be represented that way.
+ */
+const formatDiskSpec = (tier?: string, size?: string): string | undefined => {
+  const normalizedTier = tier?.toLowerCase();
+  const sizeMatch = size?.match(/^(\d+)\s*g(?:i?b)?$/i);
+  if (
+    (normalizedTier !== 'standard' && normalizedTier !== 'premium') ||
+    !sizeMatch
+  ) {
+    return undefined;
+  }
+  const tierLabel = normalizedTier === 'premium' ? 'Premium' : 'Standard';
+  return `${tierLabel} persistent disk, ${sizeMatch[1]} GB`;
+};
+
+const DURATION_UNITS: Array<[number, TimeUnit]> = [
+  [86400, 'days'],
+  [3600, 'hours'],
+  [60, 'minutes'],
+  [1, 'seconds']
+];
+
+/** Splits a duration such as '3600s' into its largest whole unit (1 hour). */
+const parseDuration = (
+  duration?: string
+): { quantity: number; unit: TimeUnit; label: string } | undefined => {
+  const match = duration?.trim().match(/^(\d+)(?:\.\d+)?s$/);
+  if (!match) {
+    return undefined;
+  }
+  const seconds = Number(match[1]);
+  const [divisor, unit] =
+    DURATION_UNITS.find(([unitSeconds]) => seconds % unitSeconds === 0) ??
+    DURATION_UNITS[DURATION_UNITS.length - 1];
+  const quantity = seconds / divisor;
+  const unitLabel = quantity === 1 ? unit.slice(0, -1) : unit;
+  return { quantity, unit, label: `${quantity} ${unitLabel}` };
+};
+
+/** Catalog resource, e.g. 'projects/p/catalogs/c' or 'projects/p/locations/l/catalogs/c'. */
+const LAKEHOUSE_CATALOG_RESOURCE_PATTERN =
+  /^projects\/([^/]+)\/(?:locations\/[^/]+\/)?catalogs\/([^/]+)$/;
+
+/** Subnetwork resource name or URL, e.g. 'projects/p/regions/r/subnetworks/s'. */
+const SUBNETWORK_RESOURCE_PATTERN =
+  /(?:^|\/)projects\/([^/]+)\/regions\/[^/]+\/subnetworks\/([^/]+)$/;
+
+/** Project of a Dataproc Metastore service, e.g. 'projects/p/locations/l/services/s'. */
+const METASTORE_SERVICE_PROJECT_PATTERN = /^projects\/([^/]+)\//;
+
+type TemplateExecutionConfig = NonNullable<
+  IRuntimeProfileTemplate['environmentConfig']
+>['executionConfig'];
+
+/**
+ * Metastore settings of a session template, and the Lakehouse properties they
+ * represent (the form shows those in the Metastore section, not as Spark
+ * properties). `catalogs` holds the 'dataproc.lakehouse.catalog.*' properties
+ * as [catalog name, value].
+ */
+const mapMetastoreConfig = (
+  template: IRuntimeProfileTemplate,
+  getProperty: (key: string) => string | undefined,
+  catalogs: Array<[string, string]>,
+  projectId: string,
+  region: string
+): { metastoreConfig: IMetastoreConfig; mappedKeys: string[] } => {
+  const metastoreService =
+    template.environmentConfig?.peripheralsConfig?.metastoreService?.trim();
+  if (metastoreService) {
+    const serviceProject =
+      METASTORE_SERVICE_PROJECT_PATTERN.exec(metastoreService)?.[1];
+    return {
+      metastoreConfig: {
+        metastore: metastoreService,
+        metastoreType: 'dataproc',
+        // Unset means the profile's own project.
+        projectId:
+          serviceProject && serviceProject !== projectId
+            ? serviceProject
+            : undefined,
+        dataprocMetastoreService: metastoreService,
+        hiveEndpointEnabled: false
+      },
+      mappedKeys: []
+    };
+  }
+
+  const lakehouseProject = getProperty(LAKEHOUSE_PROJECT_PROPERTY);
+  const defaultCatalog = getProperty(LAKEHOUSE_DEFAULT_CATALOG_PROPERTY);
+  if (!lakehouseProject && !defaultCatalog && catalogs.length === 0) {
+    // Nothing set: the service's default Lakehouse runtime catalog.
+    return { metastoreConfig: { hiveEndpointEnabled: false }, mappedKeys: [] };
+  }
+
+  // An existing default catalog is stored by resource, a new one by name.
+  const existingCatalog = defaultCatalog
+    ? LAKEHOUSE_CATALOG_RESOURCE_PATTERN.exec(defaultCatalog)
+    : null;
+  const defaultCatalogName = existingCatalog
+    ? existingCatalog[2]
+    : defaultCatalog;
+  // Any other registered catalog is the Hive endpoint's.
+  const hiveCatalog = catalogs.find(
+    ([name, value]) => name !== defaultCatalogName && value !== defaultCatalog
+  );
+  const hiveResource = hiveCatalog
+    ? LAKEHOUSE_CATALOG_RESOURCE_PATTERN.exec(hiveCatalog[1])
+    : null;
+  const isIcebergEnabled = Boolean(defaultCatalog) || !hiveCatalog;
+  const icebergProject = existingCatalog?.[1] ?? lakehouseProject;
+
+  const mappedKeys = [
+    LAKEHOUSE_PROJECT_PROPERTY,
+    LAKEHOUSE_DEFAULT_CATALOG_PROPERTY
+  ];
+  if (
+    defaultCatalogName &&
+    catalogs.some(([name]) => name === defaultCatalogName)
+  ) {
+    mappedKeys.push(LAKEHOUSE_CATALOG_PROPERTY_PREFIX + defaultCatalogName);
+  }
+  if (hiveCatalog) {
+    mappedKeys.push(LAKEHOUSE_CATALOG_PROPERTY_PREFIX + hiveCatalog[0]);
+  }
+
+  return {
+    metastoreConfig: {
+      metastore: LAKEHOUSE_RUNTIME_CATALOG,
+      metastoreType: 'lakehouse',
+      // Unset means the profile's own project.
+      projectId:
+        isIcebergEnabled && icebergProject && icebergProject !== projectId
+          ? icebergProject
+          : undefined,
+      icebergRestEndpointEnabled: isIcebergEnabled,
+      catalogSelectionMode: isIcebergEnabled
+        ? existingCatalog
+          ? 'existing'
+          : 'new'
+        : undefined,
+      catalogId: existingCatalog?.[2],
+      // The region's default name isn't saved, so it follows region changes.
+      catalogName:
+        !existingCatalog &&
+        defaultCatalog &&
+        defaultCatalog !== getDefaultLakehouseCatalogName(region)
+          ? defaultCatalog
+          : undefined,
+      hiveEndpointEnabled: Boolean(hiveCatalog),
+      hiveProjectId:
+        hiveResource?.[1] ??
+        (hiveCatalog && !isIcebergEnabled ? lakehouseProject : undefined),
+      hiveCatalogId: hiveCatalog
+        ? hiveResource?.[2] ?? hiveCatalog[0]
+        : undefined,
+      hiveCatalogName: hiveCatalog?.[0]
+    },
+    mappedKeys
+  };
+};
+
+/** Network and security settings of a session template's execution config. */
+const mapNetworkAndSecurityConfig = (
+  executionConfig: TemplateExecutionConfig,
+  projectId: string,
+  runtimeVersion?: string
+): INetworkAndSecurityConfig => {
+  const subnetworkUri = executionConfig?.subnetworkUri?.trim() || undefined;
+  const networkUri = executionConfig?.networkUri?.trim() || undefined;
+  // A subnetwork in another project is shared from a Shared VPC host project.
+  const subnetworkResource = subnetworkUri
+    ? SUBNETWORK_RESOURCE_PATTERN.exec(subnetworkUri)
+    : null;
+  const hostProjectId =
+    subnetworkResource && subnetworkResource[1] !== projectId
+      ? subnetworkResource[1]
+      : undefined;
+
+  const authenticationType =
+    executionConfig?.authenticationConfig?.userWorkloadAuthenticationType;
+  // Without an authentication type, runtimes 3.0 and newer use end-user
+  // credentials and older runtimes use the service account.
+  const usesUserAccount =
+    authenticationType &&
+    authenticationType !== 'AUTHENTICATION_TYPE_UNSPECIFIED'
+      ? authenticationType === 'END_USER_CREDENTIALS'
+      : parseFloat(runtimeVersion ?? '') >= 3;
+  const kmsKey = executionConfig?.kmsKey?.trim() || undefined;
+
+  return {
+    networkSource: hostProjectId ? 'shared_from_host' : 'project',
+    ...(hostProjectId && subnetworkResource
+      ? { hostProjectId, sharedSubnetwork: subnetworkResource[2] }
+      : {
+          networkInThisProject: subnetworkUri || networkUri,
+          primaryNetwork: networkUri,
+          subnetwork: subnetworkUri
+        }),
+    networkTags: executionConfig?.networkTags,
+    executionIdentity: usesUserAccount ? 'user_account' : 'service_account',
+    serviceAccount: executionConfig?.serviceAccount,
+    encryption: kmsKey ? 'customer_managed_key' : 'google_managed',
+    ...(kmsKey && { kmsKeySelectionMode: 'manual', kmsKeyName: kmsKey })
+  };
+};
+
+/**
+ * Maps an existing session template to the runtime profile form's initial
+ * values (the reverse of mapRuntimeProfileToSessionTemplate), so the form can
+ * open in edit mode pre-filled with the profile's settings.
+ *
+ * Spark properties that a form control owns (tier, Lightning Engine, executor
+ * and driver shape, disks, autoscaling, Lakehouse runtime catalog) are mapped
+ * into that control's config. All other properties stay in
+ * initialSparkProperties under their original keys. A derived property that
+ * its control can't represent also stays there, so it is saved unchanged.
+ */
+export function mapSessionTemplateToFormValues(
+  template: IRuntimeProfileTemplate
+): IRuntimeProfileFormInitialValues {
+  const { region, profileId } = parseRuntimeProfileResourceName(template.name);
+  const projectId = template.name.split('/')[1] ?? '';
+  const rawProperties = template.runtimeConfig?.properties ?? {};
+
+  // Lookup by unprefixed key; an unprefixed key wins over its prefixed variants.
+  const properties: Record<string, string> = {};
+  Object.entries(rawProperties).forEach(([key, value]) => {
+    const normalizedKey = normalizePropertyKey(key);
+    if (key === normalizedKey || properties[normalizedKey] === undefined) {
+      properties[normalizedKey] = value;
+    }
+  });
+  const getProperty = (key: string): string | undefined =>
+    properties[key]?.trim() || undefined;
+  const mappedKeys = new Set<string>();
+  const markMapped = (...keys: string[]) =>
+    keys.forEach(key => mappedKeys.add(key));
+
+  // Dataproc defaults to the standard tier; Lightning Engine needs premium.
+  const lightningEngineEnabled =
+    getProperty(DATAPROC_LIGHTNING_ENGINE_PROPERTY) === 'lightningEngine';
+  const tierValue = getProperty(DATAPROC_TIER_PROPERTY)?.toLowerCase();
+  const tier =
+    tierValue === 'premium' || (!tierValue && lightningEngineEnabled)
+      ? 'Premium'
+      : 'Standard';
+  markMapped(DATAPROC_TIER_PROPERTY, DATAPROC_LIGHTNING_ENGINE_PROPERTY);
+
+  const executorCategory: ExecutorCategoryType = getProperty(
+    'spark.dataproc.executor.resource.accelerator.type'
+  )
+    ? 'accelerated'
+    : 'general';
+  const executorMachine = findMachineType(
+    getProperty('spark.executor.cores'),
+    getProperty('spark.executor.memory'),
+    executorCategory
+  );
+  if (executorMachine) {
+    markMapped(
+      'spark.executor.cores',
+      'spark.executor.memory',
+      'spark.dataproc.executor.compute.tier',
+      'spark.dataproc.executor.resource.accelerator.type'
+    );
+  }
+
+  const driverMachine = findMachineType(
+    getProperty('spark.driver.cores'),
+    getProperty('spark.driver.memory'),
+    'general'
+  );
+  if (driverMachine) {
+    markMapped('spark.driver.cores', 'spark.driver.memory');
+  }
+
+  const driverDisk = formatDiskSpec(
+    getProperty('spark.dataproc.driver.disk.tier'),
+    getProperty('spark.dataproc.driver.disk.size')
+  );
+  if (driverDisk) {
+    markMapped(
+      'spark.dataproc.driver.disk.tier',
+      'spark.dataproc.driver.disk.size'
+    );
+  }
+  const executorDisk = formatDiskSpec(
+    getProperty('spark.dataproc.executor.disk.tier'),
+    getProperty('spark.dataproc.executor.disk.size')
+  );
+  if (executorDisk) {
+    markMapped(
+      'spark.dataproc.executor.disk.tier',
+      'spark.dataproc.executor.disk.size'
+    );
+  }
+
+  const autoscalingConfig: IAutoscalingConfig = {};
+  const dynamicAllocation = getProperty(
+    'spark.dynamicAllocation.enabled'
+  )?.toLowerCase();
+  if (dynamicAllocation === 'true' || dynamicAllocation === 'false') {
+    autoscalingConfig.autoscalingEnabled = dynamicAllocation === 'true';
+    markMapped('spark.dynamicAllocation.enabled');
+  }
+  const executorCountKeys: Array<
+    ['initialExecutors' | 'minExecutors' | 'maxExecutors', string]
+  > = [
+    ['initialExecutors', 'spark.dynamicAllocation.initialExecutors'],
+    ['minExecutors', 'spark.dynamicAllocation.minExecutors'],
+    ['maxExecutors', 'spark.dynamicAllocation.maxExecutors']
+  ];
+  executorCountKeys.forEach(([field, key]) => {
+    const value = getProperty(key);
+    if (value && /^\d+$/.test(value)) {
+      autoscalingConfig[field] = Number(value);
+      markMapped(key);
+    }
+  });
+
+  // The Metastore section shows the Lakehouse properties it represents.
+  const lakehouseCatalogs = Object.entries(properties)
+    .filter(([key]) => key.startsWith(LAKEHOUSE_CATALOG_PROPERTY_PREFIX))
+    .map(([key, value]): [string, string] => [
+      key.slice(LAKEHOUSE_CATALOG_PROPERTY_PREFIX.length),
+      value.trim()
+    ]);
+  const metastore = mapMetastoreConfig(
+    template,
+    getProperty,
+    lakehouseCatalogs,
+    projectId,
+    region
+  );
+  markMapped(...metastore.mappedKeys);
+
+  // Derived keys that weren't mapped keep their unprefixed name, so the create
+  // mapping finds them and doesn't add a second, conflicting value.
+  const sparkProperties: SparkProperties = {};
+  Object.entries(rawProperties).forEach(([key, value]) => {
+    const normalizedKey = normalizePropertyKey(key);
+    if (mappedKeys.has(normalizedKey)) {
+      return;
+    }
+    if (FORM_DERIVED_PROPERTY_KEYS.has(normalizedKey)) {
+      sparkProperties[normalizedKey] = properties[normalizedKey];
+    } else {
+      sparkProperties[key] = value;
+    }
+  });
+
+  const executionConfig = template.environmentConfig?.executionConfig;
+  const idleTtl = parseDuration(executionConfig?.idleTtl);
+  const sessionTtl = parseDuration(executionConfig?.ttl);
+
+  return {
+    initialDisplayName: template.jupyterSession?.displayName || profileId,
+    initialRegion: region,
+    initialDescription: template.description ?? '',
+    initialTier: tier,
+    initialLightningEngineEnabled: lightningEngineEnabled,
+    initialExecutorCategory: executorCategory,
+    initialExecutorType: executorMachine?.name,
+    initialRuntimeEnvironmentConfig: {
+      runtimeProfileId: profileId,
+      // Left undefined when unset, so saving doesn't pin a version.
+      runtimeVersion: template.runtimeConfig?.version,
+      customSparkImage: template.runtimeConfig?.containerImage ?? '',
+      stagingBucket: executionConfig?.stagingBucket ?? '',
+      pythonPackageRepository:
+        template.runtimeConfig?.repositoryConfig?.pypiRepositoryConfig
+          ?.pypiRepository ?? ''
+    },
+    initialExecutorAndDriverConfig: {
+      tier,
+      driverMachineType: driverMachine?.name,
+      driverDisk,
+      executorType: executorMachine?.name,
+      executorDisk
+    },
+    initialAutoscalingConfig: autoscalingConfig,
+    initialMetastoreConfig: metastore.metastoreConfig,
+    initialNetworkAndSecurityConfig: mapNetworkAndSecurityConfig(
+      executionConfig,
+      projectId,
+      template.runtimeConfig?.version
+    ),
+    initialSessionLifecycleConfig: {
+      maxIdleTime: idleTtl?.label,
+      maxIdleTimeQuantity: idleTtl?.quantity,
+      maxIdleTimeUnit: idleTtl?.unit,
+      maxSessionTime: sessionTtl?.label,
+      maxSessionTimeQuantity: sessionTtl?.quantity,
+      maxSessionTimeUnit: sessionTtl?.unit
+    },
+    initialSparkProperties: sparkProperties,
+    initialLabels: { ...template.labels }
+  };
+}
+
+/**
+ * Body of a sessionTemplates.patch request built by mapRuntimeProfileToSessionTemplateUpdate.
+ *
+ * `session_config` is a oneof in the API, so the body carries exactly one of
+ * `jupyterSession` or `sparkConnectSession`: whichever the saved template has.
+ */
+export interface ISessionTemplateUpdatePayload
+  extends Omit<ISessionTemplateApiPayload, 'jupyterSession'> {
+  jupyterSession?: ISessionTemplateApiPayload['jupyterSession'];
+  sparkConnectSession?: IRuntimeProfileTemplate['sparkConnectSession'];
+  environmentConfig?: IRuntimeProfileTemplate['environmentConfig'];
+}
+
+/** Fields the API sets on a session template; they aren't sent back. */
+const OUTPUT_ONLY_TEMPLATE_FIELDS = [
+  'createTime',
+  'updateTime',
+  'creator',
+  'uuid'
+];
+
+/**
+ * One Network and security setting for the update: the form fields it reads,
+ * the executionConfig value they map to (`build` throws when it's invalid)
+ * and how that value is written. `comparable` maps a value to what is compared
+ * when values that differ mean the same thing.
+ */
+interface INetworkSetting {
+  fields: (keyof INetworkAndSecurityConfig)[];
+  build: (networkConfig: INetworkAndSecurityConfig | undefined) => unknown;
+  comparable?: (value: unknown) => unknown;
+  write: (value: unknown) => void;
+}
+
+/**
+ * Subnetwork the Network and security drawer shows for a profile without a
+ * saved network. The service then uses the default network, whose subnetwork
+ * has this name, so it means the same as no subnetwork.
+ */
+const DEFAULT_SUBNETWORK = 'default';
+
+/** JSON of a value with sorted object keys, for comparisons. */
+const toComparableJson = (value: unknown): string =>
+  JSON.stringify(value ?? null, (_key, nested) =>
+    nested && typeof nested === 'object' && !Array.isArray(nested)
+      ? Object.keys(nested)
+          .sort()
+          .reduce<Record<string, unknown>>((sorted, key) => {
+            sorted[key] = nested[key];
+            return sorted;
+          }, {})
+      : nested
+  );
+
+const isSameValue = (first: unknown, second: unknown): boolean =>
+  toComparableJson(first) === toComparableJson(second);
+
+/** Sets `key` on `target`, or removes it when `value` is undefined. */
+const setOrDelete = (
+  target: Record<string, any>,
+  key: string,
+  value: unknown
+): void => {
+  if (value === undefined) {
+    delete target[key];
+  } else {
+    target[key] = value;
+  }
+};
+
+/** Sets a nested object on `target`, or removes it when it is empty. */
+const setUnlessEmpty = (
+  target: Record<string, any>,
+  key: string,
+  value: Record<string, any>
+): void =>
+  setOrDelete(target, key, Object.keys(value).length > 0 ? value : undefined);
+
+/** Applies the keys whose values differ between `before` and `after` to `target`. */
+const applyChangedKeys = (
+  target: Record<string, string>,
+  before: Record<string, string>,
+  after: Record<string, string>
+): void => {
+  Array.from(new Set([...Object.keys(before), ...Object.keys(after)])).forEach(
+    key => {
+      if (before[key] !== after[key]) {
+        setOrDelete(target, key, after[key]);
+      }
+    }
+  );
+};
+
+/** The properties a group owns, by unprefixed key (an unprefixed key wins). */
+const pickGroupProperties = (
+  properties: Record<string, string>,
+  group: IPropertyGroup
+): Record<string, string> => {
+  const picked: Record<string, string> = {};
+  Object.entries(properties).forEach(([key, value]) => {
+    const normalizedKey = normalizePropertyKey(key);
+    if (
+      group.owns(normalizedKey) &&
+      (key === normalizedKey || picked[normalizedKey] === undefined)
+    ) {
+      picked[normalizedKey] = value;
+    }
+  });
+  return picked;
+};
+
+/** The value `build` returns, or the error it throws. */
+const tryBuild = <T>(
+  build: () => T
+): { ok: true; value: T } | { ok: false; error: unknown } => {
+  try {
+    return { ok: true, value: build() };
+  } catch (error) {
+    return { ok: false, error };
+  }
+};
+
+/**
+ * Builds the body of a sessionTemplates.patch request for an edited runtime
+ * profile. PATCH replaces the whole template, so the body starts from
+ * `latestTemplate` (the saved profile, ideally reloaded just before saving)
+ * and applies only what the user changed in the form: the difference between
+ * `initialPayload` (the form values when it opened) and `payload` (the form
+ * values on Save).
+ *
+ * - Settings the user didn't change keep their saved values, including values
+ *   the form can't show (e.g. a custom executor shape or a network without a
+ *   subnetwork) and changes saved elsewhere since the form opened.
+ * - A changed control rewrites every property it derives (e.g. an executor
+ *   shape together with its compute tier), replacing values it couldn't show.
+ * - Network and security settings (network, network tags, encryption key,
+ *   execution identity and service account) are compared one by one, so
+ *   changing one doesn't rewrite or re-validate the others.
+ * - Spark properties and labels are applied key by key.
+ * - The resource name (ID and region), the session kind (`jupyterSession`
+ *   with its kernel, or `sparkConnectSession`) and fields the form doesn't
+ *   manage are kept; output-only fields are dropped.
+ */
+export function mapRuntimeProfileToSessionTemplateUpdate(
+  payload: ICreateRuntimeProfilePayload,
+  initialPayload: ICreateRuntimeProfilePayload,
+  latestTemplate: IRuntimeProfileTemplate
+): ISessionTemplateUpdatePayload {
+  const { region } = parseRuntimeProfileResourceName(latestTemplate.name);
+  const projectId = latestTemplate.name.split('/')[1] ?? '';
+
+  // What the form controls write. Spark properties and network settings are
+  // compared separately (network settings can be invalid).
+  const mapControls = (formPayload: ICreateRuntimeProfilePayload) =>
+    mapRuntimeProfileToSessionTemplate(
+      {
+        ...formPayload,
+        sparkProperties: {},
+        networkAndSecurityConfig: undefined
+      },
+      projectId,
+      region
+    );
+  const initialControls = mapControls(initialPayload);
+  const editedControls = mapControls(payload);
+
+  const result: Record<string, any> = JSON.parse(
+    JSON.stringify(latestTemplate)
+  );
+  OUTPUT_ONLY_TEMPLATE_FIELDS.forEach(field => delete result[field]);
+
+  // Basic info
+  if (initialControls.description !== editedControls.description) {
+    setOrDelete(result, 'description', editedControls.description);
+  }
+  // session_config is a oneof: `result` already carries the saved template's
+  // kind, and a Spark Connect template has no display name or kernel, so
+  // jupyterSession is only ever written for a Jupyter template.
+  const displayName = editedControls.jupyterSession.displayName;
+  if (
+    !result.sparkConnectSession &&
+    initialControls.jupyterSession.displayName !== displayName
+  ) {
+    result.jupyterSession = { ...result.jupyterSession, displayName };
+  }
+
+  // Labels
+  const labels: Record<string, string> = { ...result.labels };
+  applyChangedKeys(
+    labels,
+    initialControls.labels ?? {},
+    editedControls.labels ?? {}
+  );
+  setOrDelete(
+    result,
+    'labels',
+    Object.keys(labels).length > 0 || result.labels ? labels : undefined
+  );
+
+  // Runtime environment
+  const runtimeConfig: Record<string, any> = { ...result.runtimeConfig };
+  (['version', 'containerImage', 'repositoryConfig'] as const).forEach(
+    field => {
+      const editedValue = editedControls.runtimeConfig?.[field];
+      if (!isSameValue(initialControls.runtimeConfig?.[field], editedValue)) {
+        setOrDelete(runtimeConfig, field, editedValue);
+      }
+    }
+  );
+
+  // Spark properties: find the controls whose derived properties changed.
+  const metastoreGroup = propertyGroup([
+    LAKEHOUSE_PROJECT_PROPERTY,
+    LAKEHOUSE_DEFAULT_CATALOG_PROPERTY,
+    ...Object.keys(
+      buildLakehouseProperties(
+        initialPayload.metastoreConfig,
+        projectId,
+        region
+      )
+    ),
+    ...Object.keys(
+      buildLakehouseProperties(payload.metastoreConfig, projectId, region)
+    )
+  ]);
+  const groups = [...CONTROL_PROPERTY_GROUPS, metastoreGroup];
+  const findGroup = (key: string): IPropertyGroup | undefined => {
+    const normalizedKey = normalizePropertyKey(key);
+    return groups.find(group => group.owns(normalizedKey));
+  };
+  const initialControlProperties =
+    initialControls.runtimeConfig?.properties ?? {};
+  const editedControlProperties =
+    editedControls.runtimeConfig?.properties ?? {};
+  const changedGroups = new Set(
+    groups.filter(
+      group =>
+        !isSameValue(
+          pickGroupProperties(initialControlProperties, group),
+          pickGroupProperties(editedControlProperties, group)
+        )
+    )
+  );
+  const editedMetastoreService =
+    editedControls.environmentConfig?.peripheralsConfig?.metastoreService;
+  if (
+    initialControls.environmentConfig?.peripheralsConfig?.metastoreService !==
+    editedMetastoreService
+  ) {
+    changedGroups.add(metastoreGroup);
+  }
+
+  // A changed control replaces the values of its properties that were kept as
+  // Spark properties because it couldn't show them, unless the user edited them.
+  const initialSparkProperties = initialPayload.sparkProperties ?? {};
+  const editedSparkProperties = payload.sparkProperties ?? {};
+  const sparkPropertiesForControls = { ...editedSparkProperties };
+  Object.keys(sparkPropertiesForControls).forEach(key => {
+    const group = findGroup(key);
+    if (
+      group &&
+      changedGroups.has(group) &&
+      initialSparkProperties[key] === sparkPropertiesForControls[key]
+    ) {
+      delete sparkPropertiesForControls[key];
+    }
+  });
+  const derivedProperties =
+    mapRuntimeProfileToSessionTemplate(
+      {
+        ...payload,
+        sparkProperties: sparkPropertiesForControls,
+        networkAndSecurityConfig: undefined
+      },
+      projectId,
+      region
+    ).runtimeConfig?.properties ?? {};
+
+  const properties: Record<string, string> = { ...runtimeConfig.properties };
+  const removeProperty = (normalizedKey: string): void =>
+    Object.keys(properties).forEach(key => {
+      if (normalizePropertyKey(key) === normalizedKey) {
+        delete properties[key];
+      }
+    });
+
+  // 1. Spark properties the user edited directly.
+  Array.from(
+    new Set([
+      ...Object.keys(initialSparkProperties),
+      ...Object.keys(editedSparkProperties)
+    ])
+  ).forEach(key => {
+    const editedValue = editedSparkProperties[key];
+    if (initialSparkProperties[key] === editedValue) {
+      return;
+    }
+    const group = findGroup(key);
+    if (group && (group.isControlOnly || changedGroups.has(group))) {
+      // Written with its control below.
+      return;
+    }
+    if (group) {
+      // A derived key replaces all of its prefixed variants.
+      removeProperty(normalizePropertyKey(key));
+    } else {
+      delete properties[key];
+    }
+    if (editedValue !== undefined) {
+      properties[key] = editedValue;
+    }
+  });
+
+  // 2. All properties of the controls the user changed.
+  changedGroups.forEach(group => {
+    Object.keys(properties).forEach(key => {
+      if (group.owns(normalizePropertyKey(key))) {
+        delete properties[key];
+      }
+    });
+    Object.entries(derivedProperties).forEach(([key, value]) => {
+      if (group.owns(normalizePropertyKey(key))) {
+        properties[key] = value;
+      }
+    });
+  });
+  setUnlessEmpty(runtimeConfig, 'properties', properties);
+  setUnlessEmpty(result, 'runtimeConfig', runtimeConfig);
+
+  // Environment: network and security, staging bucket, session lifecycle and
+  // Dataproc Metastore. Fields the form doesn't manage are kept.
+  const environmentConfig: Record<string, any> = {
+    ...result.environmentConfig
+  };
+  const executionConfig: Record<string, any> = {
+    ...environmentConfig.executionConfig
+  };
+  const peripheralsConfig: Record<string, any> = {
+    ...environmentConfig.peripheralsConfig
+  };
+
+  // Network and security, setting by setting: only a setting the user changed
+  // is written, so the others keep their saved values (even ones the form
+  // can't express, e.g. a network without a subnetwork) and aren't validated.
+  const initialNetworkConfig = initialPayload.networkAndSecurityConfig;
+  const editedNetworkConfig = payload.networkAndSecurityConfig;
+  const networkSettings: INetworkSetting[] = [
+    {
+      // network_uri and subnetwork_uri are a oneof; the form sets a subnetwork.
+      fields: [
+        'networkSource',
+        'primaryNetwork',
+        'networkInThisProject',
+        'subnetwork',
+        'sharedSubnetwork',
+        'hostProjectId'
+      ],
+      build: networkConfig => buildSubnetworkUri(networkConfig, region),
+      // The drawer pre-fills the default subnetwork for a profile without a
+      // saved network; keeping it isn't a change.
+      comparable: subnetworkUri => subnetworkUri ?? DEFAULT_SUBNETWORK,
+      write: subnetworkUri => {
+        delete executionConfig.networkUri;
+        setOrDelete(executionConfig, 'subnetworkUri', subnetworkUri);
+      }
+    },
+    {
+      fields: ['networkTags'],
+      build: buildNetworkTags,
+      write: networkTags =>
+        setOrDelete(executionConfig, 'networkTags', networkTags)
+    },
+    {
+      fields: [
+        'encryption',
+        'keyRing',
+        'cryptoKey',
+        'kmsKeySelectionMode',
+        'kmsKeyName'
+      ],
+      build: networkConfig => buildKmsKey(networkConfig, projectId, region),
+      write: kmsKey => setOrDelete(executionConfig, 'kmsKey', kmsKey)
+    },
+    {
+      fields: ['executionIdentity'],
+      build: networkConfig => networkConfig?.executionIdentity,
+      write: executionIdentity => {
+        delete executionConfig.authentication_config;
+        // Explicit, because the default depends on the runtime version.
+        setOrDelete(
+          executionConfig,
+          'authenticationConfig',
+          executionIdentity
+            ? {
+                userWorkloadAuthenticationType:
+                  executionIdentity === 'user_account'
+                    ? 'END_USER_CREDENTIALS'
+                    : 'SERVICE_ACCOUNT'
+              }
+            : undefined
+        );
+      }
+    },
+    {
+      fields: ['executionIdentity', 'serviceAccount'],
+      build: buildServiceAccount,
+      write: serviceAccount =>
+        setOrDelete(executionConfig, 'serviceAccount', serviceAccount)
+    }
+  ];
+  networkSettings.forEach(
+    ({ fields, build, comparable = value => value, write }) => {
+      const initial = tryBuild(() => build(initialNetworkConfig));
+      const edited = tryBuild(() => build(editedNetworkConfig));
+      // Compare what the setting writes. When that can't be built (e.g. a
+      // saved network without a subnetwork), compare its form fields instead,
+      // so it only counts as changed when the user changed them.
+      const isChanged =
+        initial.ok && edited.ok
+          ? !isSameValue(comparable(initial.value), comparable(edited.value))
+          : fields.some(
+              field =>
+                !isSameValue(
+                  initialNetworkConfig?.[field],
+                  editedNetworkConfig?.[field]
+                )
+            );
+      if (!isChanged) {
+        return;
+      }
+      if (!edited.ok) {
+        throw edited.error;
+      }
+      write(edited.value);
+    }
+  );
+
+  const initialExecution = initialControls.environmentConfig?.executionConfig;
+  const editedExecution = editedControls.environmentConfig?.executionConfig;
+  (['stagingBucket', 'idleTtl', 'ttl'] as const).forEach(field => {
+    if (initialExecution?.[field] !== editedExecution?.[field]) {
+      setOrDelete(executionConfig, field, editedExecution?.[field]);
+    }
+  });
+
+  if (changedGroups.has(metastoreGroup)) {
+    setOrDelete(peripheralsConfig, 'metastoreService', editedMetastoreService);
+  }
+
+  setUnlessEmpty(environmentConfig, 'executionConfig', executionConfig);
+  setUnlessEmpty(environmentConfig, 'peripheralsConfig', peripheralsConfig);
+  setUnlessEmpty(result, 'environmentConfig', environmentConfig);
+
+  return result as ISessionTemplateUpdatePayload;
+}

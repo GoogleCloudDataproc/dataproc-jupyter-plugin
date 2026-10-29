@@ -40,6 +40,7 @@ from dataproc_jupyter_plugin.controllers.version import (
     UpdatePackage,
     tornado
 )
+from dataproc_jupyter_plugin.services import biglake
 
 
 from importlib.metadata import version, PackageNotFoundError
@@ -237,6 +238,47 @@ class ResourceManagerHandler(APIHandler):
             self.finish({"status": "ERROR", "error": er.stderr})
 
 
+class BigLakeCatalogsHandler(APIHandler):
+    """Lists a project's catalogs from a Lakehouse runtime catalog endpoint.
+
+    These BigLake endpoints don't answer the browser's CORS preflight, so the
+    server calls them. Errors keep their HTTP status and are returned in
+    BigLake's error shape, so the UI shows their message.
+    """
+
+    @tornado.web.authenticated
+    async def get(self):
+        status, body = await self._list_catalogs(
+            self.get_argument("endpoint", ""), self.get_argument("project_id", "")
+        )
+        self.set_status(status)
+        self.finish(body)
+
+    async def _list_catalogs(self, endpoint, project_id):
+        """Returns the (status, body) pair to send to the UI."""
+        # The project ID becomes a URL path segment, so "." and ".." are rejected too.
+        if (
+            endpoint not in biglake.CATALOG_ENDPOINTS
+            or not re.fullmatch(constants.PROJECT_REGEXP, project_id)
+            or project_id in (".", "..")
+        ):
+            message = f"Unsupported catalog endpoint or project ID: {project_id}"
+            return biglake.error_response(400, message)
+        try:
+            access_token = (await credentials.get_cached()).get("access_token")
+            # Without a token, BigLake would only answer with a technical 401.
+            if not access_token:
+                message = "Not signed in to Google Cloud. Sign in with gcloud auth login and try again."
+                return biglake.error_response(401, message)
+            return await biglake.list_catalogs(
+                self.log, endpoint, project_id, access_token
+            )
+        except Exception:
+            self.log.exception("Error fetching BigLake catalogs")
+            message = "Failed to fetch catalogs. See the Jupyter server log for details."
+            return biglake.error_response(500, message)
+
+
 def setup_handlers(web_app):
     host_pattern = ".*$"
 
@@ -260,6 +302,7 @@ def setup_handlers(web_app):
         "bigQueryPreview": bigquery.PreviewController,
         "bigQueryProjectsList": bigquery.ProjectsController,
         "bigQuerySearch": bigquery.SearchController,
+        "biglakeCatalogs": BigLakeCatalogsHandler,
         "checkResourceManager": ResourceManagerHandler,
         "jupyterlabVersion": LatestVersionController,
         "updatePlugin": UpdatePackage,

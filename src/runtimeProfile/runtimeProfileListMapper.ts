@@ -92,10 +92,14 @@ export const formatLastUsed = (
 export interface IRuntimeProfileTemplate {
   name: string;
   description?: string;
+  // session_config is a oneof in the Dataproc API: a template has either
+  // jupyterSession or sparkConnectSession, never both.
   jupyterSession?: {
     displayName?: string;
     kernel?: string;
   };
+  /** SparkConnectConfig is an empty message; presence alone selects Spark Connect. */
+  sparkConnectSession?: Record<string, never>;
   runtimeConfig?: {
     version?: string;
     containerImage?: string;
@@ -110,7 +114,9 @@ export interface IRuntimeProfileTemplate {
     executionConfig?: {
       networkUri?: string;
       subnetworkUri?: string;
+      networkTags?: string[];
       kmsKey?: string;
+      serviceAccount?: string;
       stagingBucket?: string;
       idleTtl?: string;
       ttl?: string;
@@ -120,11 +126,15 @@ export interface IRuntimeProfileTemplate {
     };
     peripheralsConfig?: {
       metastoreService?: string;
+      sparkHistoryServerConfig?: {
+        dataprocCluster?: string;
+      };
     };
   };
   creator?: string;
   createTime?: string;
   updateTime?: string;
+  uuid?: string;
   labels?: Record<string, string>;
 }
 

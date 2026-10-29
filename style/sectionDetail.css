@@ -131,8 +131,7 @@ body[data-jp-theme-name='JupyterLab Dark']
 .section-detail-row {
   display: flex;
   align-items: flex-start;
-  min-height: 40px;
-  padding: 11px 0;
+  padding: 6px 0;
   border-bottom: 0.5px solid var(--jp-border-color2, #e0e0e0);
   width: 100%;
 }
@@ -223,6 +222,11 @@ body[data-jp-theme-name='JupyterLab Dark']
 }
 
 /* Dark mode adjustments (supports JupyterLab Dark and custom dark themes via data-jp-theme-light='false') */
+/* The expand/collapse SVG ships with a dark fill; use the theme's text color in dark themes. */
+body[data-jp-theme-light='false'] .additional-config-header-container .expand-icon svg path,
+body[data-jp-theme-name='JupyterLab Dark'] .additional-config-header-container .expand-icon svg path {
+  fill: var(--jp-ui-font-color1);
+}
 body[data-jp-theme-light='false'] .section-detail-divider,
 body[data-jp-theme-name='JupyterLab Dark'] .section-detail-divider {
   background-color: var(--jp-border-color1, #9aa0a6);
