@@ -49,7 +49,7 @@ import {
 import { metastoreServiceListAPI } from '../utils/metastoreService';
 import { authApi } from '../utils/utils';
 
-const DATAPROC_METASTORE = 'Dataproc Metastore';
+export const DATAPROC_METASTORE = 'Dataproc Metastore';
 // Delay before a typed project ID is used to fetch catalogs or services.
 export const PROJECT_INPUT_DEBOUNCE_MS = 500;
 // Catalog names become part of property keys, so dots and spaces are not allowed.
@@ -247,17 +247,18 @@ interface IMetastoreDrawerState {
 /** Drawer field values for a saved config; unset fields get their defaults. */
 const deriveDrawerState = (
   config: IMetastoreConfig,
-  region: string
+  region: string,
+  defaultProjectId: string = ''
 ): IMetastoreDrawerState => ({
   metastoreType: config.metastoreType ?? 'lakehouse',
-  projectId: config.projectId ?? '',
+  projectId: config.projectId || defaultProjectId,
   icebergRestEndpointEnabled: config.icebergRestEndpointEnabled ?? true,
   catalogSelectionMode: config.catalogSelectionMode ?? 'new',
   catalogId: config.catalogId ?? '',
   catalogName: config.catalogName ?? getDefaultLakehouseCatalogName(region),
   dataprocMetastoreService: config.dataprocMetastoreService || METASTORE_NONE,
   hiveEndpointEnabled: Boolean(config.hiveEndpointEnabled),
-  hiveProjectId: config.hiveProjectId ?? config.projectId ?? '',
+  hiveProjectId: config.hiveProjectId || config.projectId || defaultProjectId,
   hiveCatalogId: config.hiveCatalogId ?? '',
   hiveCatalogName: config.hiveCatalogName ?? ''
 });
@@ -270,6 +271,8 @@ export interface IMetastoreEditDrawerProps {
   config: IMetastoreConfig;
   /** Region of the runtime profile. */
   region?: string;
+  /** Project ID of the runtime profile; falls back to signed-in project when omitted. */
+  projectId?: string;
   onClose: () => void;
   onSave: (updatedConfig: IMetastoreConfig) => void;
 }
@@ -278,13 +281,15 @@ export const MetastoreEditDrawer: React.FC<IMetastoreEditDrawerProps> = ({
   open,
   config,
   region = '',
+  projectId: profileProjectId = '',
   onClose,
   onSave
 }) => {
   const [state, setState] = useState<IMetastoreDrawerState>(() =>
-    deriveDrawerState(config, region)
+    deriveDrawerState(config, region, profileProjectId)
   );
-  const [activeProjectId, setActiveProjectId] = useState<string>('');
+  const [activeProjectId, setActiveProjectId] =
+    useState<string>(profileProjectId);
   const [projectModalTarget, setProjectModalTarget] = useState<
     'project' | 'hive' | null
   >(null);
@@ -331,12 +336,16 @@ export const MetastoreEditDrawer: React.FC<IMetastoreEditDrawerProps> = ({
     );
 
   // Reset the fields from the saved config each time the drawer opens, and
-  // default empty project fields to the signed-in project.
+  // default empty project fields to the profile's project or signed-in project.
   useEffect(() => {
     if (!open) {
       return;
     }
-    setState(deriveDrawerState(config, region));
+    setActiveProjectId(profileProjectId);
+    setState(deriveDrawerState(config, region, profileProjectId));
+    if (profileProjectId) {
+      return;
+    }
     let cancelled = false;
     authApi()
       .then(credentials => {
@@ -357,7 +366,7 @@ export const MetastoreEditDrawer: React.FC<IMetastoreEditDrawerProps> = ({
     return () => {
       cancelled = true;
     };
-  }, [open, config, region]);
+  }, [open, config, region, profileProjectId]);
 
   // Catalogs for "Choose existing catalog in project".
   useEffect(() => {

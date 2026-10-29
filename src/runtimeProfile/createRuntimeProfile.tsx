@@ -135,7 +135,8 @@ import {
   MSG_EXECUTOR_TIER_PREMIUM,
   MSG_EXECUTOR_TIER_PREMIUM_LIGHTNING,
   MSG_EXECUTOR_TIER_STANDARD,
-  parseExecutorCount
+  parseExecutorCount,
+  TIER_PREMIUM
 } from './runtimeProfileConstants';
 import {
   formatRuntimeProfileSummaryProperties,
@@ -213,11 +214,17 @@ export const DEFAULT_RUNTIME_ENVIRONMENT_CONFIG: IRuntimeEnvironmentConfig = {
 };
 
 export const DEFAULT_EXECUTOR_AND_DRIVER_CONFIG: IExecutorAndDriverConfig = {
-  tier: 'Standard',
-  driverMachineType: 'Standard-4',
-  driverDisk: 'standard persistent disk',
-  executorType: 'standard',
-  executorDisk: 'Standard persistent disk (HDD), 200 GB'
+  tier: 'Premium',
+  lightningEngineEnabled: true,
+  useDifferentDriverConfig: false,
+  driverMachineType: DEFAULT_GENERAL_EXECUTOR_TYPE,
+  driverDiskTier: DISK_TIER_HDD,
+  driverDiskSize: DEFAULT_HDD_DISK_SIZE,
+  driverDisk: `${DISK_TIER_HDD}, ${DEFAULT_HDD_DISK_SIZE}`,
+  executorType: DEFAULT_GENERAL_EXECUTOR_TYPE,
+  executorDiskTier: DISK_TIER_HDD,
+  executorDiskSize: DEFAULT_HDD_DISK_SIZE,
+  executorDisk: `${DISK_TIER_HDD}, ${DEFAULT_HDD_DISK_SIZE}`
 };
 
 export const DEFAULT_AUTOSCALING_CONFIG: IAutoscalingConfig = {
@@ -292,16 +299,27 @@ export const formatExecutorAndDriverProperties = (
   if (!config) {
     return [];
   }
+  const resolvedTier = config.tier || DEFAULT_EXECUTOR_AND_DRIVER_CONFIG.tier;
+  const isPremium =
+    (resolvedTier || '').toUpperCase() === TIER_PREMIUM ||
+    resolvedTier === 'Premium';
+  const tierDisplay = isPremium
+    ? config.lightningEngineEnabled
+      ? MSG_EXECUTOR_TIER_PREMIUM_LIGHTNING
+      : MSG_EXECUTOR_TIER_PREMIUM
+    : resolvedTier || MSG_EXECUTOR_TIER_STANDARD;
+
   return [
     {
       label: 'Tier',
-      value: config.tier || DEFAULT_EXECUTOR_AND_DRIVER_CONFIG.tier
+      value: tierDisplay
     },
     {
       label: 'Driver machine type',
-      value:
+      value: getMachineTypeLabel(
         config.driverMachineType ||
-        DEFAULT_EXECUTOR_AND_DRIVER_CONFIG.driverMachineType
+          DEFAULT_EXECUTOR_AND_DRIVER_CONFIG.driverMachineType
+      )
     },
     {
       label: 'Driver disk',
@@ -722,9 +740,71 @@ export const CreateRuntimeProfileComponent: React.FC<
     });
 
   const [executorAndDriverConfigState, setExecutorAndDriverConfigState] =
-    useState<IExecutorAndDriverConfig>(
-      () => initialExecutorAndDriverConfig || DEFAULT_EXECUTOR_AND_DRIVER_CONFIG
-    );
+    useState<IExecutorAndDriverConfig>(() => {
+      const defaultDiskTier =
+        resolvedInitialCategory === 'accelerated'
+          ? DISK_TIER_SSD
+          : DISK_TIER_HDD;
+      const defaultDiskSize =
+        resolvedInitialCategory === 'accelerated'
+          ? DEFAULT_SSD_DISK_SIZE
+          : DEFAULT_HDD_DISK_SIZE;
+      const defaultDisk = `${defaultDiskTier}, ${defaultDiskSize}`;
+
+      if (!initialExecutorAndDriverConfig) {
+        return {
+          ...DEFAULT_EXECUTOR_AND_DRIVER_CONFIG,
+          executorDiskTier: defaultDiskTier,
+          executorDiskSize: defaultDiskSize,
+          executorDisk: defaultDisk,
+          driverDiskTier: defaultDiskTier,
+          driverDiskSize: defaultDiskSize,
+          driverDisk: defaultDisk
+        };
+      }
+
+      const resolvedExecDisk =
+        initialExecutorAndDriverConfig.executorDisk ?? defaultDisk;
+      const resolvedDrvDisk =
+        initialExecutorAndDriverConfig.driverDisk ?? resolvedExecDisk;
+      const hasCustomDriver =
+        initialExecutorAndDriverConfig.useDifferentDriverConfig ??
+        Boolean(
+          (initialExecutorAndDriverConfig.driverMachineType &&
+            normalizeMachineTypeName(
+              initialExecutorAndDriverConfig.driverMachineType,
+              ALL_MACHINE_TYPES
+            ) !==
+              normalizeMachineTypeName(
+                initialExecutorAndDriverConfig.executorMachineType ||
+                  initialExecutorAndDriverConfig.executorType ||
+                  executorType,
+                ALL_MACHINE_TYPES
+              )) ||
+            (initialExecutorAndDriverConfig.driverDisk &&
+              initialExecutorAndDriverConfig.driverDisk !== resolvedExecDisk)
+        );
+
+      return {
+        ...DEFAULT_EXECUTOR_AND_DRIVER_CONFIG,
+        ...initialExecutorAndDriverConfig,
+        useDifferentDriverConfig: hasCustomDriver,
+        driverMachineType:
+          initialExecutorAndDriverConfig.driverMachineType ?? executorType,
+        executorType:
+          initialExecutorAndDriverConfig.executorType ?? executorType,
+        executorDiskTier:
+          initialExecutorAndDriverConfig.executorDiskTier ?? defaultDiskTier,
+        executorDiskSize:
+          initialExecutorAndDriverConfig.executorDiskSize ?? defaultDiskSize,
+        executorDisk: resolvedExecDisk,
+        driverDiskTier:
+          initialExecutorAndDriverConfig.driverDiskTier ?? defaultDiskTier,
+        driverDiskSize:
+          initialExecutorAndDriverConfig.driverDiskSize ?? defaultDiskSize,
+        driverDisk: resolvedDrvDisk
+      };
+    });
 
   const activeRuntimeEnvironmentConfig = useMemo<IRuntimeEnvironmentConfig>(
     () => ({
@@ -734,16 +814,33 @@ export const CreateRuntimeProfileComponent: React.FC<
     }),
     [runtimeEnvironmentConfig, tier, lightningEngineEnabled]
   );
-  const executorAndDriverConfig = useMemo<IExecutorAndDriverConfig>(
-    () => ({
+  const executorAndDriverConfig = useMemo<IExecutorAndDriverConfig>(() => {
+    const isSameDriver = !executorAndDriverConfigState.useDifferentDriverConfig;
+    const resolvedExecutorDiskTier =
+      executorAndDriverConfigState.executorDiskTier || DISK_TIER_HDD;
+    const resolvedExecutorDiskSize =
+      executorAndDriverConfigState.executorDiskSize || DEFAULT_HDD_DISK_SIZE;
+    const resolvedExecutorDisk =
+      executorAndDriverConfigState.executorDisk ||
+      `${resolvedExecutorDiskTier}, ${resolvedExecutorDiskSize}`;
+
+    return {
       ...executorAndDriverConfigState,
       tier,
       executorType,
       executorMachineType: executorType,
+      executorDiskTier: resolvedExecutorDiskTier,
+      executorDiskSize: resolvedExecutorDiskSize,
+      executorDisk: resolvedExecutorDisk,
+      ...(isSameDriver && {
+        driverMachineType: executorType,
+        driverDiskTier: resolvedExecutorDiskTier,
+        driverDiskSize: resolvedExecutorDiskSize,
+        driverDisk: resolvedExecutorDisk
+      }),
       lightningEngineEnabled: Boolean(lightningEngineEnabled)
-    }),
-    [executorAndDriverConfigState, tier, executorType, lightningEngineEnabled]
-  );
+    };
+  }, [executorAndDriverConfigState, tier, executorType, lightningEngineEnabled]);
   const [autoscalingConfig, setAutoscalingConfig] =
     useState<IAutoscalingConfig>(
       () => initialAutoscalingConfig || DEFAULT_AUTOSCALING_CONFIG

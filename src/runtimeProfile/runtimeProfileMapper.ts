@@ -149,6 +149,31 @@ const memoryToMb = (memory: string): number => {
 };
 
 /**
+ * Default Spark memoryOverhead multiplier (1 + 40% overhead = 1.4x) and
+ * Standard compute tier per-core memory limit (7,424 MB per vCPU core
+ * including overhead) enforced by Dataproc Serverless.
+ */
+const SPARK_MEMORY_OVERHEAD_MULTIPLIER = 1.4;
+const STANDARD_TIER_MAX_MEMORY_MB_PER_CORE = 7424;
+
+/**
+ * Returns true when a machine shape exceeds the Dataproc Serverless Standard
+ * compute tier memory-per-core ceiling (e.g. highmem-4 with 32 GB RAM across
+ * 4 cores) and therefore requires the 'premium' compute tier.
+ */
+const isHighmemMachineShape = (
+  machineTypeName: string | undefined,
+  machineSpec: IMachineSpec
+): boolean =>
+  Boolean(
+    machineTypeName?.toLowerCase().includes('highmem') ||
+      (machineSpec.cores > 0 &&
+        (memoryToMb(machineSpec.memory) * SPARK_MEMORY_OVERHEAD_MULTIPLIER) /
+          machineSpec.cores >
+          STANDARD_TIER_MAX_MEMORY_MB_PER_CORE)
+  );
+
+/**
  * Resolves a machine type name (or label, e.g. 'highmem-4 (4 vCPU, 32 GB)') into
  * CPU cores, memory and optional accelerator. Known shapes come from
  * DATAPROC_*_MACHINE_TYPES; other names fall back to a best-effort estimate.
@@ -704,12 +729,23 @@ export function mapRuntimeProfileToSessionTemplate(
   }
 
   // Driver machine type & disk properties
-  const driverMachine = parseMachineTypeSpec(
-    executorAndDriverConfig?.driverMachineType
-  );
+  const driverMachineType = executorAndDriverConfig?.driverMachineType;
+  const driverMachine = parseMachineTypeSpec(driverMachineType);
   if (driverMachine) {
     setIfEmpty('spark.driver.cores', String(driverMachine.cores));
     setIfEmpty('spark.driver.memory', driverMachine.memory);
+    if (
+      isHighmemMachineShape(driverMachineType, driverMachine) ||
+      driverMachine.acceleratorType
+    ) {
+      setIfEmpty('spark.dataproc.driver.compute.tier', 'premium');
+    }
+    if (driverMachine.acceleratorType) {
+      setIfEmpty(
+        'spark.dataproc.driver.resource.accelerator.type',
+        driverMachine.acceleratorType
+      );
+    }
   }
 
   const driverDisk = parseDiskSpec(
@@ -739,16 +775,10 @@ export function mapRuntimeProfileToSessionTemplate(
   if (executorMachine) {
     setIfEmpty('spark.executor.cores', String(executorMachine.cores));
     setIfEmpty('spark.executor.memory', executorMachine.memory);
-    // High-memory shapes (e.g. highmem-4 with 32 GB RAM for 4 cores = 8 GB/core) exceed the
-    // Standard compute tier memory limit of 7,424 MB per core (including 40% memoryOverhead).
-    // Dataproc Serverless requires 'premium' compute tier for highmem executor shapes.
-    const isHighmemShape =
-      executorMachineType?.toLowerCase().includes('highmem') ||
-      (executorMachine.cores > 0 &&
-        (memoryToMb(executorMachine.memory) * 1.4) / executorMachine.cores >
-          7424);
-
-    if (isHighmemShape || executorMachine.acceleratorType) {
+    if (
+      isHighmemMachineShape(executorMachineType, executorMachine) ||
+      executorMachine.acceleratorType
+    ) {
       setIfEmpty('spark.dataproc.executor.compute.tier', 'premium');
     }
 
@@ -1319,7 +1349,11 @@ const CONTROL_PROPERTY_GROUPS: IPropertyGroup[] = [
   propertyGroup(['spark.dynamicAllocation.initialExecutors']),
   propertyGroup(['spark.dynamicAllocation.minExecutors']),
   propertyGroup(['spark.dynamicAllocation.maxExecutors']),
-  propertyGroup(['spark.driver.cores', 'spark.driver.memory']),
+  propertyGroup([
+    'spark.driver.cores',
+    'spark.driver.memory',
+    'spark.dataproc.driver.resource.accelerator.type'
+  ]),
   propertyGroup([
     'spark.dataproc.driver.disk.tier',
     'spark.dataproc.driver.disk.size',
@@ -1634,13 +1668,23 @@ export function mapSessionTemplateToFormValues(
     );
   }
 
+  const driverCategory: ExecutorCategoryType = getProperty(
+    'spark.dataproc.driver.resource.accelerator.type'
+  )
+    ? 'accelerated'
+    : 'general';
   const driverMachine = findMachineType(
     getProperty('spark.driver.cores'),
     getProperty('spark.driver.memory'),
-    'general'
+    driverCategory
   );
   if (driverMachine) {
-    markMapped('spark.driver.cores', 'spark.driver.memory');
+    markMapped(
+      'spark.driver.cores',
+      'spark.driver.memory',
+      'spark.dataproc.driver.compute.tier',
+      'spark.dataproc.driver.resource.accelerator.type'
+    );
   }
 
   const driverDisk = formatDiskSpec(

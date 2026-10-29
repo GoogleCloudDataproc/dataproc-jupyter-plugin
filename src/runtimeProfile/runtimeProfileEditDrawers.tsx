@@ -1709,6 +1709,17 @@ const INTERNAL_IP_DOC =
 const KMS_KEY_REGEX =
   /^projects\/[^/]+\/locations\/[^/]+\/keyRings\/[^/]+\/cryptoKeys\/[^/]+$/;
 
+const extractSubnetShortName = (val?: string): string => {
+  if (!val) {
+    return '';
+  }
+  return (
+    /projects\/(?<project>[^/]+)\/regions\/(?<region>[^/]+)\/subnetworks\/(?<subnetwork>[^/?#]+)/.exec(
+      val
+    )?.groups?.['subnetwork'] || val
+  );
+};
+
 export interface INetworkSecurityEditDrawerProps {
   open: boolean;
   config: INetworkAndSecurityConfig;
@@ -1740,17 +1751,28 @@ export const NetworkSecurityEditDrawer: React.FC<
   onClose,
   onSave
 }) => {
+  const shouldResolveNetworkFromSubnetwork = Boolean(
+    (config.networkSource ?? 'project') === 'project' &&
+      !config.primaryNetwork &&
+      !config.networkInThisProject &&
+      extractSubnetShortName(config.subnetwork) &&
+      !networkOptions &&
+      service?.getNetworkFromSubnetwork
+  );
+
   const [networkSource, setNetworkSource] = useState<NetworkSourceType>(
     config.networkSource ?? 'project'
   );
   const [primaryNetwork, setPrimaryNetwork] = useState<string>(
-    config.primaryNetwork || config.networkInThisProject || 'default'
+    shouldResolveNetworkFromSubnetwork
+      ? ''
+      : config.primaryNetwork || config.networkInThisProject || 'default'
   );
   const [subnetwork, setSubnetwork] = useState<string>(
-    config.subnetwork || 'default'
+    extractSubnetShortName(config.subnetwork) || 'default'
   );
   const [sharedSubnetwork, setSharedSubnetwork] = useState<string>(
-    config.sharedSubnetwork || ''
+    extractSubnetShortName(config.sharedSubnetwork)
   );
   const [hostProjectId, setHostProjectId] = useState<string>(
     config.hostProjectId || ''
@@ -1797,76 +1819,83 @@ export const NetworkSecurityEditDrawer: React.FC<
     useState<boolean>(false);
   const [hasFetchedSharedSubnetworks, setHasFetchedSharedSubnetworks] =
     useState<boolean>(false);
+  const [hasResolvedParentNetwork, setHasResolvedParentNetwork] =
+    useState<boolean>(!shouldResolveNetworkFromSubnetwork);
   const [resolvedProject, setResolvedProject] = useState<string>(
     projectId || ''
   );
   const [resolvedRegion, setResolvedRegion] = useState<string>(region || '');
 
   useEffect(() => {
-    if (open) {
-      const extractSubnetName = (val?: string) => {
-        if (!val) {
-          return '';
-        }
-        return (
-          /projects\/(?<project>[\w-]+)\/regions\/(?<region>[\w-]+)\/subnetworks\/(?<subnetwork>[\w-]+)/.exec(
-            val
-          )?.groups?.['subnetwork'] || val
-        );
-      };
+    if (!open) {
+      setHasResolvedParentNetwork(false);
+      return;
+    }
 
-      setNetworkSource(config.networkSource ?? 'project');
-      setPrimaryNetwork(
-        config.primaryNetwork || config.networkInThisProject || 'default'
-      );
-      setSubnetwork(extractSubnetName(config.subnetwork) || 'default');
-      setSharedSubnetwork(extractSubnetName(config.sharedSubnetwork) || '');
-      setHostProjectId(config.hostProjectId || '');
-      setNetworkTagsText((config.networkTags || []).join(', '));
-      setInternalIpOnly(Boolean(config.internalIpOnly));
-      setExecutionIdentity(config.executionIdentity ?? 'user_account');
-      setServiceAccount(config.serviceAccount || '');
-      setEncryption(config.encryption ?? 'google_managed');
+    const nextSource = config.networkSource ?? 'project';
+    const explicitNet =
+      config.primaryNetwork || config.networkInThisProject || '';
+    const cleanSub = extractSubnetShortName(config.subnetwork);
+    const needsSubnetLookup = Boolean(
+      nextSource === 'project' &&
+        !explicitNet &&
+        cleanSub &&
+        !networkOptions &&
+        service?.getNetworkFromSubnetwork
+    );
 
-      // Extract keyRing and cryptoKey from kmsKeyName if formatted and not explicitly stored
-      let initialKeyRing = config.keyRing || '';
-      let initialCryptoKey = config.cryptoKey || '';
-      if (!initialKeyRing && config.kmsKeyName) {
-        const parts = config.kmsKeyName.split('/');
-        if (
-          parts.length === 8 &&
-          parts[0] === 'projects' &&
-          parts[2] === 'locations' &&
-          parts[4] === 'keyRings' &&
-          parts[6] === 'cryptoKeys'
-        ) {
-          initialKeyRing = parts[5] || '';
-          initialCryptoKey = parts[7] || '';
-        }
-      }
+    setNetworkSource(nextSource);
+    setPrimaryNetwork(needsSubnetLookup ? '' : explicitNet || 'default');
+    setHasResolvedParentNetwork(!needsSubnetLookup);
+    setSubnetwork(cleanSub || 'default');
+    setSharedSubnetwork(extractSubnetShortName(config.sharedSubnetwork));
+    setHostProjectId(config.hostProjectId || '');
+    setHasFetchedSubnetworks(false);
+    setHasFetchedSharedSubnetworks(false);
+    setNetworkTagsText((config.networkTags || []).join(', '));
+    setInternalIpOnly(Boolean(config.internalIpOnly));
+    setExecutionIdentity(config.executionIdentity ?? 'user_account');
+    setServiceAccount(config.serviceAccount || '');
+    setEncryption(config.encryption ?? 'google_managed');
 
-      const resolvedKmsMode: 'select' | 'manual' =
-        config.kmsKeySelectionMode ??
-        (config.kmsKeyName && !initialKeyRing ? 'manual' : 'select');
-      setKmsKeySelectionMode(resolvedKmsMode);
-
-      if (resolvedKmsMode === 'manual') {
-        setKeyRing('');
-        setCryptoKey('');
-        setKmsKeyName(config.kmsKeyName ?? '');
-        setIsValidManualKey(
-          !config.kmsKeyName || KMS_KEY_REGEX.test(config.kmsKeyName)
-        );
-      } else {
-        setKeyRing(initialKeyRing);
-        setCryptoKey(initialCryptoKey);
-        setKmsKeyName('');
-        setIsValidManualKey(true);
+    // Extract keyRing and cryptoKey from kmsKeyName if formatted and not explicitly stored
+    let initialKeyRing = config.keyRing || '';
+    let initialCryptoKey = config.cryptoKey || '';
+    if (!initialKeyRing && config.kmsKeyName) {
+      const parts = config.kmsKeyName.split('/');
+      if (
+        parts.length === 8 &&
+        parts[0] === 'projects' &&
+        parts[2] === 'locations' &&
+        parts[4] === 'keyRings' &&
+        parts[6] === 'cryptoKeys'
+      ) {
+        initialKeyRing = parts[5] || '';
+        initialCryptoKey = parts[7] || '';
       }
     }
-  }, [open, config]);
 
-  // Load primary networks when drawer opens and 'project' network source is selected
+    const resolvedKmsMode: 'select' | 'manual' =
+      config.kmsKeySelectionMode ??
+      (config.kmsKeyName && !initialKeyRing ? 'manual' : 'select');
+    setKmsKeySelectionMode(resolvedKmsMode);
+
+    if (resolvedKmsMode === 'manual') {
+      setKeyRing('');
+      setCryptoKey('');
+      setKmsKeyName(config.kmsKeyName ?? '');
+      setIsValidManualKey(
+        !config.kmsKeyName || KMS_KEY_REGEX.test(config.kmsKeyName)
+      );
+    } else {
+      setKeyRing(initialKeyRing);
+      setCryptoKey(initialCryptoKey);
+      setKmsKeyName('');
+      setIsValidManualKey(true);
+    }
+  }, [open, config, networkOptions, service]);
+
+  // Load primary networks (and resolve parent network from subnetwork when unset)
   useEffect(() => {
     if (!open || networkSource !== 'project') {
       return;
@@ -1874,34 +1903,74 @@ export const NetworkSecurityEditDrawer: React.FC<
     let isMounted = true;
 
     const fetchProjectNetworks = async () => {
-      const credentials = await authApi().catch(() => undefined);
-      const targetProject = projectId || credentials?.project_id || '';
-      const targetRegion = region || credentials?.region_id || '';
+      const explicitNet =
+        config.primaryNetwork || config.networkInThisProject || '';
+      const cleanSub = extractSubnetShortName(config.subnetwork);
+      const needsSubnetLookup = Boolean(
+        !explicitNet &&
+          cleanSub &&
+          !networkOptions &&
+          service?.getNetworkFromSubnetwork
+      );
 
-      if (isMounted) {
-        setResolvedProject(targetProject);
-        setResolvedRegion(targetRegion);
+      if (needsSubnetLookup || (service?.getNetworks && !networkOptions)) {
+        setIsLoadingNetworks(true);
       }
 
-      if (service?.getNetworks && !networkOptions) {
-        setIsLoadingNetworks(true);
-        try {
-          const networks = await service.getNetworks(targetProject);
-          if (isMounted && Array.isArray(networks) && networks.length > 0) {
-            setFetchedNetworks(networks);
-            const currentNet =
-              config.primaryNetwork || config.networkInThisProject || 'default';
-            if (!networks.includes(currentNet)) {
-              setPrimaryNetwork(networks[0]);
-              setSubnetwork('');
-            }
+      try {
+        const credentials = await authApi().catch(() => undefined);
+        const targetProject = projectId || credentials?.project_id || '';
+        const targetRegion = region || credentials?.region_id || '';
+
+        if (isMounted) {
+          setResolvedProject(targetProject);
+          setResolvedRegion(targetRegion);
+        }
+
+        const [resolvedFromSubnet, networks] = await Promise.all([
+          needsSubnetLookup && service?.getNetworkFromSubnetwork
+            ? service
+                .getNetworkFromSubnetwork(cleanSub, targetProject, targetRegion)
+                .catch(error => {
+                  console.error(
+                    'Failed to resolve network from subnetwork:',
+                    error
+                  );
+                  return '';
+                })
+            : Promise.resolve(''),
+          service?.getNetworks && !networkOptions
+            ? service.getNetworks(targetProject).catch(error => {
+                console.error('Failed to load networks:', error);
+                return null;
+              })
+            : Promise.resolve(null)
+        ]);
+
+        if (!isMounted) {
+          return;
+        }
+
+        const targetNetwork = explicitNet || resolvedFromSubnet || 'default';
+
+        if (Array.isArray(networks) && networks.length > 0) {
+          setFetchedNetworks(networks);
+          if (!networks.includes(targetNetwork)) {
+            setPrimaryNetwork(networks[0]);
+            setSubnetwork('');
+          } else if (needsSubnetLookup) {
+            setPrimaryNetwork(targetNetwork);
           }
-        } catch (error) {
-          console.error('Failed to load networks:', error);
-        } finally {
-          if (isMounted) {
-            setIsLoadingNetworks(false);
-          }
+        } else if (needsSubnetLookup) {
+          setPrimaryNetwork(targetNetwork);
+        }
+
+        if (needsSubnetLookup) {
+          setHasResolvedParentNetwork(true);
+        }
+      } finally {
+        if (isMounted) {
+          setIsLoadingNetworks(false);
         }
       }
     };
@@ -1919,7 +1988,8 @@ export const NetworkSecurityEditDrawer: React.FC<
     service,
     networkOptions,
     config.primaryNetwork,
-    config.networkInThisProject
+    config.networkInThisProject,
+    config.subnetwork
   ]);
 
   // Load Shared VPC subnetworks when drawer opens and 'shared_from_host' is selected
@@ -2035,6 +2105,7 @@ export const NetworkSecurityEditDrawer: React.FC<
     if (
       !open ||
       networkSource !== 'project' ||
+      !hasResolvedParentNetwork ||
       !primaryNetwork ||
       subnetworkOptions ||
       !service?.getSubnetworks
@@ -2088,6 +2159,7 @@ export const NetworkSecurityEditDrawer: React.FC<
   }, [
     open,
     networkSource,
+    hasResolvedParentNetwork,
     primaryNetwork,
     projectId,
     region,
@@ -2280,6 +2352,7 @@ export const NetworkSecurityEditDrawer: React.FC<
       (hasNoSubnetworks ||
         isLoadingNetworks ||
         isLoadingSubnetworks ||
+        !primaryNetwork.trim() ||
         !subnetwork.trim())) ||
     (networkSource === 'shared_from_host' &&
       (hasNoSharedSubnetworks ||
