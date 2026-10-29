@@ -71,7 +71,10 @@ import {
   MetastoreEditDrawer,
   PROJECT_INPUT_DEBOUNCE_MS
 } from './metastoreEditDrawer';
-import { LAKEHOUSE_RUNTIME_CATALOG } from './runtimeProfileMapper';
+import {
+  LAKEHOUSE_RUNTIME_CATALOG,
+  METASTORE_NONE
+} from './runtimeProfileMapper';
 import { IMetastoreConfig } from './runtimeProfileInterface';
 import {
   listHiveCatalogsAPI,
@@ -326,6 +329,29 @@ describe('MetastoreEditDrawer interactions', () => {
       hiveCatalogId: 'catalog-a',
       hiveCatalogName: 'catalog-a'
     });
+  });
+
+  it('allows saving with no endpoint enabled and saves None as the metastore', async () => {
+    const onSave = await renderDrawer();
+    await click(checkbox('Iceberg REST Endpoint'));
+    expect(checkbox('Hive Endpoint').checked).toBe(false);
+
+    expect(saveButton().disabled).toBe(false);
+    await click(saveButton());
+    expect(onSave.mock.calls[0][0]).toEqual({
+      metastore: METASTORE_NONE,
+      metastoreType: 'lakehouse',
+      icebergRestEndpointEnabled: false,
+      hiveEndpointEnabled: false
+    });
+  });
+
+  it('shows the Browse button inside the Project ID field', async () => {
+    await renderDrawer();
+    const field = input('metastore-project-id').closest('.MuiInputBase-root');
+    expect(field?.querySelector('.edit-drawer-browse-btn')?.textContent).toBe(
+      'Browse'
+    );
   });
 
   it('does not refetch catalogs when a catalog is selected', async () => {

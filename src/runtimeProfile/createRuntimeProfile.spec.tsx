@@ -272,6 +272,37 @@ describe('CreateRuntimeProfileComponent UI & Service', () => {
     expect(container.querySelector('.additional-config-content')).toBeNull();
   });
 
+  it('hides the divider above the action buttons while Additional configuration is collapsed', async () => {
+    await act(async () => {
+      root.render(<CreateRuntimeProfileComponent service={mockService} />);
+    });
+
+    const header = container.querySelector(
+      '.additional-config-header-container'
+    ) as HTMLDivElement;
+    const buttons = container.querySelector(
+      '.runtime-profile-buttons'
+    ) as HTMLDivElement;
+    // Toggles only when needed, so the test holds whichever state the
+    // section starts in.
+    const setExpanded = async (expanded: boolean) => {
+      if ((header.getAttribute('aria-expanded') === 'true') !== expanded) {
+        await act(async () => {
+          header.click();
+        });
+      }
+      expect(header.getAttribute('aria-expanded')).toBe(String(expanded));
+    };
+
+    // Collapsed: no line directly below the header
+    await setExpanded(false);
+    expect(buttons.classList.contains('no-top-border')).toBe(true);
+
+    // Expanded: the divider above the buttons is kept
+    await setExpanded(true);
+    expect(buttons.classList.contains('no-top-border')).toBe(false);
+  });
+
   it('renders custom initial configuration values and mapped display labels in the UI', async () => {
     await act(async () => {
       root.render(
@@ -1188,7 +1219,7 @@ describe('CreateRuntimeProfileComponent UI & Service', () => {
       (executorCards[1] as HTMLDivElement).click();
     });
 
-    expect(getFieldValue('Executor type')).toBe('L4 (4 cores)');
+    expect(getFieldValue('Executor type')).toBe('L4 (4 vCPU)');
   });
 
   it('initializes executor category and type from a valid initial config machine id', async () => {
@@ -1206,7 +1237,7 @@ describe('CreateRuntimeProfileComponent UI & Service', () => {
       .querySelectorAll('.node-config-cards-container')[1]
       .querySelectorAll('.node-config-card');
     expect(executorCards[1].classList.contains('selected')).toBe(true);
-    expect(getFieldValue('Executor type')).toBe('L4 (8 cores)');
+    expect(getFieldValue('Executor type')).toBe('L4 (8 vCPU)');
   });
 
   it('opens RuntimeEnvironmentEditDrawer and updates runtime configuration on save', async () => {
@@ -1304,6 +1335,100 @@ describe('CreateRuntimeProfileComponent UI & Service', () => {
     ]);
 
     expect(formatMetastoreProperties(undefined)).toEqual([]);
+  });
+
+  it("shows the metastore's project, falling back to the profile's project", () => {
+    const metastoreValue = (
+      config: Parameters<typeof formatMetastoreProperties>[0]
+    ) =>
+      formatMetastoreProperties(config, 'my-project').find(
+        p => p.label === 'Metastore'
+      )?.value;
+
+    expect(metastoreValue(DEFAULT_METASTORE_CONFIG)).toBe(
+      'Lakehouse runtime catalog (project: my-project)'
+    );
+    expect(
+      metastoreValue({
+        metastore: 'Lakehouse runtime catalog',
+        metastoreType: 'lakehouse',
+        projectId: 'other-project'
+      })
+    ).toBe('Lakehouse runtime catalog (project: other-project)');
+    // Only the Hive endpoint: the metastore is in the Hive endpoint's project.
+    expect(
+      metastoreValue({
+        metastore: 'Lakehouse runtime catalog',
+        metastoreType: 'lakehouse',
+        icebergRestEndpointEnabled: false,
+        hiveEndpointEnabled: true,
+        hiveProjectId: 'hive-project'
+      })
+    ).toBe('Lakehouse runtime catalog (project: hive-project)');
+    // No endpoint: no metastore, so no project either.
+    expect(
+      metastoreValue({
+        metastore: 'None',
+        metastoreType: 'lakehouse',
+        icebergRestEndpointEnabled: false,
+        hiveEndpointEnabled: false
+      })
+    ).toBe('None');
+  });
+
+  it('shows the signed-in project in the Metastore value', async () => {
+    (authApi as jest.Mock).mockResolvedValueOnce({ project_id: 'my-project' });
+
+    await act(async () => {
+      root.render(<CreateRuntimeProfileComponent service={mockService} />);
+    });
+    await expandAdditionalConfig();
+
+    expect(getFieldValue('Metastore')).toBe(
+      'Lakehouse runtime catalog (project: my-project)'
+    );
+  });
+
+  it('shows None for the metastore after saving with no endpoint enabled', async () => {
+    await act(async () => {
+      root.render(<CreateRuntimeProfileComponent service={mockService} />);
+    });
+    await expandAdditionalConfig();
+
+    // Metastore configuration is the 4th section.
+    await act(async () => {
+      (
+        container.querySelectorAll(
+          '.section-detail-edit-button'
+        )[3] as HTMLButtonElement
+      ).click();
+    });
+    const icebergCheckbox = Array.from(document.body.querySelectorAll('label'))
+      .find(el => el.textContent?.trim() === 'Iceberg REST Endpoint')
+      ?.querySelector('input[type="checkbox"]') as HTMLInputElement;
+    await act(async () => {
+      icebergCheckbox.click();
+    });
+    const saveButton = document.body.querySelector(
+      '.edit-drawer-footer button'
+    ) as HTMLButtonElement;
+    expect(saveButton.disabled).toBe(false);
+    await act(async () => {
+      saveButton.click();
+    });
+
+    expect(getFieldValue('Metastore')).toBe('None');
+    expect(getFieldValue('Hive endpoint')).toBe('Disabled');
+    const summaryMetastore = Array.from(
+      container.querySelectorAll('.runtime-summary-row')
+    )
+      .find(
+        row =>
+          row.querySelector('.runtime-summary-label')?.textContent ===
+          'Metastore'
+      )
+      ?.querySelector('.runtime-summary-value')?.textContent;
+    expect(summaryMetastore).toBe('None');
   });
 
   it('opens the Metastore drawer from the summary and uses the saved config', async () => {
@@ -1616,8 +1741,8 @@ describe('CreateRuntimeProfileComponent UI & Service', () => {
     expect(normalizeMachineTypeName('standard-4 (4 vCPU, 16 GB)')).toBe(
       'standard-4'
     );
-    expect(normalizeMachineTypeName('L4 (4 cores)')).toBe('l4-4');
-    expect(normalizeMachineTypeName('A100 (40 GB)')).toBe('a100-40');
+    expect(normalizeMachineTypeName('L4 (4 vCPU)')).toBe('l4-4');
+    expect(normalizeMachineTypeName('A100 40GB (12 vCPU)')).toBe('a100-40');
     expect(normalizeMachineTypeName('highmem-4')).toBe('highmem-4');
     expect(normalizeMachineTypeName('')).toBe('highmem-4');
   });
@@ -1862,7 +1987,7 @@ describe('CreateRuntimeProfileComponent UI & Service', () => {
       useDifferentDriverConfig: false
     });
     expect(acceleratedRows.find(r => r.label === 'Executor node')?.value).toBe(
-      'L4 (4 cores), 375 GB SSD'
+      'L4 (4 vCPU), 375 GB SSD'
     );
 
     const emptyRows = formatRuntimeProfileSummaryProperties({
@@ -2772,8 +2897,8 @@ describe('CreateRuntimeProfileComponent UI & Service', () => {
     expect(MACHINE_SHAPE_DCU['a100-40']).toBe(15.7);
     expect(MACHINE_SHAPE_DCU['a100-80']).toBe(31.6);
     expect(getShapeDcu('highmem-4 (4 vCPU, 32 GB)')).toBe(5.6);
-    expect(getShapeDcu('L4 (4 cores)')).toBe(4);
-    expect(getShapeDcu('A100 (80 GB)')).toBe(31.6);
+    expect(getShapeDcu('L4 (4 vCPU)')).toBe(4);
+    expect(getShapeDcu('A100 80GB (12 vCPU)')).toBe(31.6);
     expect(getShapeDcu('unknown-shape')).toBe(0);
     expect(getShapeDcu('')).toBe(0);
 

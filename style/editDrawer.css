@@ -109,14 +109,6 @@
   margin-bottom: 4px;
 }
 
-.edit-drawer-input-with-button {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  gap: 8px;
-  width: 100%;
-}
-
 .edit-drawer-browse-btn {
   height: 28px;
   padding: 0 8px;
