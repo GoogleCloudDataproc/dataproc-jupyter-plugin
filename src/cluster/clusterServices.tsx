@@ -337,9 +337,8 @@ export class ClusterService {
         .then((response: Response) => {
           response
             .json()
-            .then(async (responseResult: Response) => {
-              console.log(responseResult);
-              const formattedResponse = await responseResult.json();
+            .then((formattedResponse: any) => {
+              console.log(formattedResponse);
               if (formattedResponse?.error?.code) {
                 Notification.emit(
                   `Error deleting cluster : ${formattedResponse?.error?.message}`,
@@ -390,9 +389,8 @@ export class ClusterService {
         .then((response: Response) => {
           response
             .json()
-            .then(async (responseResult: Response) => {
-              console.log(responseResult);
-              const formattedResponse = await responseResult.json();
+            .then((formattedResponse: any) => {
+              console.log(formattedResponse);
               if (formattedResponse?.error?.code) {
                 Notification.emit(formattedResponse?.error?.message, 'error', {
                   autoClose: 5000
