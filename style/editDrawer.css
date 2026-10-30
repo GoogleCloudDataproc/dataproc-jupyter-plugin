@@ -1226,6 +1226,7 @@ body[data-jp-theme-name='JupyterLab Dark'] .edit-drawer-info-banner-text {
   gap: 4px;
 }
 
+/* Row delete icon button shown on row hover or focus */
 .edit-drawer-remove-btn {
   background: transparent;
   border: none;
