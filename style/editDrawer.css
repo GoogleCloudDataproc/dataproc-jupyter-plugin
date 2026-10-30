@@ -1042,6 +1042,10 @@ body[data-jp-theme-name='JupyterLab Dark'] .bucket-browser-item.selected {
   width: 100%;
 }
 
+.edit-drawer-helper-text + .edit-drawer-row {
+  margin-top: 12px;
+}
+
 .edit-drawer-col {
   flex: 1;
   min-width: 0;
@@ -1202,7 +1206,8 @@ body[data-jp-theme-name='JupyterLab Dark'] .edit-drawer-info-banner-text {
 .edit-drawer-kv-list {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 16px;
+  margin-top: 12px;
 }
 
 .edit-drawer-kv-row {
@@ -1223,23 +1228,41 @@ body[data-jp-theme-name='JupyterLab Dark'] .edit-drawer-info-banner-text {
 
 .edit-drawer-remove-btn {
   background: transparent;
-  border: 1px solid var(--jp-border-color2, #dadce0);
-  border-radius: 4px;
+  border: none;
+  border-radius: 50%;
   color: var(--jp-ui-font-color2, #5f6368);
   cursor: pointer;
-  height: 40px;
+  height: 36px;
+  width: 36px;
   min-width: 36px;
-  padding: 0 8px;
-  font-size: 16px;
+  margin-top: 2px;
+  padding: 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: background-color 0.15s ease-in-out, color 0.15s ease-in-out;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.15s ease-in-out, background-color 0.15s ease-in-out,
+    color 0.15s ease-in-out;
+}
+
+.edit-drawer-kv-row:hover .edit-drawer-remove-btn,
+.edit-drawer-kv-row:focus-within .edit-drawer-remove-btn,
+.edit-drawer-remove-btn:focus {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+@media (hover: none) {
+  .edit-drawer-remove-btn {
+    opacity: 1;
+    pointer-events: auto;
+  }
 }
 
 .edit-drawer-remove-btn:hover {
   background-color: var(--jp-layout-color2, #f1f3f4);
-  color: #d93025;
+  color: var(--jp-ui-font-color0, #202124);
 }
 
 .edit-drawer-add-btn {
@@ -1270,14 +1293,13 @@ body[data-jp-theme-name='JupyterLab Dark'] .edit-drawer-info-banner-text {
 
 body[data-jp-theme-light='false'] .edit-drawer-remove-btn,
 body[data-jp-theme-name='JupyterLab Dark'] .edit-drawer-remove-btn {
-  border-color: var(--jp-border-color1, #5f6368);
-  color: var(--jp-ui-font-color2, #9aa0a6);
+  color: var(--jp-ui-font-color1, #e8eaed);
 }
 
 body[data-jp-theme-light='false'] .edit-drawer-remove-btn:hover,
 body[data-jp-theme-name='JupyterLab Dark'] .edit-drawer-remove-btn:hover {
   background-color: var(--jp-layout-color2, #303134);
-  color: #f28b82;
+  color: var(--jp-ui-font-color0, #ffffff);
 }
 
 body[data-jp-theme-light='false'] .edit-drawer-add-btn,

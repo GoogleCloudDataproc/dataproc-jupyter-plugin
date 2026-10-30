@@ -80,6 +80,7 @@ import {
   listHiveCatalogsAPI,
   listIcebergCatalogsAPI
 } from '../utils/biglakeService';
+import { metastoreServiceListAPI } from '../utils/metastoreService';
 
 describe('MetastoreEditDrawer & Metastore Flow', () => {
   const initialLakehouseConfig: IMetastoreConfig = {
@@ -540,5 +541,29 @@ describe('MetastoreEditDrawer interactions', () => {
     await wait();
 
     expect(saveButton().disabled).toBe(true);
+  });
+
+  it('renders a loader spinner inside the Metastore service dropdown while loading services', async () => {
+    let resolveServices: (services: string[]) => void = () => undefined;
+    (metastoreServiceListAPI as jest.Mock).mockReturnValueOnce(
+      new Promise(resolve => {
+        resolveServices = resolve;
+      })
+    );
+    await renderDrawer();
+    await click(cards()[1]);
+
+    const selectEl = document.getElementById(
+      'dpms-service-select'
+    ) as HTMLElement;
+    const spinnerEl = selectEl.querySelector('[role="progressbar"]');
+    expect(spinnerEl).not.toBeNull();
+    expect(spinnerEl?.getAttribute('aria-hidden')).toBe('true');
+    expect(selectEl.textContent).toContain('None');
+
+    await act(async () => {
+      resolveServices([DPMS_SERVICE]);
+    });
+    expect(selectEl.querySelector('[role="progressbar"]')).toBeNull();
   });
 });

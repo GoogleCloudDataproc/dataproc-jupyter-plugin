@@ -1031,8 +1031,13 @@ export const buildNetworkSecurityConfigFromTemplate = (
 
   const authType =
     executionConfig?.authenticationConfig?.userWorkloadAuthenticationType || '';
-  const executionIdentity: ExecutionIdentityType =
-    authType === 'END_USER_CREDENTIALS' ? 'user_account' : 'service_account';
+  const usesUserAccount =
+    authType && authType !== 'AUTHENTICATION_TYPE_UNSPECIFIED'
+      ? authType === 'END_USER_CREDENTIALS'
+      : parseFloat(profile.runtimeConfig?.version ?? '') >= 3;
+  const executionIdentity: ExecutionIdentityType = usesUserAccount
+    ? 'user_account'
+    : 'service_account';
   const serviceAccount =
     executionIdentity === 'service_account'
       ? executionConfig?.serviceAccount?.trim() || undefined
@@ -1621,7 +1626,23 @@ export default function RuntimeProfileDetails({
     {
       title: 'Network and security',
       onEdit: () => setIsNetworkSecurityDrawerOpen(true),
-      rows: [{ label: 'Encryption type', value: encryptionType }]
+      rows: [
+        {
+          label: 'Execution identity',
+          value:
+            networkSecurityDrawerConfig.executionIdentity === 'user_account'
+              ? 'User account'
+              : 'Service account'
+        },
+        {
+          label: 'Subnetwork URI',
+          value:
+            executionConfig?.subnetworkUri?.trim() ||
+            executionConfig?.networkUri?.trim() ||
+            'default'
+        },
+        { label: 'Encryption type', value: encryptionType }
+      ]
     },
     {
       title: 'Session lifecycle',
