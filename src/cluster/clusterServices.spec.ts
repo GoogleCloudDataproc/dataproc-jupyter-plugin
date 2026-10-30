@@ -68,7 +68,11 @@ import {
 import { DataprocLoggingService, LOG_LEVEL } from '../utils/loggingService';
 import { Notification } from '@jupyterlab/apputils';
 
-const flushPromises = () => new Promise(resolve => setTimeout(resolve, 0));
+const flushPromises = async () => {
+  for (let i = 0; i < 6; i++) {
+    await new Promise<void>(resolve => queueMicrotask(resolve));
+  }
+};
 
 describe('ClusterService', () => {
   const mockCredentials = {
@@ -620,9 +624,7 @@ describe('ClusterService', () => {
         .mockImplementation(() => undefined);
 
       (loggedFetch as jest.Mock).mockResolvedValue({
-        json: jest.fn().mockResolvedValue({
-          json: jest.fn().mockResolvedValue({ name: 'operations/delete-op' })
-        })
+        json: jest.fn().mockResolvedValue({ name: 'operations/delete-op' })
       });
 
       await ClusterService.deleteClusterApi('cluster-to-delete');
@@ -647,9 +649,7 @@ describe('ClusterService', () => {
 
       (loggedFetch as jest.Mock).mockResolvedValueOnce({
         json: jest.fn().mockResolvedValue({
-          json: jest.fn().mockResolvedValue({
-            error: { code: 403, message: 'Delete permission denied' }
-          })
+          error: { code: 403, message: 'Delete permission denied' }
         })
       });
 
@@ -690,9 +690,7 @@ describe('ClusterService', () => {
 
       (loggedFetch as jest.Mock).mockResolvedValueOnce({
         json: jest.fn().mockResolvedValue({
-          json: jest.fn().mockResolvedValue({
-            error: { code: 400, message: 'Start failed message' }
-          })
+          error: { code: 400, message: 'Start failed message' }
         })
       });
 

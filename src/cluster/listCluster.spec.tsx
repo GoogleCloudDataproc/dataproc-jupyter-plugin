@@ -144,7 +144,7 @@ describe('ListCluster Component', () => {
     expect(PollingTimer).toHaveBeenCalled();
   });
 
-  it('renders ApiEnableDialog when apiDialogOpen is true and closes on Cancel or Enable', async () => {
+  it('renders ApiEnableDialog when apiDialogOpen is true and opens enable link on Enable', async () => {
     const windowOpenSpy = jest
       .spyOn(window, 'open')
       .mockImplementation(() => null);
@@ -174,8 +174,9 @@ describe('ListCluster Component', () => {
       'The Cloud Dataproc API is not enabled for this project.'
     );
 
-    const buttons = Array.from(document.body.querySelectorAll('button'));
-    const enableBtn = buttons.find(b => b.textContent === 'Enable');
+    const enableBtn = Array.from(document.body.querySelectorAll('button')).find(
+      b => b.textContent === 'Enable'
+    );
     expect(enableBtn).toBeDefined();
 
     await act(async () => {
@@ -186,13 +187,42 @@ describe('ListCluster Component', () => {
       'https://console.cloud.google.com/apis/dataproc',
       '_blank'
     );
+    expect(document.body.textContent).not.toContain(
+      'The Cloud Dataproc API is not enabled for this project.'
+    );
 
-    // Re-mount and verify Cancel button triggers onCancel handler
-    act(() => {
-      root.unmount();
-    });
-    root = createRoot(container);
+    windowOpenSpy.mockRestore();
+  });
+
+  it('renders ApiEnableDialog when apiDialogOpen is true and closes on Cancel', async () => {
+    const windowOpenSpy = jest
+      .spyOn(window, 'open')
+      .mockImplementation(() => null);
+
+    jest
+      .spyOn(ClusterService, 'listClustersAPIService')
+      .mockImplementation(
+        async (
+          setProjectId,
+          renderActions,
+          setClustersList,
+          setIsLoading,
+          setLoggedIn,
+          setApiDialogOpen,
+          setPollingDisable,
+          setEnableLink
+        ) => {
+          setIsLoading(false);
+          setEnableLink('https://console.cloud.google.com/apis/dataproc');
+          setApiDialogOpen(true);
+        }
+      );
+
     await renderComponent();
+
+    expect(document.body.textContent).toContain(
+      'The Cloud Dataproc API is not enabled for this project.'
+    );
 
     const cancelBtn = Array.from(document.body.querySelectorAll('button')).find(
       b => b.textContent === 'Cancel'
@@ -203,7 +233,11 @@ describe('ListCluster Component', () => {
       cancelBtn?.click();
     });
 
-    expect(windowOpenSpy).toHaveBeenCalledTimes(1);
+    expect(windowOpenSpy).not.toHaveBeenCalled();
+    expect(document.body.textContent).not.toContain(
+      'The Cloud Dataproc API is not enabled for this project.'
+    );
+
     windowOpenSpy.mockRestore();
   });
 

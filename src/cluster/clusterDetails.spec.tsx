@@ -238,7 +238,7 @@ describe('ClusterDetails Component', () => {
     stopSpy.mockRestore();
   });
 
-  it('triggers START when cluster is STOPPED and handles CREATING/ERROR status rendering', async () => {
+  it('triggers START when cluster is STOPPED and disables STOP', async () => {
     const startSpy = jest
       .spyOn(ClusterService, 'startClusterApi')
       .mockResolvedValue(undefined);
@@ -283,7 +283,11 @@ describe('ClusterDetails Component', () => {
     expect(startSpy).toHaveBeenCalledWith('cluster-stopped');
     expect(stopSpy).not.toHaveBeenCalled();
 
-    // Verify STATUS_CREATING maps display text to STATUS_PROVISIONING and shows spinner
+    startSpy.mockRestore();
+    stopSpy.mockRestore();
+  });
+
+  it('renders provisioning status and spinner when cluster status is CREATING', async () => {
     jest
       .spyOn(ClusterService, 'getClusterDetailsService')
       .mockImplementationOnce(
@@ -304,18 +308,15 @@ describe('ClusterDetails Component', () => {
         }
       );
 
-    act(() => {
-      root.unmount();
-    });
-    root = createRoot(container);
     await renderDetails();
 
     expect(container.querySelector('.cluster-status')?.textContent).toBe(
       STATUS_PROVISIONING
     );
     expect(container.querySelector('[data-testid="loader"]')).not.toBeNull();
+  });
 
-    // Verify STATUS_ERROR renders error status
+  it('renders error status when cluster status is ERROR', async () => {
     jest
       .spyOn(ClusterService, 'getClusterDetailsService')
       .mockImplementationOnce(
@@ -336,18 +337,11 @@ describe('ClusterDetails Component', () => {
         }
       );
 
-    act(() => {
-      root.unmount();
-    });
-    root = createRoot(container);
     await renderDetails();
 
     expect(container.querySelector('.cluster-status')?.textContent).toBe(
       'error'
     );
-
-    startSpy.mockRestore();
-    stopSpy.mockRestore();
   });
 
   it('opens DeletePopup on DELETE click, cancels on Cancel, and deletes + navigates back on Delete', async () => {
