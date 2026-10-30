@@ -188,47 +188,86 @@ const AsyncOptionsSelect: React.FC<IAsyncOptionsSelectProps> = ({
   emptyText,
   onChange,
   fixedOptions = []
-}) => (
-  <FormControl size="small" fullWidth variant="outlined">
-    <InputLabel id={`${id}-label`} shrink>
-      {label}
-    </InputLabel>
-    <Select
-      labelId={`${id}-label`}
-      id={id}
-      label={label}
-      notched
-      value={value}
-      onChange={e => onChange(e.target.value as string)}
-      disabled={isLoading}
+}) => {
+  const formControlRef = useRef<HTMLDivElement>(null);
+  const [menuWidth, setMenuWidth] = useState<number | undefined>(undefined);
+
+  return (
+    <FormControl
+      ref={formControlRef}
+      size="small"
+      fullWidth
+      variant="outlined"
     >
-      {fixedOptions.map(option => (
-        <MenuItem key={option} value={option}>
-          {option}
-        </MenuItem>
-      ))}
-      {isLoading ? (
-        <MenuItem value="" disabled>
-          <CircularProgress
-            size={16}
-            className="metastore-drawer-option-spinner"
-          />
-          {loadingText}
-        </MenuItem>
-      ) : options.length === 0 ? (
-        <MenuItem value="" disabled>
-          {emptyText}
-        </MenuItem>
-      ) : (
-        options.map(option => (
-          <MenuItem key={option} value={option}>
+      <InputLabel id={`${id}-label`} shrink>
+        {label}
+      </InputLabel>
+      <Select
+        labelId={`${id}-label`}
+        id={id}
+        label={label}
+        notched
+        displayEmpty
+        value={value}
+        onOpen={() => {
+          const width = formControlRef.current?.clientWidth;
+          if (width) {
+            setMenuWidth(width);
+          }
+        }}
+        onChange={e => onChange(e.target.value as string)}
+        disabled={isLoading}
+        MenuProps={{
+          PaperProps: {
+            className: 'metastore-drawer-menu-paper',
+            style: menuWidth ? { width: menuWidth } : undefined
+          }
+        }}
+        renderValue={selected => {
+          const displayText = selected || (isLoading ? loadingText : emptyText);
+          return isLoading ? (
+            <span className="metastore-drawer-select-loading">
+              <CircularProgress
+                size={16}
+                aria-hidden="true"
+                className="metastore-drawer-option-spinner"
+              />
+              {displayText}
+            </span>
+          ) : (
+            displayText
+          );
+        }}
+      >
+        {fixedOptions.map(option => (
+          <MenuItem key={option} value={option} title={option}>
             {option}
           </MenuItem>
-        ))
-      )}
-    </Select>
-  </FormControl>
-);
+        ))}
+        {isLoading ? (
+          <MenuItem value="" disabled>
+            <CircularProgress
+              size={16}
+              aria-hidden="true"
+              className="metastore-drawer-option-spinner"
+            />
+            {loadingText}
+          </MenuItem>
+        ) : options.length === 0 ? (
+          <MenuItem value="" disabled>
+            {emptyText}
+          </MenuItem>
+        ) : (
+          options.map(option => (
+            <MenuItem key={option} value={option} title={option}>
+              {option}
+            </MenuItem>
+          ))
+        )}
+      </Select>
+    </FormControl>
+  );
+};
 
 interface IMetastoreDrawerState {
   metastoreType: MetastoreType;

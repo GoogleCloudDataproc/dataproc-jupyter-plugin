@@ -17,7 +17,9 @@
 
 import {
   DATAPROC_ACCELERATED_MACHINE_TYPES,
-  DATAPROC_STANDARD_MACHINE_TYPES
+  DATAPROC_STANDARD_MACHINE_TYPES,
+  DISK_TIER_HDD,
+  DISK_TIER_SSD
 } from '../utils/const';
 import { IMachineTypeOption } from './runtimeProfileInterface';
 import { normalizeMachineTypeName } from './runtimeProfileMapper';
@@ -230,14 +232,16 @@ export function formatCompactDiskLabel(diskStr?: string): string {
     return '';
   }
   const lower = diskStr.toLowerCase();
-  const diskType =
-    lower.includes('ssd') || lower.includes('premium') ? 'SSD' : 'HDD';
+  const diskTier =
+    lower.includes('ssd') || lower.includes('premium')
+      ? DISK_TIER_SSD
+      : DISK_TIER_HDD;
   const sizeMatch =
     diskStr.match(/(\d+)\s*(?:GiB|GB)\b/i) || diskStr.match(/(\d+)/);
   if (!sizeMatch) {
     return diskStr.trim();
   }
-  return `${sizeMatch[1]} GB ${diskType}`;
+  return `${diskTier}, ${sizeMatch[1]} GiB`;
 }
 
 /**

@@ -101,6 +101,11 @@ import {
   TIER_STANDARD_INFO_BANNER,
   TIER_STANDARD_TITLE
 } from '../utils/const';
+import {
+  DEFAULT_INITIAL_EXECUTORS,
+  DEFAULT_MAX_EXECUTORS,
+  DEFAULT_MIN_EXECUTORS
+} from './runtimeProfileConstants';
 import { authApi } from '../utils/utils';
 
 export const RUNTIME_VERSION_OPTIONS: string[] = [
@@ -238,6 +243,18 @@ const ChevronRightIcon: React.FC = () => (
     aria-hidden="true"
   >
     <path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z" />
+  </svg>
+);
+
+const DeleteRowIcon: React.FC = () => (
+  <svg
+    width="18"
+    height="18"
+    viewBox="0 0 24 24"
+    fill="currentColor"
+    aria-hidden="true"
+  >
+    <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z" />
   </svg>
 );
 
@@ -3049,7 +3066,7 @@ const UNIT_TO_SECONDS: Record<TimeUnit, number> = {
 };
 const MIN_LIFECYCLE_SECONDS = 10 * 60; // 10 minutes
 const MAX_IDLE_TIME_SECONDS = 330 * 3600; // 330 hours
-const MAX_SESSION_TIME_SECONDS = 14 * 86400; // 14 days
+const MAX_SESSION_TIME_SECONDS = 330 * 3600; // 330 hours
 
 const validateLifecycleQuantity = (
   rawVal: string,
@@ -3074,7 +3091,7 @@ const validateLifecycleQuantity = (
       totalSeconds < MIN_LIFECYCLE_SECONDS ||
       totalSeconds > MAX_SESSION_TIME_SECONDS
     ) {
-      return 'Max session time must be between 10 minutes and 14 days.';
+      return 'Max session time must be between 10 minutes and 330 hours.';
     }
   }
   return '';
@@ -3095,21 +3112,27 @@ export const AutoscalingEditDrawer: React.FC<IAutoscalingEditDrawerProps> = ({
 }) => {
   const [draftConfig, setDraftConfig] = useState<IAutoscalingConfig>(config);
   const [initialExecutorsInput, setInitialExecutorsInput] = useState<string>(
-    String(config.initialExecutors ?? 2)
+    String(config.initialExecutors ?? DEFAULT_INITIAL_EXECUTORS)
   );
   const [minExecutorsInput, setMinExecutorsInput] = useState<string>(
-    String(config.minExecutors ?? 2)
+    String(config.minExecutors ?? DEFAULT_MIN_EXECUTORS)
   );
   const [maxExecutorsInput, setMaxExecutorsInput] = useState<string>(
-    String(config.maxExecutors ?? 1000)
+    String(config.maxExecutors ?? DEFAULT_MAX_EXECUTORS)
   );
 
   useEffect(() => {
     if (open) {
       setDraftConfig(config);
-      setInitialExecutorsInput(String(config.initialExecutors ?? 2));
-      setMinExecutorsInput(String(config.minExecutors ?? 2));
-      setMaxExecutorsInput(String(config.maxExecutors ?? 1000));
+      setInitialExecutorsInput(
+        String(config.initialExecutors ?? DEFAULT_INITIAL_EXECUTORS)
+      );
+      setMinExecutorsInput(
+        String(config.minExecutors ?? DEFAULT_MIN_EXECUTORS)
+      );
+      setMaxExecutorsInput(
+        String(config.maxExecutors ?? DEFAULT_MAX_EXECUTORS)
+      );
     }
   }, [open, config]);
 
@@ -3170,15 +3193,15 @@ export const AutoscalingEditDrawer: React.FC<IAutoscalingEditDrawerProps> = ({
       initialExecutors:
         isAutoscalingEnabled || !Number.isNaN(initVal)
           ? initVal
-          : config.initialExecutors ?? 2,
+          : config.initialExecutors ?? DEFAULT_INITIAL_EXECUTORS,
       minExecutors:
         isAutoscalingEnabled || !Number.isNaN(minVal)
           ? minVal
-          : config.minExecutors ?? 2,
+          : config.minExecutors ?? DEFAULT_MIN_EXECUTORS,
       maxExecutors:
         isAutoscalingEnabled || !Number.isNaN(maxVal)
           ? maxVal
-          : config.maxExecutors ?? 1000
+          : config.maxExecutors ?? DEFAULT_MAX_EXECUTORS
     });
   };
 
@@ -3416,6 +3439,11 @@ export const SessionLifecycleEditDrawer: React.FC<
               fullWidth
               error={Boolean(idleQuantityError)}
               InputLabelProps={{ shrink: true }}
+              inputProps={
+                idleQuantityError
+                  ? { 'aria-describedby': 'max-idle-time-quantity-error-text' }
+                  : undefined
+              }
             />
             {idleQuantityError && (
               <div
@@ -3456,7 +3484,8 @@ export const SessionLifecycleEditDrawer: React.FC<
       <div className="edit-drawer-field-group">
         <div className="edit-drawer-section-heading">Max session time</div>
         <div className="edit-drawer-helper-text">
-          Max lifetime of a session. Can be anywhere from 10 minutes to 14 days.
+          Max lifetime of a session. Can be anywhere from 10 minutes to 330
+          hours.
         </div>
 
         <div className="edit-drawer-row">
@@ -3471,6 +3500,13 @@ export const SessionLifecycleEditDrawer: React.FC<
               fullWidth
               error={Boolean(sessionQuantityError)}
               InputLabelProps={{ shrink: true }}
+              inputProps={
+                sessionQuantityError
+                  ? {
+                      'aria-describedby': 'max-session-time-quantity-error-text'
+                    }
+                  : undefined
+              }
             />
             {sessionQuantityError && (
               <div
@@ -3512,15 +3548,28 @@ export const SessionLifecycleEditDrawer: React.FC<
 };
 
 interface IKeyValueEntry {
+  id: string;
   key: string;
   value: string;
 }
+
+let nextKeyValueEntryId = 0;
+const createKeyValueEntry = (
+  key: string = '',
+  value: string = ''
+): IKeyValueEntry => ({
+  id: `kv-entry-${++nextKeyValueEntryId}`,
+  key,
+  value
+});
 
 const recordToEntries = (record?: Record<string, string>): IKeyValueEntry[] => {
   if (!record || Object.keys(record).length === 0) {
     return [];
   }
-  return Object.entries(record).map(([key, value]) => ({ key, value }));
+  return Object.entries(record).map(([key, value]) =>
+    createKeyValueEntry(key, value)
+  );
 };
 
 const entriesToRecord = (entries: IKeyValueEntry[]): Record<string, string> => {
@@ -3574,7 +3623,7 @@ export const OtherCustomizationEditDrawer: React.FC<
   const handleAddEntry = (
     setList: React.Dispatch<React.SetStateAction<IKeyValueEntry[]>>
   ) => {
-    setList(prev => [...prev, { key: '', value: '' }]);
+    setList(prev => [...prev, createKeyValueEntry()]);
   };
 
   const handleRemoveEntry = (
@@ -3647,73 +3696,80 @@ export const OtherCustomizationEditDrawer: React.FC<
           Custom Spark properties applied to every workload that runs on this
           profile, for example spark.executor.memory.
         </div>
-        <div className="edit-drawer-kv-list">
-          {sparkEntries.map((entry, idx) => {
-            const sparkKeyError = getSparkKeyError(entry.key, idx);
-            return (
-              <div key={`spark-prop-${idx}`} className="edit-drawer-kv-row">
-                <div className="edit-drawer-kv-col">
-                  <TextField
-                    id={`edit-spark-property-key-${idx}`}
-                    label={`Key ${idx + 1} *`}
-                    value={entry.key}
-                    onChange={e =>
-                      handleEntryChange(
-                        setSparkEntries,
-                        idx,
-                        'key',
-                        e.target.value
-                      )
-                    }
-                    variant="outlined"
-                    size="small"
-                    fullWidth
-                    error={Boolean(sparkKeyError)}
-                    InputLabelProps={{ shrink: true }}
-                  />
-                  {sparkKeyError && (
-                    <div
-                      className="edit-drawer-error-text"
-                      id={`spark-key-error-${idx}`}
-                    >
-                      <span className="edit-drawer-error-icon">
-                        <FieldErrorIcon />
-                      </span>
-                      <span>{sparkKeyError}</span>
-                    </div>
-                  )}
+        {sparkEntries.length > 0 && (
+          <div className="edit-drawer-kv-list">
+            {sparkEntries.map((entry, idx) => {
+              const sparkKeyError = getSparkKeyError(entry.key, idx);
+              return (
+                <div key={entry.id} className="edit-drawer-kv-row">
+                  <div className="edit-drawer-kv-col">
+                    <TextField
+                      id={`edit-spark-property-key-${idx}`}
+                      label={`Key ${idx + 1} *`}
+                      value={entry.key}
+                      onChange={e =>
+                        handleEntryChange(
+                          setSparkEntries,
+                          idx,
+                          'key',
+                          e.target.value
+                        )
+                      }
+                      variant="outlined"
+                      size="small"
+                      fullWidth
+                      error={Boolean(sparkKeyError)}
+                      InputLabelProps={{ shrink: true }}
+                      inputProps={
+                        sparkKeyError
+                          ? { 'aria-describedby': `spark-key-error-${idx}` }
+                          : undefined
+                      }
+                    />
+                    {sparkKeyError && (
+                      <div
+                        className="edit-drawer-error-text"
+                        id={`spark-key-error-${idx}`}
+                      >
+                        <span className="edit-drawer-error-icon">
+                          <FieldErrorIcon />
+                        </span>
+                        <span>{sparkKeyError}</span>
+                      </div>
+                    )}
+                  </div>
+                  <div className="edit-drawer-kv-col">
+                    <TextField
+                      id={`edit-spark-property-value-${idx}`}
+                      label={`Value ${idx + 1}`}
+                      value={entry.value}
+                      onChange={e =>
+                        handleEntryChange(
+                          setSparkEntries,
+                          idx,
+                          'value',
+                          e.target.value
+                        )
+                      }
+                      variant="outlined"
+                      size="small"
+                      fullWidth
+                      InputLabelProps={{ shrink: true }}
+                    />
+                  </div>
+                  <button
+                    type="button"
+                    className="edit-drawer-remove-btn"
+                    aria-label={`Remove Spark property ${idx + 1}`}
+                    onClick={() => handleRemoveEntry(setSparkEntries, idx)}
+                  >
+                    <DeleteRowIcon />
+                  </button>
                 </div>
-                <div className="edit-drawer-kv-col">
-                  <TextField
-                    id={`edit-spark-property-value-${idx}`}
-                    label={`Value ${idx + 1}`}
-                    value={entry.value}
-                    onChange={e =>
-                      handleEntryChange(
-                        setSparkEntries,
-                        idx,
-                        'value',
-                        e.target.value
-                      )
-                    }
-                    variant="outlined"
-                    size="small"
-                    fullWidth
-                    InputLabelProps={{ shrink: true }}
-                  />
-                </div>
-                <button
-                  type="button"
-                  className="edit-drawer-remove-btn"
-                  aria-label={`Remove Spark property ${idx + 1}`}
-                  onClick={() => handleRemoveEntry(setSparkEntries, idx)}
-                >
-                  &#x2715;
-                </button>
-              </div>
-            );
-          })}
-        </div>
+              );
+            })}
+          </div>
+        )}
         <button
           type="button"
           className="edit-drawer-add-btn"
@@ -3731,86 +3787,98 @@ export const OtherCustomizationEditDrawer: React.FC<
           A list of key:value pairs to attach to the session template for
           tracking.
         </div>
-        <div className="edit-drawer-kv-list">
-          {labelEntries.map((entry, idx) => {
-            const keyError = getLabelKeyError(entry.key, idx);
-            const valueError = getLabelValueError(entry.value);
-            return (
-              <div key={`label-entry-${idx}`} className="edit-drawer-kv-row">
-                <div className="edit-drawer-kv-col">
-                  <TextField
-                    id={`edit-label-key-${idx}`}
-                    label={`Key ${idx + 1} *`}
-                    value={entry.key}
-                    onChange={e =>
-                      handleEntryChange(
-                        setLabelEntries,
-                        idx,
-                        'key',
-                        e.target.value
-                      )
-                    }
-                    variant="outlined"
-                    size="small"
-                    fullWidth
-                    error={Boolean(keyError)}
-                    InputLabelProps={{ shrink: true }}
-                  />
-                  {keyError && (
-                    <div
-                      className="edit-drawer-error-text"
-                      id={`label-key-error-${idx}`}
-                    >
-                      <span className="edit-drawer-error-icon">
-                        <FieldErrorIcon />
-                      </span>
-                      <span>{keyError}</span>
-                    </div>
-                  )}
+        {labelEntries.length > 0 && (
+          <div className="edit-drawer-kv-list">
+            {labelEntries.map((entry, idx) => {
+              const keyError = getLabelKeyError(entry.key, idx);
+              const valueError = getLabelValueError(entry.value);
+              return (
+                <div key={entry.id} className="edit-drawer-kv-row">
+                  <div className="edit-drawer-kv-col">
+                    <TextField
+                      id={`edit-label-key-${idx}`}
+                      label={`Key ${idx + 1} *`}
+                      value={entry.key}
+                      onChange={e =>
+                        handleEntryChange(
+                          setLabelEntries,
+                          idx,
+                          'key',
+                          e.target.value
+                        )
+                      }
+                      variant="outlined"
+                      size="small"
+                      fullWidth
+                      error={Boolean(keyError)}
+                      InputLabelProps={{ shrink: true }}
+                      inputProps={
+                        keyError
+                          ? { 'aria-describedby': `label-key-error-${idx}` }
+                          : undefined
+                      }
+                    />
+                    {keyError && (
+                      <div
+                        className="edit-drawer-error-text"
+                        id={`label-key-error-${idx}`}
+                      >
+                        <span className="edit-drawer-error-icon">
+                          <FieldErrorIcon />
+                        </span>
+                        <span>{keyError}</span>
+                      </div>
+                    )}
+                  </div>
+                  <div className="edit-drawer-kv-col">
+                    <TextField
+                      id={`edit-label-value-${idx}`}
+                      label={`Value ${idx + 1}`}
+                      value={entry.value}
+                      onChange={e =>
+                        handleEntryChange(
+                          setLabelEntries,
+                          idx,
+                          'value',
+                          e.target.value
+                        )
+                      }
+                      variant="outlined"
+                      size="small"
+                      fullWidth
+                      error={Boolean(valueError)}
+                      InputLabelProps={{ shrink: true }}
+                      inputProps={
+                        valueError
+                          ? { 'aria-describedby': `label-value-error-${idx}` }
+                          : undefined
+                      }
+                    />
+                    {valueError && (
+                      <div
+                        className="edit-drawer-error-text"
+                        id={`label-value-error-${idx}`}
+                      >
+                        <span className="edit-drawer-error-icon">
+                          <FieldErrorIcon />
+                        </span>
+                        <span>{valueError}</span>
+                      </div>
+                    )}
+                  </div>
+                  <button
+                    type="button"
+                    className="edit-drawer-remove-btn"
+                    aria-label={`Remove label ${idx + 1}`}
+                    onClick={() => handleRemoveEntry(setLabelEntries, idx)}
+                  >
+                    <DeleteRowIcon />
+                  </button>
                 </div>
-                <div className="edit-drawer-kv-col">
-                  <TextField
-                    id={`edit-label-value-${idx}`}
-                    label={`Value ${idx + 1}`}
-                    value={entry.value}
-                    onChange={e =>
-                      handleEntryChange(
-                        setLabelEntries,
-                        idx,
-                        'value',
-                        e.target.value
-                      )
-                    }
-                    variant="outlined"
-                    size="small"
-                    fullWidth
-                    error={Boolean(valueError)}
-                    InputLabelProps={{ shrink: true }}
-                  />
-                  {valueError && (
-                    <div
-                      className="edit-drawer-error-text"
-                      id={`label-value-error-${idx}`}
-                    >
-                      <span className="edit-drawer-error-icon">
-                        <FieldErrorIcon />
-                      </span>
-                      <span>{valueError}</span>
-                    </div>
-                  )}
-                </div>
-                <button
-                  type="button"
-                  className="edit-drawer-remove-btn"
-                  aria-label={`Remove label ${idx + 1}`}
-                  onClick={() => handleRemoveEntry(setLabelEntries, idx)}
-                >
-                  &#x2715;
-                </button>
-              </div>
-            );
-          })}
-        </div>
+              );
+            })}
+          </div>
+        )}
         <button
           type="button"
           className="edit-drawer-add-btn"

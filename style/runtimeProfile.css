@@ -357,14 +357,7 @@ body[data-jp-theme-name='JupyterLab Dark']
   gap: 12px;
   margin-top: 24px;
   padding-top: 16px;
-  border-top: 1px solid var(--jp-border-color2, #e0e0e0);
   width: 100%;
-}
-
-/* Hide the divider above the buttons while Additional configuration is
-   collapsed, so no line appears directly under its header (as when expanded) */
-.runtime-profile-buttons.no-top-border {
-  border-top: none;
 }
 
 .runtime-profile-buttons button {
@@ -424,21 +417,64 @@ body[data-jp-theme-name='JupyterLab Dark']
   background-color: rgba(51, 103, 214, 0.04);
 }
 
-body[data-jp-theme-name='JupyterLab Dark'] .runtime-profile-submit-btn {
+body[data-jp-theme-light='false']
+  .runtime-profile-buttons
+  .runtime-profile-submit-btn:not(:disabled),
+body[data-jp-theme-light='false']
+  .runtime-profile-buttons
+  .runtime-profile-submit-btn.submit-button-style:not(:disabled),
+body[data-jp-theme-name='JupyterLab Dark']
+  .runtime-profile-buttons
+  .runtime-profile-submit-btn:not(:disabled),
+body[data-jp-theme-name='JupyterLab Dark']
+  .runtime-profile-buttons
+  .runtime-profile-submit-btn.submit-button-style:not(:disabled) {
+  background: #8ab4f8;
   background-color: #8ab4f8;
   color: #202124;
 }
 
+body[data-jp-theme-light='false']
+  .runtime-profile-buttons
+  .runtime-profile-submit-btn:hover:not(:disabled),
+body[data-jp-theme-light='false']
+  .runtime-profile-buttons
+  .runtime-profile-submit-btn.submit-button-style:hover:not(:disabled),
 body[data-jp-theme-name='JupyterLab Dark']
-  .runtime-profile-submit-btn:hover:not(:disabled) {
+  .runtime-profile-buttons
+  .runtime-profile-submit-btn:hover:not(:disabled),
+body[data-jp-theme-name='JupyterLab Dark']
+  .runtime-profile-buttons
+  .runtime-profile-submit-btn.submit-button-style:hover:not(:disabled) {
+  background: #aecbfa;
   background-color: #aecbfa;
 }
 
-body[data-jp-theme-name='JupyterLab Dark'] .runtime-profile-cancel-btn {
+body[data-jp-theme-light='false']
+  .runtime-profile-buttons
+  .runtime-profile-submit-btn:disabled,
+body[data-jp-theme-name='JupyterLab Dark']
+  .runtime-profile-buttons
+  .runtime-profile-submit-btn:disabled {
+  background-color: var(--jp-layout-color3, #3c4043);
+  color: var(--jp-ui-font-color3, #80868b);
+}
+
+body[data-jp-theme-light='false']
+  .runtime-profile-buttons
+  .runtime-profile-cancel-btn,
+body[data-jp-theme-name='JupyterLab Dark']
+  .runtime-profile-buttons
+  .runtime-profile-cancel-btn {
   color: #8ab4f8;
 }
 
-body[data-jp-theme-name='JupyterLab Dark'] .runtime-profile-cancel-btn:hover {
+body[data-jp-theme-light='false']
+  .runtime-profile-buttons
+  .runtime-profile-cancel-btn:hover,
+body[data-jp-theme-name='JupyterLab Dark']
+  .runtime-profile-buttons
+  .runtime-profile-cancel-btn:hover {
   background-color: rgba(138, 180, 248, 0.08);
 }
 
@@ -1259,6 +1295,22 @@ body[data-jp-theme-name='JupyterLab Dark'] .runtime-pricing-table thead tr {
   margin-bottom: 16px;
 }
 
+.metastore-drawer-select-loading {
+  display: inline-flex;
+  align-items: center;
+}
+
 .metastore-drawer-option-spinner {
   margin-right: 8px;
+}
+
+.metastore-drawer-menu-paper {
+  max-width: 512px;
+  box-sizing: border-box;
+}
+
+.metastore-drawer-menu-paper .MuiMenuItem-root {
+  font-size: 13px;
+  white-space: normal;
+  overflow-wrap: anywhere;
 }

@@ -233,6 +233,10 @@ describe('RuntimeProfileDetails Component', () => {
     expect(container.textContent).toContain('Metastore configuration');
     expect(container.textContent).toContain('Hive endpoint');
     expect(container.textContent).toContain('Disabled');
+    expect(container.textContent).toContain('Execution identity');
+    expect(container.textContent).toContain('User account');
+    expect(container.textContent).toContain('Subnetwork URI');
+    expect(container.textContent).toContain('default');
     expect(container.textContent).toContain('Encryption type');
     expect(container.textContent).toContain('Google-managed');
     expect(container.textContent).toContain('Network and security');
@@ -1546,6 +1550,18 @@ describe('RuntimeProfileDetails Component', () => {
       executionIdentity: 'service_account',
       encryption: 'google_managed'
     });
+
+    // Runtime >= 3.0 without explicit authenticationConfig defaults to user_account
+    expect(
+      buildNetworkSecurityConfigFromTemplate(
+        {
+          name: 'projects/test-project/locations/us-central1/sessionTemplates/v3-net',
+          runtimeConfig: { version: '3.0' }
+        },
+        'test-project',
+        'us-central1'
+      ).executionIdentity
+    ).toBe('user_account');
 
     // Domain-scoped Shared VPC project ID + full compute networkUri URL
     expect(
