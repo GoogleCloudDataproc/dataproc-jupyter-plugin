@@ -488,7 +488,7 @@ export class RuntimeProfileService implements IRuntimeProfileService {
       }
 
       const subnetworkName =
-        /projects\/(?<project>[\w-]+)\/regions\/(?<region>[\w-]+)\/subnetworks\/(?<subnetwork>[\w-]+)/.exec(
+        /projects\/(?<project>[^/]+)\/regions\/(?<region>[^/]+)\/subnetworks\/(?<subnetwork>[^/?#]+)/.exec(
           subnetwork
         )?.groups?.['subnetwork'] || subnetwork;
 
@@ -515,7 +515,7 @@ export class RuntimeProfileService implements IRuntimeProfileService {
 
       return (
         (responseResult?.network &&
-          (/\/networks\/(?<network>[\w-]+)$/.exec(responseResult.network)
+          (/\/networks\/(?<network>[^/?#]+)$/.exec(responseResult.network)
             ?.groups?.['network'] ||
             responseResult.network.split('/')[9])) ||
         ''

@@ -419,7 +419,7 @@ describe('runtimeProfileMapper', () => {
       expect(props?.['spark.dataproc.executor.disk.size']).toBe('200g');
     });
 
-    it('should automatically set spark.dataproc.executor.compute.tier to premium for highmem shapes', () => {
+    it('should automatically set spark.dataproc.executor.compute.tier and driver.compute.tier to premium for highmem shapes', () => {
       const payload: ICreateRuntimeProfilePayload = {
         displayName: 'Highmem Profile',
         region: 'us-central1',
@@ -427,6 +427,10 @@ describe('runtimeProfileMapper', () => {
         executorConfig: {
           executorType: 'general',
           machineType: 'highmem-4'
+        },
+        executorAndDriverConfig: {
+          driverMachineType: 'highmem-4',
+          executorType: 'highmem-4'
         }
       };
 
@@ -437,6 +441,9 @@ describe('runtimeProfileMapper', () => {
       );
 
       const props = result.runtimeConfig?.properties;
+      expect(props?.['spark.driver.cores']).toBe('4');
+      expect(props?.['spark.driver.memory']).toBe('32g');
+      expect(props?.['spark.dataproc.driver.compute.tier']).toBe('premium');
       expect(props?.['spark.executor.cores']).toBe('4');
       expect(props?.['spark.executor.memory']).toBe('32g');
       // Highmem shape has 8 GB RAM per core, so it must set premium compute tier
