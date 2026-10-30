@@ -220,9 +220,7 @@ const AsyncOptionsSelect: React.FC<IAsyncOptionsSelectProps> = ({
         MenuProps={{
           PaperProps: {
             className: 'metastore-drawer-menu-paper',
-            style: menuWidth
-              ? { width: menuWidth, maxWidth: menuWidth }
-              : undefined
+            style: menuWidth ? { width: menuWidth } : undefined
           }
         }}
         renderValue={selected => {
