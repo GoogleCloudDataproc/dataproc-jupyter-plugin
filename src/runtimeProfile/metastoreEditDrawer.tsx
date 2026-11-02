@@ -15,7 +15,6 @@
  * limitations under the License.
  */
 
-
 import React, { useEffect, useRef, useState } from 'react';
 import {
   Checkbox,
@@ -193,12 +192,7 @@ const AsyncOptionsSelect: React.FC<IAsyncOptionsSelectProps> = ({
   const [menuWidth, setMenuWidth] = useState<number | undefined>(undefined);
 
   return (
-    <FormControl
-      ref={formControlRef}
-      size="small"
-      fullWidth
-      variant="outlined"
-    >
+    <FormControl ref={formControlRef} size="small" fullWidth variant="outlined">
       <InputLabel id={`${id}-label`} shrink>
         {label}
       </InputLabel>
@@ -224,19 +218,22 @@ const AsyncOptionsSelect: React.FC<IAsyncOptionsSelectProps> = ({
           }
         }}
         renderValue={selected => {
-          const displayText = selected || (isLoading ? loadingText : emptyText);
-          return isLoading ? (
-            <span className="metastore-drawer-select-loading">
-              <CircularProgress
-                size={16}
-                aria-hidden="true"
-                className="metastore-drawer-option-spinner"
-              />
-              {displayText}
-            </span>
-          ) : (
-            displayText
-          );
+          if (isLoading) {
+            return (
+              <span className="metastore-drawer-select-loading">
+                <CircularProgress
+                  size={16}
+                  aria-hidden="true"
+                  className="metastore-drawer-option-spinner"
+                />
+                {loadingText}
+              </span>
+            );
+          }
+          if (selected) {
+            return selected;
+          }
+          return options.length === 0 ? emptyText : '';
         }}
       >
         {fixedOptions.map(option => (

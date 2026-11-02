@@ -557,8 +557,11 @@ describe('RuntimeProfileDetails Component', () => {
       editAutoscalingBtn.click();
     });
     expect(
-      (document.body.querySelector('#edit-initial-executors') as HTMLInputElement)
-        ?.value
+      (
+        document.body.querySelector(
+          '#edit-initial-executors'
+        ) as HTMLInputElement
+      )?.value
     ).toBe('2');
     await act(async () => {
       getDrawerSaveBtn('Autoscaling').click();
@@ -748,7 +751,12 @@ describe('RuntimeProfileDetails Component', () => {
       );
     });
 
-    await renderDetails(jest.fn(), undefined, latestProfile, handleUpdateSuccess);
+    await renderDetails(
+      jest.fn(),
+      undefined,
+      latestProfile,
+      handleUpdateSuccess
+    );
 
     const configHeader = container.querySelector(
       '.runtime-profile-details-section-header.configuration-header'
@@ -811,9 +819,9 @@ describe('RuntimeProfileDetails Component', () => {
       saveBtn.click();
     });
 
-    expect(latestProfile.environmentConfig?.executionConfig?.subnetworkUri).toBe(
-      'custom-subnet-2'
-    );
+    expect(
+      latestProfile.environmentConfig?.executionConfig?.subnetworkUri
+    ).toBe('custom-subnet-2');
     expect(
       latestProfile.environmentConfig?.executionConfig?.networkUri
     ).toBeUndefined();
@@ -1047,15 +1055,14 @@ describe('RuntimeProfileDetails Component', () => {
         driverDisk: 'SSD (premium), 375 GiB'
       }
     );
-    const updatedProps =
-      updatedExecDrvTemplate.runtimeConfig?.properties || {};
+    const updatedProps = updatedExecDrvTemplate.runtimeConfig?.properties || {};
     expect(updatedProps['dataproc.tier']).toBe('premium');
     expect(updatedProps['spark.dataproc.engine']).toBeUndefined();
     expect(updatedProps['spark.executor.cores']).toBe('4');
     expect(updatedProps['spark.executor.memory']).toBeUndefined();
-    expect(updatedProps['spark.dataproc.executor.resource.accelerator.type']).toBe(
-      'l4'
-    );
+    expect(
+      updatedProps['spark.dataproc.executor.resource.accelerator.type']
+    ).toBe('l4');
     expect(updatedProps['spark.driver.cores']).toBe('4');
     expect(updatedProps['spark.driver.memory']).toBe('16g');
     expect(updatedProps['spark.dataproc.driver.compute.tier']).toBe('premium');
@@ -1071,7 +1078,8 @@ describe('RuntimeProfileDetails Component', () => {
         }
       }
     };
-    const cfg2xNoTier = buildExecutorAndDriverConfigFromTemplate(template2xNoTier);
+    const cfg2xNoTier =
+      buildExecutorAndDriverConfigFromTemplate(template2xNoTier);
     expect(cfg2xNoTier.tier).toBe('Standard');
 
     const saved2xUnchanged = applyExecutorAndDriverUpdateToTemplate(
@@ -1090,9 +1098,9 @@ describe('RuntimeProfileDetails Component', () => {
         properties: {}
       }
     };
-    expect(buildExecutorAndDriverConfigFromTemplate(template31NoTier).tier).toBe(
-      'Premium'
-    );
+    expect(
+      buildExecutorAndDriverConfigFromTemplate(template31NoTier).tier
+    ).toBe('Premium');
 
     // Autoscaling builder & updater (including minExecutors > 2 with unset initialExecutors)
     const autoCfg = buildAutoscalingConfigFromTemplate(mockProfile);
@@ -1233,9 +1241,9 @@ describe('RuntimeProfileDetails Component', () => {
         maxSessionTime: '2 days'
       }
     );
-    expect(
-      updatedLifecycle.environmentConfig?.executionConfig?.idleTtl
-    ).toBe('1800s');
+    expect(updatedLifecycle.environmentConfig?.executionConfig?.idleTtl).toBe(
+      '1800s'
+    );
     expect(updatedLifecycle.environmentConfig?.executionConfig?.ttl).toBe(
       '172800s'
     );
@@ -1245,9 +1253,9 @@ describe('RuntimeProfileDetails Component', () => {
         maxIdleTime: '2h'
       }
     );
-    expect(
-      clearedLifecycle.environmentConfig?.executionConfig?.idleTtl
-    ).toBe('7200s');
+    expect(clearedLifecycle.environmentConfig?.executionConfig?.idleTtl).toBe(
+      '7200s'
+    );
     expect(
       clearedLifecycle.environmentConfig?.executionConfig?.ttl
     ).toBeUndefined();
@@ -1309,7 +1317,11 @@ describe('RuntimeProfileDetails Component', () => {
 
     // Metastore builder & updater
     expect(
-      buildMetastoreConfigFromTemplate(mockProfile, 'test-project', 'us-central1')
+      buildMetastoreConfigFromTemplate(
+        mockProfile,
+        'test-project',
+        'us-central1'
+      )
     ).toEqual({
       hiveEndpointEnabled: false
     });
@@ -1325,7 +1337,9 @@ describe('RuntimeProfileDetails Component', () => {
 
     // 'new' Lakehouse catalog mode (default regional catalog name vs. custom catalogName + prefixed keys)
     const defaultNewLakehouse = applyMetastoreUpdateToTemplate(
-      { name: 'projects/test-project/locations/us-central1/sessionTemplates/p1' },
+      {
+        name: 'projects/test-project/locations/us-central1/sessionTemplates/p1'
+      },
       {
         metastore: 'Lakehouse runtime catalog',
         metastoreType: 'lakehouse',
@@ -1537,7 +1551,9 @@ describe('RuntimeProfileDetails Component', () => {
     // Defaults primaryNetwork to 'default' when neither networkUri nor subnetworkUri is present
     expect(
       buildNetworkSecurityConfigFromTemplate(
-        { name: 'projects/test-project/locations/us-central1/sessionTemplates/empty-net' },
+        {
+          name: 'projects/test-project/locations/us-central1/sessionTemplates/empty-net'
+        },
         'test-project',
         'us-central1'
       )
@@ -1765,5 +1781,49 @@ describe('RuntimeProfileDetails Component', () => {
       )
     ).toBe('Enabled');
   });
-});
 
+  it('preserves serviceAccount and renders custom SA email and separate Network URI row on Runtime 3.0+ profiles without explicit auth type', async () => {
+    const customSaEmail = 'custom-runner@test-project.iam.gserviceaccount.com';
+    const customNetworkUri = 'projects/test-project/global/networks/custom-vpc';
+    const runtime3SaProfile: IRuntimeProfileTemplate = {
+      ...mockProfile,
+      runtimeConfig: {
+        ...mockProfile.runtimeConfig,
+        version: '3.0'
+      },
+      environmentConfig: {
+        executionConfig: {
+          serviceAccount: customSaEmail,
+          networkUri: customNetworkUri
+        }
+      }
+    };
+
+    const drawerConfig =
+      buildNetworkSecurityConfigFromTemplate(runtime3SaProfile);
+    expect(drawerConfig.executionIdentity).toBe('service_account');
+    expect(drawerConfig.serviceAccount).toBe(customSaEmail);
+
+    await renderDetails(jest.fn(), undefined, runtime3SaProfile);
+    const configHeader = container.querySelector(
+      '[aria-controls="runtime-profile-config-content"]'
+    ) as HTMLElement;
+    if (configHeader.getAttribute('aria-expanded') !== 'true') {
+      await act(async () => {
+        configHeader.click();
+      });
+    }
+
+    const rows = Array.from(
+      container.querySelectorAll('.runtime-profile-details-row')
+    );
+    const getRowValue = (label: string) =>
+      rows
+        .find(row => row.textContent?.startsWith(label))
+        ?.querySelector('.runtime-profile-details-value')?.textContent;
+
+    expect(getRowValue('Execution identity')).toBe(customSaEmail);
+    expect(getRowValue('Network URI')).toBe(customNetworkUri);
+    expect(getRowValue('Subnetwork URI')).toBeUndefined();
+  });
+});

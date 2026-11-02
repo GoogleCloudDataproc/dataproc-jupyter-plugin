@@ -39,10 +39,7 @@ import {
   RuntimeEnvironmentEditDrawer,
   SessionLifecycleEditDrawer
 } from './runtimeProfileEditDrawers';
-import {
-  DATAPROC_METASTORE,
-  MetastoreEditDrawer
-} from './metastoreEditDrawer';
+import { DATAPROC_METASTORE, MetastoreEditDrawer } from './metastoreEditDrawer';
 import {
   CatalogSelectionMode,
   DISK_TIER_HDD,
@@ -210,8 +207,10 @@ export const buildRuntimeEnvironmentConfigFromTemplate = (
       profile.runtimeConfig?.repositoryConfig?.pypiRepositoryConfig
         ?.pypiRepository || '',
     lightningEngineEnabled:
-      getPropertyValue(properties, DATAPROC_LIGHTNING_ENGINE_PROPERTY).trim() ===
-      'lightningEngine'
+      getPropertyValue(
+        properties,
+        DATAPROC_LIGHTNING_ENGINE_PROPERTY
+      ).trim() === 'lightningEngine'
   };
 };
 
@@ -337,8 +336,8 @@ export const buildExecutorAndDriverConfigFromTemplate = (
     rawTier === 'standard'
       ? 'Standard'
       : rawTier === 'premium'
-        ? 'Premium'
-        : getDefaultTierForVersion(profile.runtimeConfig?.version);
+      ? 'Premium'
+      : getDefaultTierForVersion(profile.runtimeConfig?.version);
   const lightningEngineEnabled =
     getPropertyValue(properties, DATAPROC_LIGHTNING_ENGINE_PROPERTY).trim() ===
     'lightningEngine';
@@ -1031,16 +1030,19 @@ export const buildNetworkSecurityConfigFromTemplate = (
 
   const authType =
     executionConfig?.authenticationConfig?.userWorkloadAuthenticationType || '';
+  const configuredServiceAccount =
+    executionConfig?.serviceAccount?.trim() || undefined;
   const usesUserAccount =
     authType && authType !== 'AUTHENTICATION_TYPE_UNSPECIFIED'
       ? authType === 'END_USER_CREDENTIALS'
-      : parseFloat(profile.runtimeConfig?.version ?? '') >= 3;
+      : !configuredServiceAccount &&
+        parseFloat(profile.runtimeConfig?.version ?? '') >= 3;
   const executionIdentity: ExecutionIdentityType = usesUserAccount
     ? 'user_account'
     : 'service_account';
   const serviceAccount =
     executionIdentity === 'service_account'
-      ? executionConfig?.serviceAccount?.trim() || undefined
+      ? configuredServiceAccount
       : undefined;
 
   const rawKmsKey = executionConfig?.kmsKey?.trim() || '';
@@ -1544,10 +1546,10 @@ export default function RuntimeProfileDetails({
   const metastore = metastoreService
     ? metastoreService
     : hasLakehouseConfig
-      ? lakehouseProject && (!projectId || lakehouseProject !== projectId)
-        ? `${LAKEHOUSE_RUNTIME_CATALOG} (project: ${lakehouseProject})`
-        : LAKEHOUSE_RUNTIME_CATALOG
-      : METASTORE_NONE;
+    ? lakehouseProject && (!projectId || lakehouseProject !== projectId)
+      ? `${LAKEHOUSE_RUNTIME_CATALOG} (project: ${lakehouseProject})`
+      : LAKEHOUSE_RUNTIME_CATALOG
+    : METASTORE_NONE;
   // A new default catalog is stored by name, an existing one by resource.
   const hasHiveCatalog = Object.keys(properties).some(rawKey => {
     const key = stripPropertyPrefix(rawKey);
@@ -1632,15 +1634,25 @@ export default function RuntimeProfileDetails({
           value:
             networkSecurityDrawerConfig.executionIdentity === 'user_account'
               ? 'User account'
-              : 'Service account'
+              : networkSecurityDrawerConfig.serviceAccount || 'Service account'
         },
-        {
-          label: 'Subnetwork URI',
-          value:
-            executionConfig?.subnetworkUri?.trim() ||
-            executionConfig?.networkUri?.trim() ||
-            'default'
-        },
+        ...(executionConfig?.networkUri?.trim()
+          ? [
+              {
+                label: 'Network URI',
+                value: executionConfig.networkUri.trim()
+              }
+            ]
+          : []),
+        ...(executionConfig?.subnetworkUri?.trim() ||
+        !executionConfig?.networkUri?.trim()
+          ? [
+              {
+                label: 'Subnetwork URI',
+                value: executionConfig?.subnetworkUri?.trim() || 'default'
+              }
+            ]
+          : []),
         { label: 'Encryption type', value: encryptionType }
       ]
     },
