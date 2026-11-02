@@ -190,6 +190,11 @@ const AsyncOptionsSelect: React.FC<IAsyncOptionsSelectProps> = ({
 }) => {
   const formControlRef = useRef<HTMLDivElement>(null);
   const [menuWidth, setMenuWidth] = useState<number | undefined>(undefined);
+  const renderedOptions = isLoading || options.length === 0 ? [] : options;
+  const hasMatchingOption =
+    value === '' ||
+    fixedOptions.includes(value) ||
+    renderedOptions.includes(value);
 
   return (
     <FormControl ref={formControlRef} size="small" fullWidth variant="outlined">
@@ -241,6 +246,11 @@ const AsyncOptionsSelect: React.FC<IAsyncOptionsSelectProps> = ({
             {option}
           </MenuItem>
         ))}
+        {!hasMatchingOption && (
+          <MenuItem value={value} disabled>
+            {value}
+          </MenuItem>
+        )}
         {isLoading ? (
           <MenuItem value="" disabled>
             <CircularProgress

@@ -406,7 +406,12 @@ export const buildExecutorAndDriverConfigFromTemplate = (
   const useDifferentDriverConfig =
     driverMachineType !== executorMachineType ||
     parsedDrvDisk.tier !== parsedExecDisk.tier ||
-    parsedDrvDisk.size !== parsedExecDisk.size;
+    parsedDrvDisk.size !== parsedExecDisk.size ||
+    Boolean(
+      drvDiskStr &&
+        execDiskStr &&
+        drvDiskStr.toLowerCase() !== execDiskStr.toLowerCase()
+    );
 
   return {
     tier,
