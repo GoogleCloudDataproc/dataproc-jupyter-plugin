@@ -229,9 +229,9 @@ export const DEFAULT_EXECUTOR_AND_DRIVER_CONFIG: IExecutorAndDriverConfig = {
 
 export const DEFAULT_AUTOSCALING_CONFIG: IAutoscalingConfig = {
   autoscalingEnabled: true,
-  initialExecutors: 2,
-  minExecutors: 2,
-  maxExecutors: 10
+  initialExecutors: DEFAULT_INITIAL_EXECUTORS,
+  minExecutors: DEFAULT_MIN_EXECUTORS,
+  maxExecutors: DEFAULT_MAX_EXECUTORS
 };
 
 // No metastoreType: nothing is sent until the user saves the Metastore drawer,
@@ -1718,11 +1718,7 @@ export const CreateRuntimeProfileComponent: React.FC<
             </div>
 
             {/* Action Buttons */}
-            <div
-              className={`runtime-profile-buttons${
-                expandAdditionalConfig ? '' : ' no-top-border'
-              }`}
-            >
+            <div className="runtime-profile-buttons">
               <button
                 type="submit"
                 disabled={isSubmitting || hasFormErrors}

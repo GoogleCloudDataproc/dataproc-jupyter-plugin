@@ -1,4 +1,3 @@
-
 /**
  * @license
  * Copyright 2026 Google LLC
@@ -80,6 +79,7 @@ import {
   listHiveCatalogsAPI,
   listIcebergCatalogsAPI
 } from '../utils/biglakeService';
+import { metastoreServiceListAPI } from '../utils/metastoreService';
 
 describe('MetastoreEditDrawer & Metastore Flow', () => {
   const initialLakehouseConfig: IMetastoreConfig = {
@@ -540,5 +540,55 @@ describe('MetastoreEditDrawer interactions', () => {
     await wait();
 
     expect(saveButton().disabled).toBe(true);
+  });
+
+  it('renders a loader spinner with loadingText while loading services and shows None once loaded', async () => {
+    let resolveServices: (services: string[]) => void = () => undefined;
+    (metastoreServiceListAPI as jest.Mock).mockReturnValueOnce(
+      new Promise(resolve => {
+        resolveServices = resolve;
+      })
+    );
+    await renderDrawer();
+    await click(cards()[1]);
+
+    const selectEl = document.getElementById(
+      'dpms-service-select'
+    ) as HTMLElement;
+    const spinnerEl = selectEl.querySelector('[role="progressbar"]');
+    expect(spinnerEl).not.toBeNull();
+    expect(spinnerEl?.getAttribute('aria-hidden')).toBe('true');
+    expect(selectEl.textContent).toContain('Loading services...');
+
+    await act(async () => {
+      resolveServices([DPMS_SERVICE]);
+    });
+    expect(selectEl.querySelector('[role="progressbar"]')).toBeNull();
+    expect(selectEl.textContent).toContain('None');
+  });
+
+  it('shows emptyText only when options are empty and renders blank when options exist with no selection', async () => {
+    await renderDrawer();
+    await click(radio('existing'));
+    await wait();
+
+    const icebergSelect = document.getElementById(
+      'existing-catalog-select'
+    ) as HTMLElement;
+    expect(icebergSelect.textContent).not.toContain(
+      'No catalogs found in project'
+    );
+
+    (listIcebergCatalogsAPI as jest.Mock).mockResolvedValueOnce([]);
+    await renderDrawer();
+    await click(radio('existing'));
+    await wait();
+
+    const emptyIcebergSelect = document.getElementById(
+      'existing-catalog-select'
+    ) as HTMLElement;
+    expect(emptyIcebergSelect.textContent).toContain(
+      'No catalogs found in project'
+    );
   });
 });

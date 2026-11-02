@@ -15,7 +15,6 @@
  * limitations under the License.
  */
 
-
 import React, { useEffect, useRef, useState } from 'react';
 import {
   Checkbox,
@@ -188,47 +187,94 @@ const AsyncOptionsSelect: React.FC<IAsyncOptionsSelectProps> = ({
   emptyText,
   onChange,
   fixedOptions = []
-}) => (
-  <FormControl size="small" fullWidth variant="outlined">
-    <InputLabel id={`${id}-label`} shrink>
-      {label}
-    </InputLabel>
-    <Select
-      labelId={`${id}-label`}
-      id={id}
-      label={label}
-      notched
-      value={value}
-      onChange={e => onChange(e.target.value as string)}
-      disabled={isLoading}
-    >
-      {fixedOptions.map(option => (
-        <MenuItem key={option} value={option}>
-          {option}
-        </MenuItem>
-      ))}
-      {isLoading ? (
-        <MenuItem value="" disabled>
-          <CircularProgress
-            size={16}
-            className="metastore-drawer-option-spinner"
-          />
-          {loadingText}
-        </MenuItem>
-      ) : options.length === 0 ? (
-        <MenuItem value="" disabled>
-          {emptyText}
-        </MenuItem>
-      ) : (
-        options.map(option => (
-          <MenuItem key={option} value={option}>
+}) => {
+  const formControlRef = useRef<HTMLDivElement>(null);
+  const [menuWidth, setMenuWidth] = useState<number | undefined>(undefined);
+  const renderedOptions = isLoading || options.length === 0 ? [] : options;
+  const hasMatchingOption =
+    value === '' ||
+    fixedOptions.includes(value) ||
+    renderedOptions.includes(value);
+
+  return (
+    <FormControl ref={formControlRef} size="small" fullWidth variant="outlined">
+      <InputLabel id={`${id}-label`} shrink>
+        {label}
+      </InputLabel>
+      <Select
+        labelId={`${id}-label`}
+        id={id}
+        label={label}
+        notched
+        displayEmpty
+        value={value}
+        onOpen={() => {
+          const width = formControlRef.current?.clientWidth;
+          if (width) {
+            setMenuWidth(width);
+          }
+        }}
+        onChange={e => onChange(e.target.value as string)}
+        disabled={isLoading}
+        MenuProps={{
+          PaperProps: {
+            className: 'metastore-drawer-menu-paper',
+            style: menuWidth ? { width: menuWidth } : undefined
+          }
+        }}
+        renderValue={selected => {
+          if (isLoading) {
+            return (
+              <span className="metastore-drawer-select-loading">
+                <CircularProgress
+                  size={16}
+                  aria-hidden="true"
+                  className="metastore-drawer-option-spinner"
+                />
+                {loadingText}
+              </span>
+            );
+          }
+          if (selected) {
+            return selected;
+          }
+          return options.length === 0 ? emptyText : '';
+        }}
+      >
+        {fixedOptions.map(option => (
+          <MenuItem key={option} value={option} title={option}>
             {option}
           </MenuItem>
-        ))
-      )}
-    </Select>
-  </FormControl>
-);
+        ))}
+        {!hasMatchingOption && (
+          <MenuItem value={value} disabled>
+            {value}
+          </MenuItem>
+        )}
+        {isLoading ? (
+          <MenuItem value="" disabled>
+            <CircularProgress
+              size={16}
+              aria-hidden="true"
+              className="metastore-drawer-option-spinner"
+            />
+            {loadingText}
+          </MenuItem>
+        ) : options.length === 0 ? (
+          <MenuItem value="" disabled>
+            {emptyText}
+          </MenuItem>
+        ) : (
+          options.map(option => (
+            <MenuItem key={option} value={option} title={option}>
+              {option}
+            </MenuItem>
+          ))
+        )}
+      </Select>
+    </FormControl>
+  );
+};
 
 interface IMetastoreDrawerState {
   metastoreType: MetastoreType;
