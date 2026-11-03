@@ -1227,7 +1227,8 @@ export const CreateRuntimeProfileComponent: React.FC<
         if (widget.title?.label === SETTINGS_WIDGET_TITLE) {
           widget.close();
         } else if (widget.title?.label === formWidgetTitle) {
-          const widgetProfileName = widget.content?.profile?.name;
+          const widgetProfileName =
+            widget.profile?.name ?? widget.content?.profile?.name;
           if (
             !isEditMode ||
             !profile?.name ||
@@ -1241,11 +1242,9 @@ export const CreateRuntimeProfileComponent: React.FC<
     }
     // The new Settings layout reads this request when it mounts.
     requestRuntimeProfileListTab();
-    void Promise.resolve(app?.commands.execute(SETTINGS_COMMAND_ID)).catch(
-      err => {
-        console.error('Failed to open Settings widget', err);
-      }
-    );
+    void app?.commands.execute(SETTINGS_COMMAND_ID)?.catch(err => {
+      console.error('Failed to open Settings widget', err);
+    });
     if (onBack) {
       onBack();
     }

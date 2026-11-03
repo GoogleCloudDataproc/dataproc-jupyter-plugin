@@ -331,9 +331,11 @@ export default function RuntimeProfileList({ app }: { app?: JupyterLab }) {
                             onKeyDown={e => {
                               if (e.key === 'Enter' || e.key === ' ') {
                                 e.preventDefault();
-                                toggleDropdown(
-                                  e as unknown as React.MouseEvent,
-                                  profile.id
+                                e.stopPropagation();
+                                setOpenDropdownId(
+                                  openDropdownId === profile.id
+                                    ? null
+                                    : profile.id
                                 );
                               }
                             }}
