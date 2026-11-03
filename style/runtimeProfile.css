@@ -544,33 +544,33 @@ body[data-jp-theme-name='JupyterLab Dark'] .node-config-card.disabled {
   flex-direction: column;
   height: 100%;
   width: 100%;
-    min-width: 0;
-    overflow: hidden;
+  min-width: 0;
+  overflow: hidden;
 }
 
 .runtime-profile-table-container {
   padding: 12px 24px;
-    flex: 1;
-    min-width: 0;
-    min-height: 0;
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-    box-sizing: border-box;
-  }
-  
-  .runtime-profile-table-scroll {
-    width: 100%;
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+.runtime-profile-table-scroll {
+  width: 100%;
   overflow: auto;
   border: 1px solid var(--jp-border-color2);
-    box-sizing: border-box;
+  box-sizing: border-box;
 }
 
 .runtime-profile-table {
   width: 100%;
   min-width: max-content;
-    border-collapse: separate;
-    border-spacing: 0;
+  border-collapse: separate;
+  border-spacing: 0;
 }
 
 .runtime-profile-table th,
@@ -579,13 +579,13 @@ body[data-jp-theme-name='JupyterLab Dark'] .node-config-card.disabled {
   text-align: left;
   border-bottom: 1px solid var(--jp-border-color2);
   font-size: 14px;
-    line-height: 16px;
-    white-space: nowrap;
-    vertical-align: middle;
-  }
-  
-  .runtime-profile-table tbody tr:last-child td {
-    border-bottom: none;
+  line-height: 16px;
+  white-space: nowrap;
+  vertical-align: middle;
+}
+
+.runtime-profile-table tbody tr:last-child td {
+  border-bottom: none;
 }
 
 .runtime-profile-table th {
@@ -593,25 +593,25 @@ body[data-jp-theme-name='JupyterLab Dark'] .node-config-card.disabled {
   font-weight: 500;
   background-color: var(--jp-layout-color2);
   position: sticky;
-    top: 0;
-    z-index: 2;
-  }
-  
-  .runtime-profile-table td {
-    background-color: var(--jp-layout-color1);
+  top: 0;
+  z-index: 2;
+}
+
+.runtime-profile-table td {
+  background-color: var(--jp-layout-color1);
 }
 
 .runtime-profile-table th:first-child,
 .runtime-profile-table td:first-child {
   position: sticky;
-    left: 0;
-    z-index: 1;
+  left: 0;
+  z-index: 1;
   border-right: 2px solid var(--jp-border-color2);
   max-width: 220px;
-  }
-  
-  .runtime-profile-table th:first-child {
-    z-index: 3;
+}
+
+.runtime-profile-table th:first-child {
+  z-index: 3;
 }
 
 .runtime-profile-table th:last-child,
@@ -641,8 +641,8 @@ body[data-jp-theme-name='JupyterLab Dark'] .node-config-card.disabled {
 .profile-name-cell {
   color: var(--jp-brand-color1);
   max-width: 220px;
-    overflow: hidden;
-    text-overflow: ellipsis;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .profile-name-button-link {
@@ -654,10 +654,10 @@ body[data-jp-theme-name='JupyterLab Dark'] .node-config-card.disabled {
   padding: 0;
   text-align: left;
   display: block;
-    max-width: 100%;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .actions-cell {

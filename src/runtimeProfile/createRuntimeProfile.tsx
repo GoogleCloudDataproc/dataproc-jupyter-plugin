@@ -1206,7 +1206,9 @@ export const CreateRuntimeProfileComponent: React.FC<
    * open is replaced by a fresh one, so the listing reloads and includes the
    * new profile.
    */
-  const navigateToRuntimeProfileList = () => {
+  const navigateToRuntimeProfileList = (
+    submittingWidget?: { close: () => void } | null
+  ) => {
     const shell = app?.shell;
     if (!shell) {
       return;
@@ -1215,26 +1217,44 @@ export const CreateRuntimeProfileComponent: React.FC<
       ? 'Edit Runtime Profile'
       : 'Create Runtime Profile';
     const formWidgetsToClose = new Set<{ close: () => void }>();
-    const activeOrCurrent = shell.activeWidget ?? shell.currentWidget;
-    if (activeOrCurrent) {
-      formWidgetsToClose.add(activeOrCurrent);
+    const targetWidget =
+      submittingWidget ?? shell.activeWidget ?? shell.currentWidget;
+    if (targetWidget) {
+      formWidgetsToClose.add(targetWidget);
     }
     if (typeof shell.widgets === 'function') {
-      Array.from(shell.widgets('main')).forEach(widget => {
-        if (widget.title.label === SETTINGS_WIDGET_TITLE) {
+      Array.from(shell.widgets('main')).forEach((widget: any) => {
+        if (widget.title?.label === SETTINGS_WIDGET_TITLE) {
           widget.close();
-        } else if (widget.title.label === formWidgetTitle) {
-          formWidgetsToClose.add(widget);
+        } else if (widget.title?.label === formWidgetTitle) {
+          const widgetProfileName = widget.content?.profile?.name;
+          if (
+            !isEditMode ||
+            !profile?.name ||
+            !widgetProfileName ||
+            widgetProfileName === profile.name
+          ) {
+            formWidgetsToClose.add(widget);
+          }
         }
       });
     }
     // The new Settings layout reads this request when it mounts.
     requestRuntimeProfileListTab();
-    void app?.commands.execute(SETTINGS_COMMAND_ID);
+    void Promise.resolve(app?.commands.execute(SETTINGS_COMMAND_ID)).catch(
+      err => {
+        console.error('Failed to open Settings widget', err);
+      }
+    );
+    if (onBack) {
+      onBack();
+    }
     formWidgetsToClose.forEach(widget => widget.close());
   };
 
   const onSubmit = async (data: IRuntimeProfileFormData) => {
+    const submittingWidget =
+      app?.shell?.activeWidget ?? app?.shell?.currentWidget;
     try {
       const payload = buildPayload(data);
 
@@ -1274,7 +1294,7 @@ export const CreateRuntimeProfileComponent: React.FC<
       if (onSuccess) {
         onSuccess();
       } else {
-        navigateToRuntimeProfileList();
+        navigateToRuntimeProfileList(submittingWidget);
       }
     } catch (error: any) {
       const errorMessage =
@@ -1903,6 +1923,7 @@ export class CreateRuntimeProfile extends DataprocWidget {
         settingRegistry={this.settingRegistry}
         mode={this.profile ? 'edit' : 'create'}
         profile={this.profile}
+        onBack={() => (this.parent ?? this).close()}
       />
     );
   }

@@ -132,8 +132,15 @@ describe('RuntimeProfileList Component', () => {
       'Description',
       'Actions'
     ]);
-    expect(container.textContent).toContain('profile-1');
-    expect(container.textContent).toContain('Profile 1 Display');
+    const firstRowCells = Array.from(
+      container.querySelectorAll('.runtime-profile-table tbody tr:first-child td')
+    );
+    expect(firstRowCells[0]?.textContent).toBe('profile-1');
+    expect(
+      firstRowCells[0]?.querySelector('.profile-name-button-link')?.getAttribute('title')
+    ).toBe('profile-1');
+    expect(firstRowCells[1]?.textContent).toBe('Profile 1 Display');
+    expect(firstRowCells[1]?.getAttribute('title')).toBe('Profile 1 Display');
     expect(container.textContent).toContain('us-central1');
     expect(container.textContent).toContain('Premium');
     expect(container.textContent).toContain('Lightning Engine');

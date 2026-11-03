@@ -321,15 +321,42 @@ export default function RuntimeProfileList({ app }: { app?: JupyterLab }) {
                       </td>
                       <td className="actions-cell">
                         <div className="dropdown">
-                          <span onClick={e => toggleDropdown(e, profile.id)}>
+                          <span
+                            role="button"
+                            tabIndex={0}
+                            aria-label={`Actions for ${profile.name}`}
+                            aria-haspopup="menu"
+                            aria-expanded={openDropdownId === profile.id}
+                            onClick={e => toggleDropdown(e, profile.id)}
+                            onKeyDown={e => {
+                              if (e.key === 'Enter' || e.key === ' ') {
+                                e.preventDefault();
+                                toggleDropdown(
+                                  e as unknown as React.MouseEvent,
+                                  profile.id
+                                );
+                              }
+                            }}
+                          >
                             &#8942;
                           </span>
                           <div
+                            role="menu"
                             className={`dropdown-content ${
                               openDropdownId === profile.id ? 'show' : ''
                             }`}
                           >
-                            <div onClick={() => openDeleteModal(profile)}>
+                            <div
+                              role="menuitem"
+                              tabIndex={0}
+                              onClick={() => openDeleteModal(profile)}
+                              onKeyDown={e => {
+                                if (e.key === 'Enter' || e.key === ' ') {
+                                  e.preventDefault();
+                                  openDeleteModal(profile);
+                                }
+                              }}
+                            >
                               Delete
                             </div>
                           </div>
