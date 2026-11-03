@@ -177,8 +177,8 @@ const EXECUTION_IDENTITY_DISPLAY_MAP: Record<string, string> = {
 };
 
 const ENCRYPTION_DISPLAY_MAP: Record<string, string> = {
-  google_managed: 'Google-managed key',
-  customer_managed_key: 'Customer-managed key'
+  google_managed: 'Google managed',
+  customer_managed_key: 'Customer managed'
 };
 
 const RUNTIME_VERSION_DISPLAY_MAP: Record<string, string> = {
@@ -1195,6 +1195,8 @@ export const CreateRuntimeProfileComponent: React.FC<
       onBack();
     } else if (app?.shell?.activeWidget) {
       app.shell.activeWidget.close();
+    } else if (app?.shell?.currentWidget) {
+      app.shell.currentWidget.close();
     }
   };
 
@@ -1209,16 +1211,27 @@ export const CreateRuntimeProfileComponent: React.FC<
     if (!shell) {
       return;
     }
-    const formWidget = shell.activeWidget;
+    const formWidgetTitle = isEditMode
+      ? 'Edit Runtime Profile'
+      : 'Create Runtime Profile';
+    const formWidgetsToClose = new Set<{ close: () => void }>();
+    const activeOrCurrent = shell.activeWidget ?? shell.currentWidget;
+    if (activeOrCurrent) {
+      formWidgetsToClose.add(activeOrCurrent);
+    }
     if (typeof shell.widgets === 'function') {
-      Array.from(shell.widgets('main'))
-        .filter(widget => widget.title.label === SETTINGS_WIDGET_TITLE)
-        .forEach(widget => widget.close());
+      Array.from(shell.widgets('main')).forEach(widget => {
+        if (widget.title.label === SETTINGS_WIDGET_TITLE) {
+          widget.close();
+        } else if (widget.title.label === formWidgetTitle) {
+          formWidgetsToClose.add(widget);
+        }
+      });
     }
     // The new Settings layout reads this request when it mounts.
     requestRuntimeProfileListTab();
     void app?.commands.execute(SETTINGS_COMMAND_ID);
-    formWidget?.close();
+    formWidgetsToClose.forEach(widget => widget.close());
   };
 
   const onSubmit = async (data: IRuntimeProfileFormData) => {

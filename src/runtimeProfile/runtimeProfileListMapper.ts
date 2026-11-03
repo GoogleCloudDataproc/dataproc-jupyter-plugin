@@ -24,6 +24,7 @@ import {
 
 export interface IRuntimeProfileRow {
   name: string;
+  displayName: string;
   region: string;
   runtimeVersion: string;
   tier: string;
@@ -204,7 +205,8 @@ export const runtimeProfileListMapper = (
     const engine = LightningEngineDisplayNameMap.get(rawEngine) ?? 'Default';
 
     return {
-      name: t.jupyterSession?.displayName || profileId || t.name,
+      name: profileId || t.name,
+      displayName: t.jupyterSession?.displayName || '',
       region: region,
       runtimeVersion: t.runtimeConfig?.version || '',
       tier,

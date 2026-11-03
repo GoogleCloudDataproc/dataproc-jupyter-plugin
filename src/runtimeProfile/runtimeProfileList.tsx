@@ -266,70 +266,80 @@ export default function RuntimeProfileList({ app }: { app?: JupyterLab }) {
           <div className="no-profiles-message">No rows to display</div>
         ) : (
           <>
-            <table className="runtime-profile-table">
-              <thead>
-                <tr>
-                  <th>Runtime profile name</th>
-                  <th>Region</th>
-                  <th>Runtime version</th>
-                  <th>Tier</th>
-                  <th>Engine</th>
-                  <th>Last used</th>
-                  <th>Creator</th>
-                  <th>Description</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {profiles.map(profile => (
-                  <tr key={profile.id}>
-                    <td className="profile-name-cell">
-                      <button
-                        type="button"
-                        className="profile-name-button-link"
-                        onClick={() => handleProfileClick(profile.id)}
-                        onKeyDown={e => {
-                          if (e.key === 'Enter' || e.key === ' ') {
-                            e.preventDefault();
-                            handleProfileClick(profile.id);
-                          }
-                        }}
-                      >
-                        {profile.name}
-                      </button>
-                    </td>
-                    <td>{profile.region}</td>
-                    <td>{profile.runtimeVersion}</td>
-                    <td>{profile.tier}</td>
-                    <td>{profile.engine}</td>
-                    <td>{profile.lastUsed}</td>
-                    <td>{profile.creator}</td>
-                    <td
-                      className="description-cell"
-                      title={profile.description}
-                    >
-                      {profile.description}
-                    </td>
-                    <td className="actions-cell">
-                      <div className="dropdown">
-                        <span onClick={e => toggleDropdown(e, profile.id)}>
-                          &#8942;
-                        </span>
-                        <div
-                          className={`dropdown-content ${
-                            openDropdownId === profile.id ? 'show' : ''
-                          }`}
+            <div className="runtime-profile-table-scroll">
+              <table className="runtime-profile-table">
+                <thead>
+                  <tr>
+                    <th>Name</th>
+                    <th>Display name</th>
+                    <th>Region</th>
+                    <th>Runtime version</th>
+                    <th>Tier</th>
+                    <th>Engine</th>
+                    <th>Last used</th>
+                    <th>Creator</th>
+                    <th>Description</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {profiles.map(profile => (
+                    <tr key={profile.id}>
+                      <td className="profile-name-cell">
+                        <button
+                          type="button"
+                          className="profile-name-button-link"
+                          title={profile.name}
+                          onClick={() => handleProfileClick(profile.id)}
+                          onKeyDown={e => {
+                            if (e.key === 'Enter' || e.key === ' ') {
+                              e.preventDefault();
+                              handleProfileClick(profile.id);
+                            }
+                          }}
                         >
-                          <div onClick={() => openDeleteModal(profile)}>
-                            Delete
+                          {profile.name}
+                        </button>
+                      </td>
+                      <td
+                        className="display-name-cell"
+                        title={profile.displayName}
+                      >
+                        {profile.displayName}
+                      </td>
+                      <td>{profile.region}</td>
+                      <td>{profile.runtimeVersion}</td>
+                      <td>{profile.tier}</td>
+                      <td>{profile.engine}</td>
+                      <td>{profile.lastUsed}</td>
+                      <td>{profile.creator}</td>
+                      <td
+                        className="description-cell"
+                        title={profile.description}
+                      >
+                        {profile.description}
+                      </td>
+                      <td className="actions-cell">
+                        <div className="dropdown">
+                          <span onClick={e => toggleDropdown(e, profile.id)}>
+                            &#8942;
+                          </span>
+                          <div
+                            className={`dropdown-content ${
+                              openDropdownId === profile.id ? 'show' : ''
+                            }`}
+                          >
+                            <div onClick={() => openDeleteModal(profile)}>
+                              Delete
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
             <div className="table-footer">
               {`Showing ${(pageOffsets[currentPage] ?? 0) + 1} – ${
                 (pageOffsets[currentPage] ?? 0) + profiles.length

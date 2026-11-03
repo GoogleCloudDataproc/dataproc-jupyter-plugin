@@ -68,7 +68,8 @@ describe('runtimeProfileListMapper', () => {
 
     expect(result[0]).toEqual({
       id: 'projects/test-proj/locations/europe-west1/sessionTemplates/full-profile',
-      name: 'Display Profile',
+      name: 'full-profile',
+      displayName: 'Display Profile',
       region: 'europe-west1',
       runtimeVersion: '2.2',
       tier: 'Premium',
@@ -81,6 +82,7 @@ describe('runtimeProfileListMapper', () => {
     expect(result[1]).toEqual({
       id: 'short-name',
       name: 'short-name',
+      displayName: '',
       region: '',
       runtimeVersion: '',
       tier: 'Standard',
@@ -92,7 +94,8 @@ describe('runtimeProfileListMapper', () => {
 
     expect(result[2]).toEqual({
       id: 'projects/test-proj/locations/us-east4/sessionTemplates/v31-profile',
-      name: 'V31 Profile',
+      name: 'v31-profile',
+      displayName: 'V31 Profile',
       region: 'us-east4',
       runtimeVersion: '3.1',
       tier: 'Premium',

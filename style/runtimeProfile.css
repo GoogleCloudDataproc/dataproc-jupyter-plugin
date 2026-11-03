@@ -543,37 +543,75 @@ body[data-jp-theme-name='JupyterLab Dark'] .node-config-card.disabled {
   display: flex;
   flex-direction: column;
   height: 100%;
+  width: 100%;
+    min-width: 0;
+    overflow: hidden;
 }
 
 .runtime-profile-table-container {
-  padding: 24px;
-  flex-grow: 1;
+  padding: 12px 24px;
+    flex: 1;
+    min-width: 0;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    box-sizing: border-box;
+  }
+  
+  .runtime-profile-table-scroll {
+    width: 100%;
   overflow: auto;
+  border: 1px solid var(--jp-border-color2);
+    box-sizing: border-box;
 }
 
 .runtime-profile-table {
   width: 100%;
-  border-collapse: collapse;
-  border: 1px solid var(--jp-border-color2);
+  min-width: max-content;
+    border-collapse: separate;
+    border-spacing: 0;
 }
 
 .runtime-profile-table th,
 .runtime-profile-table td {
-  padding: 12px 16px;
+  padding: 8px 16px;
   text-align: left;
   border-bottom: 1px solid var(--jp-border-color2);
-  font-size: 13px;
+  font-size: 14px;
+    line-height: 16px;
+    white-space: nowrap;
+    vertical-align: middle;
+  }
+  
+  .runtime-profile-table tbody tr:last-child td {
+    border-bottom: none;
 }
 
 .runtime-profile-table th {
   color: var(--jp-ui-font-color2);
   font-weight: 500;
   background-color: var(--jp-layout-color2);
+  position: sticky;
+    top: 0;
+    z-index: 2;
+  }
+  
+  .runtime-profile-table td {
+    background-color: var(--jp-layout-color1);
 }
 
 .runtime-profile-table th:first-child,
 .runtime-profile-table td:first-child {
+  position: sticky;
+    left: 0;
+    z-index: 1;
   border-right: 2px solid var(--jp-border-color2);
+  max-width: 220px;
+  }
+  
+  .runtime-profile-table th:first-child {
+    z-index: 3;
 }
 
 .runtime-profile-table th:last-child,
@@ -582,12 +620,15 @@ body[data-jp-theme-name='JupyterLab Dark'] .node-config-card.disabled {
   text-align: center;
 }
 
-.runtime-profile-table tr:hover {
+.runtime-profile-table tbody tr:hover td {
   background-color: var(--jp-layout-color2);
 }
 
-.runtime-profile-table tr {
-  vertical-align: top;
+.display-name-cell {
+  max-width: 200px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .description-cell {
@@ -599,6 +640,9 @@ body[data-jp-theme-name='JupyterLab Dark'] .node-config-card.disabled {
 
 .profile-name-cell {
   color: var(--jp-brand-color1);
+  max-width: 220px;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .profile-name-button-link {
@@ -609,6 +653,11 @@ body[data-jp-theme-name='JupyterLab Dark'] .node-config-card.disabled {
   font: inherit;
   padding: 0;
   text-align: left;
+  display: block;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .actions-cell {
@@ -619,13 +668,14 @@ body[data-jp-theme-name='JupyterLab Dark'] .node-config-card.disabled {
 .table-footer {
   display: flex;
   justify-content: flex-end;
-  padding: 12px 16px;
+  padding: 6px 16px;
   border: 1px solid var(--jp-border-color2);
   border-top: none;
   color: var(--jp-ui-font-color2);
   font-size: 13px;
   align-items: center;
   gap: 16px;
+  flex-shrink: 0;
 }
 
 .pagination-btn {
