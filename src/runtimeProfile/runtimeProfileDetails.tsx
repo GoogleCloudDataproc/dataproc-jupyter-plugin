@@ -39,10 +39,7 @@ import {
   RuntimeEnvironmentEditDrawer,
   SessionLifecycleEditDrawer
 } from './runtimeProfileEditDrawers';
-import {
-  DATAPROC_METASTORE,
-  MetastoreEditDrawer
-} from './metastoreEditDrawer';
+import { DATAPROC_METASTORE, MetastoreEditDrawer } from './metastoreEditDrawer';
 import {
   CatalogSelectionMode,
   DISK_TIER_HDD,
@@ -210,8 +207,10 @@ export const buildRuntimeEnvironmentConfigFromTemplate = (
       profile.runtimeConfig?.repositoryConfig?.pypiRepositoryConfig
         ?.pypiRepository || '',
     lightningEngineEnabled:
-      getPropertyValue(properties, DATAPROC_LIGHTNING_ENGINE_PROPERTY).trim() ===
-      'lightningEngine'
+      getPropertyValue(
+        properties,
+        DATAPROC_LIGHTNING_ENGINE_PROPERTY
+      ).trim() === 'lightningEngine'
   };
 };
 
@@ -337,8 +336,8 @@ export const buildExecutorAndDriverConfigFromTemplate = (
     rawTier === 'standard'
       ? 'Standard'
       : rawTier === 'premium'
-        ? 'Premium'
-        : getDefaultTierForVersion(profile.runtimeConfig?.version);
+      ? 'Premium'
+      : getDefaultTierForVersion(profile.runtimeConfig?.version);
   const lightningEngineEnabled =
     getPropertyValue(properties, DATAPROC_LIGHTNING_ENGINE_PROPERTY).trim() ===
     'lightningEngine';
@@ -407,7 +406,12 @@ export const buildExecutorAndDriverConfigFromTemplate = (
   const useDifferentDriverConfig =
     driverMachineType !== executorMachineType ||
     parsedDrvDisk.tier !== parsedExecDisk.tier ||
-    parsedDrvDisk.size !== parsedExecDisk.size;
+    parsedDrvDisk.size !== parsedExecDisk.size ||
+    Boolean(
+      drvDiskStr &&
+        execDiskStr &&
+        drvDiskStr.toLowerCase() !== execDiskStr.toLowerCase()
+    );
 
   return {
     tier,
@@ -1031,11 +1035,19 @@ export const buildNetworkSecurityConfigFromTemplate = (
 
   const authType =
     executionConfig?.authenticationConfig?.userWorkloadAuthenticationType || '';
-  const executionIdentity: ExecutionIdentityType =
-    authType === 'END_USER_CREDENTIALS' ? 'user_account' : 'service_account';
+  const configuredServiceAccount =
+    executionConfig?.serviceAccount?.trim() || undefined;
+  const usesUserAccount =
+    authType && authType !== 'AUTHENTICATION_TYPE_UNSPECIFIED'
+      ? authType === 'END_USER_CREDENTIALS'
+      : !configuredServiceAccount &&
+        parseFloat(profile.runtimeConfig?.version ?? '') >= 3;
+  const executionIdentity: ExecutionIdentityType = usesUserAccount
+    ? 'user_account'
+    : 'service_account';
   const serviceAccount =
     executionIdentity === 'service_account'
-      ? executionConfig?.serviceAccount?.trim() || undefined
+      ? configuredServiceAccount
       : undefined;
 
   const rawKmsKey = executionConfig?.kmsKey?.trim() || '';
@@ -1539,10 +1551,10 @@ export default function RuntimeProfileDetails({
   const metastore = metastoreService
     ? metastoreService
     : hasLakehouseConfig
-      ? lakehouseProject && (!projectId || lakehouseProject !== projectId)
-        ? `${LAKEHOUSE_RUNTIME_CATALOG} (project: ${lakehouseProject})`
-        : LAKEHOUSE_RUNTIME_CATALOG
-      : METASTORE_NONE;
+    ? lakehouseProject && (!projectId || lakehouseProject !== projectId)
+      ? `${LAKEHOUSE_RUNTIME_CATALOG} (project: ${lakehouseProject})`
+      : LAKEHOUSE_RUNTIME_CATALOG
+    : METASTORE_NONE;
   // A new default catalog is stored by name, an existing one by resource.
   const hasHiveCatalog = Object.keys(properties).some(rawKey => {
     const key = stripPropertyPrefix(rawKey);
@@ -1621,7 +1633,33 @@ export default function RuntimeProfileDetails({
     {
       title: 'Network and security',
       onEdit: () => setIsNetworkSecurityDrawerOpen(true),
-      rows: [{ label: 'Encryption type', value: encryptionType }]
+      rows: [
+        {
+          label: 'Execution identity',
+          value:
+            networkSecurityDrawerConfig.executionIdentity === 'user_account'
+              ? 'User account'
+              : networkSecurityDrawerConfig.serviceAccount || 'Service account'
+        },
+        ...(executionConfig?.networkUri?.trim()
+          ? [
+              {
+                label: 'Network URI',
+                value: executionConfig.networkUri.trim()
+              }
+            ]
+          : []),
+        ...(executionConfig?.subnetworkUri?.trim() ||
+        !executionConfig?.networkUri?.trim()
+          ? [
+              {
+                label: 'Subnetwork URI',
+                value: executionConfig?.subnetworkUri?.trim() || 'default'
+              }
+            ]
+          : []),
+        { label: 'Encryption type', value: encryptionType }
+      ]
     },
     {
       title: 'Session lifecycle',

@@ -513,11 +513,10 @@ export const DISK_TIER_HDD = 'HDD (standard)';
 export const DISK_TIER_SSD = 'SSD (premium)';
 export const DISK_TIER_OPTIONS: string[] = [DISK_TIER_HDD, DISK_TIER_SSD];
 
-export const DEFAULT_HDD_DISK_SIZE = '200 GiB';
+export const DEFAULT_HDD_DISK_SIZE = '400 GiB';
 export const DEFAULT_SSD_DISK_SIZE = '375 GiB';
 
 export const HDD_DISK_SIZES: string[] = [
-  '200 GiB',
   '300 GiB',
   '400 GiB',
   '500 GiB',
