@@ -1,137 +1,138 @@
-# dataproc_jupyter_plugin
+# Dataproc Jupyter Plugin
 
-It is a plugin to work with dataproc services in Jupyterlab
+[![PyPI version](https://img.shields.io/pypi/v/dataproc_jupyter_plugin.svg)](https://pypi.org/project/dataproc_jupyter_plugin/)
+[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
 
-This extension is composed of a Python package named `dataproc_jupyter_plugin`
-for the server extension and a NPM package named `dataproc_jupyter_plugin`
-for the frontend extension.
+A JupyterLab extension for working with [Google Cloud Dataproc](https://cloud.google.com/dataproc)
+and [BigQuery](https://cloud.google.com/bigquery) directly from your notebook environment.
+
+The extension is composed of two parts:
+
+- a Python package named `dataproc_jupyter_plugin` that provides the Jupyter **server** extension, and
+- an NPM package named `dataproc_jupyter_plugin` that provides the JupyterLab **frontend** extension.
+
+## Features
+
+From the JupyterLab launcher and menus, the plugin lets you:
+
+- **Dataproc Serverless** – create and run Spark batches (serverless notebooks) and browse batch details.
+- **Runtime Templates** – create, list, and manage serverless runtime templates.
+- **Clusters** – view Dataproc clusters and submit/track jobs.
+- **BigQuery Dataset Explorer** – browse datasets, tables, and schemas, and open BigQuery DataFrames notebooks.
+- **Dataproc Metastore (DPMS)** – explore metastore catalogs, databases, and tables.
+- **Notebook Templates** – start from curated example notebooks.
+- **Spark monitoring** – bundled Spark monitor for tracking Spark jobs from within notebooks.
 
 ## Requirements
 
-- JupyterLab >= 3.6.0
+- **JupyterLab** `>= 3.6.0, < 5`
+- The **[Google Cloud CLI (`gcloud`)](https://cloud.google.com/sdk/docs/install)** installed and on your `PATH`.
+- A Google Cloud project with the relevant APIs enabled (Dataproc, BigQuery, Cloud Resource Manager,
+  and Dataproc Metastore, depending on which features you use). The UI will prompt you to enable an
+  API if it detects it is disabled.
+
+## Prerequisites: authenticate with Google Cloud
+
+The plugin reads your active project, region, and access token from your local `gcloud`
+configuration. **Before launching JupyterLab**, authenticate and set defaults:
+
+```bash
+# Log in and create Application Default Credentials
+gcloud auth login
+
+# Set your project
+gcloud config set project <PROJECT_ID>
+
+# Set a default Dataproc region (falls back to compute/region if unset)
+gcloud config set dataproc/region <REGION>
+# e.g. gcloud config set dataproc/region us-central1
+```
+
+If the project/region are not configured, or you are not logged in, the plugin surfaces a
+configuration or login error in the **Google Cloud Settings** panel instead of loading data.
 
 ## Install
-
-To install the extension, execute:
 
 ```bash
 pip install dataproc_jupyter_plugin
 ```
 
-## Uninstall
+## Configuration
 
-To remove the extension, execute:
+### Frontend settings
 
-```bash
-pip uninstall dataproc_jupyter_plugin
+Available under **Settings → Dataproc Jupyter Plugin** (or the Google Cloud Settings panel):
+
+| Setting     | Default | Description                                        |
+| ----------- | ------- | -------------------------------------------------- |
+| `bqRegion`  | `US`    | The BigQuery region used by the Dataset Explorer.  |
+
+### Server (Jupyter) configuration
+
+These options are set on the Jupyter server, e.g. in `jupyter_server_config.py` or on the
+command line as `--DataprocPluginConfig.<option>=<value>`:
+
+| Option                          | Type   | Default                                | Description                                                                             |
+| ------------------------------- | ------ | -------------------------------------- | --------------------------------------------------------------------------------------- |
+| `enable_bigquery_integration`   | bool   | `False`                                | Enable the BigQuery Dataset Explorer integration.                                        |
+| `enable_metastore_integration`  | bool   | `False`                                | Enable the Dataproc Metastore (DPMS) integration.                                        |
+| `kernel_gateway_project_number` | str    | `""`                                   | Use this project number for the kernel gateway and skip project-number verification.     |
+| `log_path`                      | str    | `""`                                   | If set, write server and plugin logs to a rotating file at this path.                     |
+| `custom_user_agent`             | str    | `dataproc-jupyter-plugin/<version>`    | Custom `User-Agent` header for outbound requests to the kernels mixer.                    |
+
+Example:
+
+```python
+# jupyter_server_config.py
+c.DataprocPluginConfig.enable_bigquery_integration = True
+c.DataprocPluginConfig.enable_metastore_integration = True
 ```
 
-## Troubleshoot
+## Troubleshooting
 
-If you are seeing the frontend extension, but it is not working, check
-that the server extension is enabled:
+### Data is not loading / "login" or "configuration" error
+
+The most common issue is that `gcloud` is not authenticated or is missing a project/region.
+Verify your configuration:
+
+```bash
+gcloud auth list          # confirm an active account
+gcloud config get project # confirm a project is set
+gcloud config get dataproc/region   # or: gcloud config get compute/region
+```
+
+Then restart JupyterLab so the plugin re-reads the configuration.
+
+### "API has not been used / is not enabled"
+
+The plugin checks whether the Dataproc, BigQuery, and Cloud Resource Manager APIs are enabled and
+will prompt you to enable them. Enable the reported API in the Google Cloud console (or with
+`gcloud services enable <api>`) and restart the instance.
+
+### The frontend extension is not working
+
+If you can see the frontend extension but it is not working, check that the **server** extension is
+enabled:
 
 ```bash
 jupyter server extension list
 ```
 
-If the server extension is installed and enabled, but you are not seeing
-the frontend extension, check the frontend extension is installed:
+If the server extension is installed and enabled but you do not see the **frontend** extension,
+check that it is installed:
 
 ```bash
 jupyter labextension list
 ```
 
-## Contributing
-
-### Development install
-
-Note: You will need NodeJS to build the extension package.
-
-The `jlpm` command is JupyterLab's pinned version of
-[yarn](https://yarnpkg.com/) that is installed with JupyterLab. You may use
-`yarn` or `npm` in lieu of `jlpm` below.
+## Uninstall
 
 ```bash
-# Clone the repo to your local environment
-# Change directory to the dataproc_jupyter_plugin directory
-# Install package in development mode
-pip install -e ".[test]"
-# Link your development version of the extension with JupyterLab
-jupyter labextension develop . --overwrite
-# Server extension must be manually installed in develop mode
-jupyter server extension enable dataproc_jupyter_plugin
-# Rebuild extension Typescript source after making changes
-jlpm build
-```
-
-You can watch the source directory and run JupyterLab at the same time in different terminals to watch for changes in the extension's source and automatically rebuild the extension.
-
-```bash
-# Watch the source directory in one terminal, automatically rebuilding when needed
-jlpm watch
-# Run JupyterLab in another terminal
-jupyter lab
-```
-
-With the watch command running, every saved change will immediately be built locally and available in your running JupyterLab. Refresh JupyterLab to load the change in your browser (you may need to wait several seconds for the extension to be rebuilt).
-
-By default, the `jlpm build` command generates the source maps for this extension to make it easier to debug using the browser dev tools. To also generate source maps for the JupyterLab core extensions, you can run the following command:
-
-```bash
-jupyter lab build --minimize=False
-```
-
-### Development uninstall
-
-```bash
-# Server extension must be manually disabled in develop mode
-jupyter server extension disable dataproc_jupyter_plugin
 pip uninstall dataproc_jupyter_plugin
 ```
 
-In development mode, you will also need to remove the symlink created by `jupyter labextension develop`
-command. To find its location, you can run `jupyter labextension list` to figure out where the `labextensions`
-folder is located. Then you can remove the symlink named `dataproc_jupyter_plugin` within that folder.
+## Contributing
 
-### Testing the extension
-
-#### Server tests
-
-This extension is using [Pytest](https://docs.pytest.org/) for Python code testing.
-
-Install test dependencies (needed only once):
-
-```sh
-pip install -e ".[test]"
-# Each time you install the Python package, you need to restore the front-end extension link
-jupyter labextension develop . --overwrite
-```
-
-To execute them, run:
-
-```sh
-pytest -vv -r ap --cov dataproc_jupyter_plugin
-```
-
-#### Frontend tests
-
-This extension is using [Jest](https://jestjs.io/) for JavaScript code testing.
-
-To execute them, execute:
-
-```sh
-jlpm
-jlpm test
-```
-
-#### Integration tests
-
-This extension uses [Playwright](https://playwright.dev/docs/intro/) for the integration tests (aka user level tests).
-More precisely, the JupyterLab helper [Galata](https://github.com/jupyterlab/jupyterlab/tree/master/galata) is used to handle testing the extension in JupyterLab.
-
-More information are provided within the [ui-tests](./ui-tests/README.md) README.
-
-### Packaging the extension
-
-See [RELEASE](RELEASE.md)
+Contributions are welcome! See [CONTRIBUTING.md](CONTRIBUTING.md) for the Contributor License
+Agreement, local development setup, and testing instructions. Packaging and release steps are
+documented in [RELEASE.md](RELEASE.md).
