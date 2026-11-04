@@ -54,7 +54,7 @@ describe('RuntimeProfileList Component', () => {
     {
       name: 'projects/test-project/locations/us-central1/sessionTemplates/profile-1',
       description: 'Short description',
-      jupyterSession: { kernel: 'PYTHON', displayName: 'profile-1' },
+      jupyterSession: { kernel: 'PYTHON', displayName: 'Profile 1 Display' },
       environmentConfig: {
         executionConfig: {
           subnetworkUri: 'default'
@@ -74,7 +74,7 @@ describe('RuntimeProfileList Component', () => {
       name: 'projects/test-project/locations/us-east1/sessionTemplates/profile-2',
       description:
         'A very long description that exceeds forty characters and should be truncated in the table view',
-      jupyterSession: { kernel: 'PYTHON', displayName: 'profile-2' },
+      jupyterSession: { kernel: 'PYTHON', displayName: 'Profile 2 Display' },
       runtimeConfig: {
         version: '2.1'
       },
@@ -121,7 +121,8 @@ describe('RuntimeProfileList Component', () => {
       container.querySelectorAll('.runtime-profile-table thead th')
     ).map(th => th.textContent);
     expect(headers).toEqual([
-      'Runtime profile name',
+      'Name',
+      'Display name',
       'Region',
       'Runtime version',
       'Tier',
@@ -131,11 +132,20 @@ describe('RuntimeProfileList Component', () => {
       'Description',
       'Actions'
     ]);
-    expect(container.textContent).toContain('profile-1');
+    const firstRowCells = Array.from(
+      container.querySelectorAll('.runtime-profile-table tbody tr:first-child td')
+    );
+    expect(firstRowCells[0]?.textContent).toBe('profile-1');
+    expect(
+      firstRowCells[0]?.querySelector('.profile-name-button-link')?.getAttribute('title')
+    ).toBe('profile-1');
+    expect(firstRowCells[1]?.textContent).toBe('Profile 1 Display');
+    expect(firstRowCells[1]?.getAttribute('title')).toBe('Profile 1 Display');
     expect(container.textContent).toContain('us-central1');
     expect(container.textContent).toContain('Premium');
     expect(container.textContent).toContain('Lightning Engine');
     expect(container.textContent).toContain('profile-2');
+    expect(container.textContent).toContain('Profile 2 Display');
     expect(container.textContent).toContain('Standard');
     expect(container.textContent).toContain('Default');
     expect(container.textContent).toContain('Showing 1 – 2 profiles');

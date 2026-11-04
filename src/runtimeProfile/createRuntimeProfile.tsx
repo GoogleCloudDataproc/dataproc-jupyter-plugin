@@ -177,8 +177,8 @@ const EXECUTION_IDENTITY_DISPLAY_MAP: Record<string, string> = {
 };
 
 const ENCRYPTION_DISPLAY_MAP: Record<string, string> = {
-  google_managed: 'Google-managed key',
-  customer_managed_key: 'Customer-managed key'
+  google_managed: 'Google managed',
+  customer_managed_key: 'Customer managed'
 };
 
 const RUNTIME_VERSION_DISPLAY_MAP: Record<string, string> = {
@@ -1195,6 +1195,8 @@ export const CreateRuntimeProfileComponent: React.FC<
       onBack();
     } else if (app?.shell?.activeWidget) {
       app.shell.activeWidget.close();
+    } else if (app?.shell?.currentWidget) {
+      app.shell.currentWidget.close();
     }
   };
 
@@ -1204,24 +1206,54 @@ export const CreateRuntimeProfileComponent: React.FC<
    * open is replaced by a fresh one, so the listing reloads and includes the
    * new profile.
    */
-  const navigateToRuntimeProfileList = () => {
+  const navigateToRuntimeProfileList = (
+    submittingWidget?: { close: () => void } | null
+  ) => {
     const shell = app?.shell;
     if (!shell) {
       return;
     }
-    const formWidget = shell.activeWidget;
+    const formWidgetTitle = isEditMode
+      ? 'Edit Runtime Profile'
+      : 'Create Runtime Profile';
+    const formWidgetsToClose = new Set<{ close: () => void }>();
+    const targetWidget =
+      submittingWidget ?? shell.activeWidget ?? shell.currentWidget;
+    if (targetWidget) {
+      formWidgetsToClose.add(targetWidget);
+    }
     if (typeof shell.widgets === 'function') {
-      Array.from(shell.widgets('main'))
-        .filter(widget => widget.title.label === SETTINGS_WIDGET_TITLE)
-        .forEach(widget => widget.close());
+      Array.from(shell.widgets('main')).forEach((widget: any) => {
+        if (widget.title?.label === SETTINGS_WIDGET_TITLE) {
+          widget.close();
+        } else if (widget.title?.label === formWidgetTitle) {
+          const widgetProfileName =
+            widget.profile?.name ?? widget.content?.profile?.name;
+          if (
+            !isEditMode ||
+            !profile?.name ||
+            !widgetProfileName ||
+            widgetProfileName === profile.name
+          ) {
+            formWidgetsToClose.add(widget);
+          }
+        }
+      });
     }
     // The new Settings layout reads this request when it mounts.
     requestRuntimeProfileListTab();
-    void app?.commands.execute(SETTINGS_COMMAND_ID);
-    formWidget?.close();
+    void app?.commands.execute(SETTINGS_COMMAND_ID)?.catch(err => {
+      console.error('Failed to open Settings widget', err);
+    });
+    if (onBack) {
+      onBack();
+    }
+    formWidgetsToClose.forEach(widget => widget.close());
   };
 
   const onSubmit = async (data: IRuntimeProfileFormData) => {
+    const submittingWidget =
+      app?.shell?.activeWidget ?? app?.shell?.currentWidget;
     try {
       const payload = buildPayload(data);
 
@@ -1261,7 +1293,7 @@ export const CreateRuntimeProfileComponent: React.FC<
       if (onSuccess) {
         onSuccess();
       } else {
-        navigateToRuntimeProfileList();
+        navigateToRuntimeProfileList(submittingWidget);
       }
     } catch (error: any) {
       const errorMessage =
@@ -1890,6 +1922,7 @@ export class CreateRuntimeProfile extends DataprocWidget {
         settingRegistry={this.settingRegistry}
         mode={this.profile ? 'edit' : 'create'}
         profile={this.profile}
+        onBack={() => (this.parent ?? this).close()}
       />
     );
   }

@@ -360,7 +360,7 @@ describe('CreateRuntimeProfileComponent UI & Service', () => {
     expect(getFieldValue('Hive endpoint')).toBe('Enabled');
     expect(getFieldValue('Execution identity')).toBe('User account');
     expect(getFieldValue('Network in this project')).toBe('custom-vpc');
-    expect(getFieldValue('Encryption')).toBe('Customer-managed key');
+    expect(getFieldValue('Encryption')).toBe('Customer managed');
     expect(getFieldValue('Maximum idle time')).toBe('120 minutes');
     expect(getFieldValue('Maximum session time')).toBe('7 days');
     expect(getFieldValue('Spark properties')).toBe(
@@ -1030,6 +1030,25 @@ describe('CreateRuntimeProfileComponent UI & Service', () => {
     expect(otherWidget.close).not.toHaveBeenCalled();
     expect(mockApp.commands.execute).toHaveBeenCalledWith(SETTINGS_COMMAND_ID);
     expect(formWidget.close).toHaveBeenCalledTimes(2);
+    expect(consumeRuntimeProfileListTabRequest()).toBe(true);
+
+    // Even when shell.activeWidget is null (e.g. submit button disabled blurred focus),
+    // the 'Create Runtime Profile' tab in main widgets is closed
+    const createTabWidget = {
+      id: 'create-tab',
+      title: { label: 'Create Runtime Profile' },
+      close: jest.fn()
+    };
+    mockApp.shell.activeWidget = null;
+    mockApp.shell.widgets.mockImplementation(() =>
+      [otherWidget, createTabWidget][Symbol.iterator]()
+    );
+    await act(async () => {
+      (
+        container.querySelector('button[type="submit"]') as HTMLButtonElement
+      ).click();
+    });
+    expect(createTabWidget.close).toHaveBeenCalledTimes(1);
     expect(consumeRuntimeProfileListTabRequest()).toBe(true);
   });
 
@@ -2196,7 +2215,7 @@ describe('CreateRuntimeProfileComponent UI & Service', () => {
       );
       expect(getFieldValue('Execution identity')).toBe('User account');
       expect(getFieldValue('Network in this project')).toBe('default');
-      expect(getFieldValue('Encryption')).toBe('Customer-managed key');
+      expect(getFieldValue('Encryption')).toBe('Customer managed');
       expect(getFieldValue('Maximum idle time')).toBe('1 hour');
       expect(getFieldValue('Maximum session time')).toBe('3 days');
       expect(getFieldValue('Spark properties')).toBe(
@@ -2394,7 +2413,7 @@ describe('CreateRuntimeProfileComponent UI & Service', () => {
       await act(async () => {
         getDrawerSaveBtn('#edit-encryption-google-managed').click();
       });
-      expect(getFieldValue('Encryption')).toBe('Google-managed key');
+      expect(getFieldValue('Encryption')).toBe('Google managed');
 
       await clickSave();
 
