@@ -1,0 +1,22 @@
+# Blocks a pull request from being merged while it carries the "do-not-merge" label.
+# Add "do-not-merge" (or "DO NOT MERGE") to a PR and this required check will fail;
+# remove the label and it re-runs and passes. Make this check "Required" in the
+# branch protection rule for `main` for the block to actually be enforced.
+
+name: do-not-merge
+
+on:
+  pull_request:
+    types: [opened, labeled, unlabeled, synchronize, reopened]
+
+jobs:
+  do-not-merge:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Fail if a blocking label is present
+        if: >-
+          contains(github.event.pull_request.labels.*.name, 'do-not-merge') ||
+          contains(github.event.pull_request.labels.*.name, 'DO NOT MERGE')
+        run: |
+          echo "::error::This PR carries a 'do-not-merge' label and is blocked from merging. Remove the label to unblock."
+          exit 1
