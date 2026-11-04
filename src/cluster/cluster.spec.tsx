@@ -94,6 +94,7 @@ import { createRoot, Root } from 'react-dom/client';
 import { Cluster } from './cluster';
 import { checkConfig } from '../utils/utils';
 
+// Unit tests for Cluster widget and ClusterComponent
 describe('Cluster Widget and ClusterComponent', () => {
   let container: HTMLDivElement;
   let root: Root;
