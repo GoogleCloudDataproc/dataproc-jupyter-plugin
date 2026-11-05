@@ -49,13 +49,13 @@ test.describe('Settings Menu', () => {
     // can cause other tests to fail as their access tokens get revoked from
     // underneath them.
   });
-  test('Renders SettingsLayout when enable_runtime_profile_integration flag is true', async ({ page }) => {
-    // Mock the settings API response to enable the new UI
+  test('Renders SettingsLayout by default when enable_runtime_template_integration flag is false', async ({ page }) => {
+    // Mock the settings API response with default runtime template flag disabled
     await page.route('**/dataproc-plugin/settings*', async route => {
       await route.fulfill({
         status: 200,
         contentType: 'application/json',
-        body: JSON.stringify({ enable_runtime_profile_integration: true })
+        body: JSON.stringify({ enable_runtime_template_integration: false })
       });
     });
 
@@ -72,13 +72,13 @@ test.describe('Settings Menu', () => {
     await expect(commonTab).toBeVisible();
   });
 
-  test('Renders ConfigSelection when enable_runtime_profile_integration flag is false', async ({ page }) => {
-    // Mock the settings API response to disable the new UI
+  test('Renders ConfigSelection when enable_runtime_template_integration flag is true', async ({ page }) => {
+    // Mock the settings API response to enable the legacy runtime template UI
     await page.route('**/dataproc-plugin/settings*', async route => {
       await route.fulfill({
         status: 200,
         contentType: 'application/json',
-        body: JSON.stringify({ enable_runtime_profile_integration: false })
+        body: JSON.stringify({ enable_runtime_template_integration: true })
       });
     });
 
