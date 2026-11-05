@@ -52,7 +52,8 @@ const AuthLoginComponent = ({
   const [configError, setConfigError] = useState(false);
   const [loginError, setLoginError] = useState(false);
   const [configLoading, setConfigLoading] = useState(true);
-  const [runtimeProfileUiEnabled, setRuntimeProfileUiEnabled] = useState(false);
+  const [runtimeTemplateUiEnabled, setRuntimeTemplateUiEnabled] =
+    useState(false);
   const [settingsLoading, setSettingsLoading] = useState(true);
 
   const login = async () => {
@@ -85,7 +86,9 @@ const AuthLoginComponent = ({
     // Fetch the feature flag
     requestAPI('settings')
       .then((data: any) => {
-        setRuntimeProfileUiEnabled(Boolean(data?.enable_runtime_profile_integration));
+        setRuntimeTemplateUiEnabled(
+          Boolean(data?.enable_runtime_template_integration)
+        );
       })
       .catch(err => {
         console.error('Error fetching settings for feature flag', err);
@@ -108,24 +111,30 @@ const AuthLoginComponent = ({
           Loading Config Setup
         </div>
       )}
-      {!loginError && loginState && !settingsLoading && runtimeProfileUiEnabled && (
-        <SettingsLayout
-          configError={configError}
-          setConfigError={setConfigError}
-          app={app}
-          settingRegistry={settingRegistry}
-        />
-      )}
-      {!loginError && loginState && !settingsLoading && !runtimeProfileUiEnabled && (
-        <ConfigSelection
-          configError={configError}
-          setConfigError={setConfigError}
-          app={app}
-          launcher={launcher}
-          settingRegistry={settingRegistry}
-          themeManager={themeManager}
-        />
-      )}
+      {!loginError &&
+        loginState &&
+        !settingsLoading &&
+        !runtimeTemplateUiEnabled && (
+          <SettingsLayout
+            configError={configError}
+            setConfigError={setConfigError}
+            app={app}
+            settingRegistry={settingRegistry}
+          />
+        )}
+      {!loginError &&
+        loginState &&
+        !settingsLoading &&
+        runtimeTemplateUiEnabled && (
+          <ConfigSelection
+            configError={configError}
+            setConfigError={setConfigError}
+            app={app}
+            launcher={launcher}
+            settingRegistry={settingRegistry}
+            themeManager={themeManager}
+          />
+        )}
       {loginError && (
         <>
           <div className="login-error-parent">Please login to continue</div>

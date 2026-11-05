@@ -99,10 +99,10 @@ class DataprocPluginConfig(SingletonConfigurable):
         help="Enable integration with BigQuery in JupyterLab",
     )
 
-    enable_runtime_profile_integration = Bool(
+    enable_runtime_template_integration = Bool(
         False,
         config=True,
-        help="Enable runtime profile UI in JupyterLab",
+        help="Enable runtime template UI in JupyterLab",
     )
 
     enable_metastore_integration = Bool(
