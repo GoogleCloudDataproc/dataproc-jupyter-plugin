@@ -314,9 +314,16 @@ export interface IRuntimeProfileFormInitialValues {
   initialLabels?: ProfileLabels;
 }
 
+export interface ISubnetworkOption {
+  name: string;
+  ipCidrRange?: string;
+}
+
+export type SubnetworkOption = string | ISubnetworkOption;
+
 export interface ISharedVpcSubnetworksResult {
   hostProjectId: string;
-  subnetworks: string[];
+  subnetworks: SubnetworkOption[];
 }
 
 export interface IRuntimeProfileService {
@@ -337,7 +344,7 @@ export interface IRuntimeProfileService {
     network: string,
     projectId?: string,
     region?: string
-  ): Promise<string[]>;
+  ): Promise<SubnetworkOption[]>;
   getSharedVpcSubnetworks?(
     projectId?: string,
     region?: string

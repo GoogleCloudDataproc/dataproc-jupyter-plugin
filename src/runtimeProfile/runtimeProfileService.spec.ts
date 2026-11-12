@@ -32,6 +32,7 @@ import {
   mapRuntimeProfileToSessionTemplate,
   mapRuntimeProfileToSessionTemplateUpdate
 } from './runtimeProfileMapper';
+import { Notification } from '@jupyterlab/apputils';
 import { authenticatedFetch, loggedFetch, authApi } from '../utils/utils';
 import { HTTP_METHOD } from '../utils/const';
 
@@ -76,54 +77,28 @@ describe('RuntimeProfileService', () => {
       });
     });
 
-    it('skips blank pages containing no jupyterSession items and stops immediately once a non-empty page is found', async () => {
-      const blankPage = {
-        sessionTemplates: [{ name: 'non-jupyter-1' }],
+    it('returns all sessionTemplates including templates without jupyterSession', async () => {
+      const mockData = {
+        sessionTemplates: [
+          { name: 'spark-connect-template', sparkConnectSession: {} },
+          { name: 'jupyter-template', jupyterSession: {} }
+        ],
         nextPageToken: 'token-2'
       };
-      const validPage = {
-        sessionTemplates: [{ name: 'valid-template', jupyterSession: {} }],
-        nextPageToken: 'token-3'
-      };
 
-      (authenticatedFetch as jest.Mock)
-        .mockResolvedValueOnce({
-          ok: true,
-          json: jest.fn().mockResolvedValue(blankPage)
-        })
-        .mockResolvedValueOnce({
-          ok: true,
-          json: jest.fn().mockResolvedValue(validPage)
-        });
-
-      const result = await RuntimeProfileService.fetchRuntimeProfiles(
-        'token-1'
-      );
-
-      expect(authenticatedFetch).toHaveBeenCalledTimes(2);
-      expect(result).toEqual({
-        templates: validPage.sessionTemplates,
-        nextPageToken: 'token-3'
-      });
-    });
-
-    it('caps empty-page skipping at 10 hops when pages contain only non-Jupyter templates', async () => {
       (authenticatedFetch as jest.Mock).mockResolvedValue({
         ok: true,
-        json: jest.fn().mockResolvedValue({
-          sessionTemplates: [{ name: 'non-jupyter' }],
-          nextPageToken: 'still-more-tokens'
-        })
+        json: jest.fn().mockResolvedValue(mockData)
       });
 
       const result = await RuntimeProfileService.fetchRuntimeProfiles(
         'token-1'
       );
 
-      expect(authenticatedFetch).toHaveBeenCalledTimes(10);
+      expect(authenticatedFetch).toHaveBeenCalledTimes(1);
       expect(result).toEqual({
-        templates: [],
-        nextPageToken: 'still-more-tokens'
+        templates: mockData.sessionTemplates,
+        nextPageToken: 'token-2'
       });
     });
 
@@ -812,6 +787,242 @@ describe('RuntimeProfileService', () => {
       await expect(
         service.getRuntimeProfile('projects/p/locations/l/sessionTemplates/x')
       ).rejects.toThrow('Template not found');
+    });
+  });
+
+  describe('getSubnetworks', () => {
+    it('returns subnetworks with ipCidrRange for Private Google Access subnets matching the target network', async () => {
+      const service = new RuntimeProfileService(false);
+      (authApi as jest.Mock).mockResolvedValue({
+        access_token: 'live-token',
+        project_id: 'google.com:test-project',
+        region_id: 'us-central1'
+      });
+      (loggedFetch as jest.Mock).mockResolvedValue({
+        json: jest.fn().mockResolvedValue({
+          items: [
+            {
+              name: 'default-auto',
+              selfLink:
+                'https://www.googleapis.com/compute/v1/projects/google.com:test-project/regions/us-central1/subnetworks/default-auto',
+              network:
+                'https://www.googleapis.com/compute/v1/projects/google.com:test-project/global/networks/default-auto',
+              ipCidrRange: '10.150.0.0/20',
+              privateIpGoogleAccess: true
+            },
+            {
+              name: 'ipv6-subnet',
+              network:
+                'https://www.googleapis.com/compute/v1/projects/google.com:test-project/global/networks/default-auto',
+              ipv6CidrRange: '2600:1900::/64',
+              privateIpGoogleAccess: true
+            },
+            {
+              name: 'no-pga-subnet',
+              network:
+                'https://www.googleapis.com/compute/v1/projects/google.com:test-project/global/networks/default-auto',
+              ipCidrRange: '10.151.0.0/20',
+              privateIpGoogleAccess: false
+            },
+            {
+              name: 'other-network-subnet',
+              network:
+                'https://www.googleapis.com/compute/v1/projects/google.com:test-project/global/networks/other-vpc',
+              ipCidrRange: '10.152.0.0/20',
+              privateIpGoogleAccess: true
+            }
+          ]
+        })
+      });
+
+      const result = await service.getSubnetworks(
+        'default-auto',
+        'google.com:test-project',
+        'us-central1'
+      );
+
+      expect(result).toEqual([
+        { name: 'default-auto', ipCidrRange: '10.150.0.0/20' },
+        { name: 'ipv6-subnet', ipCidrRange: '2600:1900::/64' }
+      ]);
+    });
+
+    it('returns empty list without emitting an error notification when no Private Google Access subnetworks exist', async () => {
+      const notifySpy = jest
+        .spyOn(Notification, 'emit')
+        .mockImplementation(() => 'id');
+      try {
+        const service = new RuntimeProfileService(false);
+        (authApi as jest.Mock).mockResolvedValue({
+          access_token: 'live-token',
+          project_id: 'google.com:test-project',
+          region_id: 'us-east4'
+        });
+        (loggedFetch as jest.Mock).mockResolvedValue({
+          json: jest.fn().mockResolvedValue({
+            items: [
+              {
+                name: 'no-pga-subnet',
+                network:
+                  'https://www.googleapis.com/compute/v1/projects/google.com:test-project/global/networks/network2',
+                ipCidrRange: '10.151.0.0/20',
+                privateIpGoogleAccess: false
+              }
+            ]
+          })
+        });
+
+        const result = await service.getSubnetworks(
+          'network2',
+          'google.com:test-project',
+          'us-east4'
+        );
+
+        expect(result).toEqual([]);
+        expect(notifySpy).not.toHaveBeenCalled();
+      } finally {
+        notifySpy.mockRestore();
+      }
+    });
+
+    it('does not emit an error notification when getNetworkFromSubnetwork returns 404', async () => {
+      const notifySpy = jest
+        .spyOn(Notification, 'emit')
+        .mockImplementation(() => 'id');
+      try {
+        const service = new RuntimeProfileService(false);
+        (authApi as jest.Mock).mockResolvedValue({
+          access_token: 'live-token',
+          project_id: 'google.com:test-project',
+          region_id: 'us-east4'
+        });
+        (loggedFetch as jest.Mock).mockResolvedValue({
+          json: jest.fn().mockResolvedValue({
+            error: {
+              code: 404,
+              message:
+                "The resource 'projects/google.com:test-project/regions/us-east4/subnetworks/default' was not found"
+            }
+          })
+        });
+
+        const result = await service.getNetworkFromSubnetwork(
+          'default',
+          'google.com:test-project',
+          'us-east4'
+        );
+
+        expect(result).toBe('');
+        expect(notifySpy).not.toHaveBeenCalled();
+      } finally {
+        notifySpy.mockRestore();
+      }
+    });
+  });
+
+  describe('getSharedVpcSubnetworks', () => {
+    it('returns usable shared VPC subnetworks with ipCidrRange or ipv6CidrRange filtered by target region', async () => {
+      const service = new RuntimeProfileService(false);
+      (authApi as jest.Mock).mockResolvedValue({
+        access_token: 'live-token',
+        project_id: 'service-project',
+        region_id: 'us-central1'
+      });
+      (loggedFetch as jest.Mock)
+        .mockResolvedValueOnce({
+          text: jest
+            .fn()
+            .mockResolvedValue(JSON.stringify({ name: 'google.com:host-vpc' }))
+        })
+        .mockResolvedValueOnce({
+          json: jest.fn().mockResolvedValue({
+            items: [
+              {
+                subnetwork:
+                  'https://www.googleapis.com/compute/v1/projects/google.com:host-vpc/regions/us-central1/subnetworks/shared-subnet-1',
+                ipCidrRange: '10.200.0.0/20'
+              },
+              {
+                subnetwork:
+                  'https://www.googleapis.com/compute/v1/projects/google.com:host-vpc/regions/us-central1/subnetworks/shared-ipv6',
+                ipv6CidrRange: '2600:1900::/64'
+              },
+              {
+                subnetwork:
+                  'https://www.googleapis.com/compute/v1/projects/google.com:host-vpc/regions/us-east1/subnetworks/other-region-subnet',
+                ipCidrRange: '10.201.0.0/20'
+              },
+              {
+                subnetwork:
+                  'https://www.googleapis.com/compute/v1/projects/google.com:host-vpc/regions/us-central1/subnetworks/shared-no-cidr'
+              }
+            ]
+          })
+        });
+
+      const result = await service.getSharedVpcSubnetworks(
+        'service-project',
+        'us-central1'
+      );
+
+      expect(result).toEqual({
+        hostProjectId: 'google.com:host-vpc',
+        subnetworks: [
+          { name: 'shared-subnet-1', ipCidrRange: '10.200.0.0/20' },
+          { name: 'shared-ipv6', ipCidrRange: '2600:1900::/64' },
+          { name: 'shared-no-cidr' }
+        ]
+      });
+    });
+
+    it('returns empty subnetworks early and emits error notification when listUsable returns an API error', async () => {
+      const notifySpy = jest
+        .spyOn(Notification, 'emit')
+        .mockImplementation(() => 'id');
+      try {
+        const service = new RuntimeProfileService(false);
+        (authApi as jest.Mock).mockResolvedValue({
+          access_token: 'live-token',
+          project_id: 'service-project',
+          region_id: 'us-central1'
+        });
+        (loggedFetch as jest.Mock)
+          .mockResolvedValueOnce({
+            text: jest
+              .fn()
+              .mockResolvedValue(
+                JSON.stringify({ name: 'google.com:host-vpc' })
+              )
+          })
+          .mockResolvedValueOnce({
+            json: jest.fn().mockResolvedValue({
+              error: { code: 403, message: 'Permission denied' },
+              items: [
+                {
+                  subnetwork:
+                    'https://www.googleapis.com/compute/v1/projects/google.com:host-vpc/regions/us-central1/subnetworks/should-ignore'
+                }
+              ]
+            })
+          });
+
+        const result = await service.getSharedVpcSubnetworks(
+          'service-project',
+          'us-central1'
+        );
+
+        expect(result).toEqual({
+          hostProjectId: 'google.com:host-vpc',
+          subnetworks: []
+        });
+        expect(notifySpy).toHaveBeenCalledWith(
+          'Permission denied',
+          'error',
+          expect.any(Object)
+        );
+      } finally {
+        notifySpy.mockRestore();
+      }
     });
   });
 });

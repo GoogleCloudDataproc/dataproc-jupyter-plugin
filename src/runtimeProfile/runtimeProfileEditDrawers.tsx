@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
   Checkbox,
   CircularProgress,
@@ -47,10 +47,12 @@ import {
   IRuntimeEnvironmentConfig,
   IRuntimeProfileService,
   ISessionLifecycleConfig,
+  ISubnetworkOption,
   NetworkSourceType,
   ProfileLabels,
   SparkProperties,
   SSD_DISK_SIZES,
+  SubnetworkOption,
   TimeUnit
 } from './runtimeProfileInterface';
 import {
@@ -1726,7 +1728,7 @@ const INTERNAL_IP_DOC =
 const KMS_KEY_REGEX =
   /^projects\/[^/]+\/locations\/[^/]+\/keyRings\/[^/]+\/cryptoKeys\/[^/]+$/;
 
-const extractSubnetShortName = (val?: string): string => {
+export const extractSubnetShortName = (val?: string): string => {
   if (!val) {
     return '';
   }
@@ -1737,12 +1739,17 @@ const extractSubnetShortName = (val?: string): string => {
   );
 };
 
+const normalizeSubnetworkOption = (
+  option: SubnetworkOption
+): ISubnetworkOption =>
+  typeof option === 'string' ? { name: option } : option;
+
 export interface INetworkSecurityEditDrawerProps {
   open: boolean;
   config: INetworkAndSecurityConfig;
   networkOptions?: string[];
-  subnetworkOptions?: string[];
-  sharedSubnetworkOptions?: string[];
+  subnetworkOptions?: SubnetworkOption[];
+  sharedSubnetworkOptions?: SubnetworkOption[];
   keyRingOptions?: string[];
   cryptoKeyOptions?: string[];
   region?: string;
@@ -1820,9 +1827,11 @@ export const NetworkSecurityEditDrawer: React.FC<
   const [isValidManualKey, setIsValidManualKey] = useState<boolean>(true);
 
   const [fetchedNetworks, setFetchedNetworks] = useState<string[]>([]);
-  const [fetchedSubnetworks, setFetchedSubnetworks] = useState<string[]>([]);
+  const [fetchedSubnetworks, setFetchedSubnetworks] = useState<
+    ISubnetworkOption[]
+  >([]);
   const [fetchedSharedSubnetworks, setFetchedSharedSubnetworks] = useState<
-    string[]
+    ISubnetworkOption[]
   >([]);
   const [fetchedKeyRings, setFetchedKeyRings] = useState<string[]>([]);
   const [fetchedCryptoKeys, setFetchedCryptoKeys] = useState<string[]>([]);
@@ -1836,6 +1845,31 @@ export const NetworkSecurityEditDrawer: React.FC<
     useState<boolean>(false);
   const [hasFetchedSharedSubnetworks, setHasFetchedSharedSubnetworks] =
     useState<boolean>(false);
+  const [subnetworkTouched, setSubnetworkTouched] = useState<boolean>(false);
+  const subnetworkFormControlRef = useRef<HTMLDivElement>(null);
+  const [subnetworkMenuWidth, setSubnetworkMenuWidth] = useState<
+    number | undefined
+  >(undefined);
+  const sharedSubnetworkFormControlRef = useRef<HTMLDivElement>(null);
+  const [sharedSubnetworkMenuWidth, setSharedSubnetworkMenuWidth] = useState<
+    number | undefined
+  >(undefined);
+  useEffect(() => {
+    if (!open) {
+      return;
+    }
+    if (networkSource === 'project') {
+      const width = subnetworkFormControlRef.current?.clientWidth;
+      if (width) {
+        setSubnetworkMenuWidth(width);
+      }
+    } else if (networkSource === 'shared_from_host') {
+      const width = sharedSubnetworkFormControlRef.current?.clientWidth;
+      if (width) {
+        setSharedSubnetworkMenuWidth(width);
+      }
+    }
+  }, [open, networkSource]);
   const [hasResolvedParentNetwork, setHasResolvedParentNetwork] =
     useState<boolean>(!shouldResolveNetworkFromSubnetwork);
   const [resolvedProject, setResolvedProject] = useState<string>(
@@ -1869,6 +1903,7 @@ export const NetworkSecurityEditDrawer: React.FC<
     setHostProjectId(config.hostProjectId || '');
     setHasFetchedSubnetworks(false);
     setHasFetchedSharedSubnetworks(false);
+    setSubnetworkTouched(false);
     setNetworkTagsText((config.networkTags || []).join(', '));
     setInternalIpOnly(Boolean(config.internalIpOnly));
     setExecutionIdentity(config.executionIdentity ?? 'user_account');
@@ -2038,14 +2073,16 @@ export const NetworkSecurityEditDrawer: React.FC<
           targetRegion
         );
         if (isMounted && sharedResult) {
-          const subs = sharedResult.subnetworks || [];
+          const subs = (sharedResult.subnetworks || [])
+            .map(normalizeSubnetworkOption)
+            .filter(opt => Boolean(opt.name));
           setFetchedSharedSubnetworks(subs);
           if (sharedResult.hostProjectId !== undefined) {
             setHostProjectId(sharedResult.hostProjectId);
           }
           if (subs.length > 0) {
             setSharedSubnetwork(prev =>
-              prev && subs.includes(prev) ? prev : subs[0]
+              prev && subs.some(opt => opt.name === prev) ? prev : subs[0].name
             );
           } else {
             setSharedSubnetwork('');
@@ -2144,12 +2181,18 @@ export const NetworkSecurityEditDrawer: React.FC<
           targetRegion
         );
         if (isMounted && Array.isArray(subs)) {
-          setFetchedSubnetworks(subs);
+          const normalizedSubs = subs
+            .map(normalizeSubnetworkOption)
+            .filter(opt => Boolean(opt.name));
+          setFetchedSubnetworks(normalizedSubs);
           setHasFetchedSubnetworks(true);
-          if (subs.length > 0) {
+          if (normalizedSubs.length > 0) {
             setSubnetwork(prev =>
-              prev && subs.includes(prev) ? prev : subs[0]
+              prev && normalizedSubs.some(opt => opt.name === prev)
+                ? prev
+                : normalizedSubs[0].name
             );
+            setSubnetworkTouched(false);
           } else {
             setSubnetwork('');
           }
@@ -2243,8 +2286,8 @@ export const NetworkSecurityEditDrawer: React.FC<
     return source;
   }, [networkOptions, fetchedNetworks, primaryNetwork]);
 
-  const resolvedSubnetworkOptions = React.useMemo(() => {
-    const source =
+  const resolvedSubnetworkOptions = React.useMemo<ISubnetworkOption[]>(() => {
+    const rawSource: SubnetworkOption[] =
       subnetworkOptions && subnetworkOptions.length > 0
         ? subnetworkOptions
         : hasFetchedSubnetworks
@@ -2252,8 +2295,13 @@ export const NetworkSecurityEditDrawer: React.FC<
         : fetchedSubnetworks.length > 0
         ? fetchedSubnetworks
         : DEFAULT_SUBNETWORK_OPTIONS;
-    if (subnetwork && !hasFetchedSubnetworks && !source.includes(subnetwork)) {
-      return [subnetwork, ...source];
+    const source = rawSource.map(normalizeSubnetworkOption);
+    if (
+      subnetwork &&
+      !hasFetchedSubnetworks &&
+      !source.some(opt => opt.name === subnetwork)
+    ) {
+      return [{ name: subnetwork }, ...source];
     }
     return source;
   }, [
@@ -2263,13 +2311,19 @@ export const NetworkSecurityEditDrawer: React.FC<
     subnetwork
   ]);
 
-  const resolvedSharedSubnetworkOptions = React.useMemo(() => {
-    const source =
+  const resolvedSharedSubnetworkOptions = React.useMemo<
+    ISubnetworkOption[]
+  >(() => {
+    const rawSource: SubnetworkOption[] =
       sharedSubnetworkOptions && sharedSubnetworkOptions.length > 0
         ? sharedSubnetworkOptions
         : fetchedSharedSubnetworks;
-    if (sharedSubnetwork && !source.includes(sharedSubnetwork)) {
-      return [sharedSubnetwork, ...source];
+    const source = rawSource.map(normalizeSubnetworkOption);
+    if (
+      sharedSubnetwork &&
+      !source.some(opt => opt.name === sharedSubnetwork)
+    ) {
+      return [{ name: sharedSubnetwork }, ...source];
     }
     return source;
   }, [sharedSubnetworkOptions, fetchedSharedSubnetworks, sharedSubnetwork]);
@@ -2279,6 +2333,51 @@ export const NetworkSecurityEditDrawer: React.FC<
     !isLoadingSubnetworks &&
     hasFetchedSubnetworks &&
     resolvedSubnetworkOptions.length === 0;
+
+  const showSubnetworkRequiredError =
+    networkSource === 'project' &&
+    !isLoadingNetworks &&
+    !isLoadingSubnetworks &&
+    subnetworkTouched &&
+    !subnetwork.trim();
+
+  const subnetworkDescribedBy =
+    [
+      showSubnetworkRequiredError ? 'edit-subnetwork-error-text' : '',
+      hasNoSubnetworks ? 'edit-subnetwork-unavailable-note' : ''
+    ]
+      .filter(Boolean)
+      .join(' ') || undefined;
+
+  const subnetworkMenuProps = useMemo(
+    () => ({
+      PaperProps: {
+        className: 'edit-drawer-subnetwork-menu-paper',
+        style: subnetworkMenuWidth
+          ? {
+              width: subnetworkMenuWidth,
+              maxWidth: subnetworkMenuWidth
+            }
+          : undefined
+      }
+    }),
+    [subnetworkMenuWidth]
+  );
+
+  const sharedSubnetworkMenuProps = useMemo(
+    () => ({
+      PaperProps: {
+        className: 'edit-drawer-subnetwork-menu-paper',
+        style: sharedSubnetworkMenuWidth
+          ? {
+              width: sharedSubnetworkMenuWidth,
+              maxWidth: sharedSubnetworkMenuWidth
+            }
+          : undefined
+      }
+    }),
+    [sharedSubnetworkMenuWidth]
+  );
 
   const hasNoSharedSubnetworks =
     !isLoadingSharedSubnetworks &&
@@ -2503,87 +2602,162 @@ export const NetworkSecurityEditDrawer: React.FC<
             {networkSource === 'project' && (
               <div className="edit-drawer-nested-fields">
                 <div className="edit-drawer-row">
-                  <FormControl
-                    size="small"
-                    fullWidth
-                    variant="outlined"
-                    className="edit-drawer-select-with-help"
-                  >
-                    <InputLabel id="edit-primary-network-label" shrink>
-                      Primary network *
-                    </InputLabel>
-                    <Select
-                      labelId="edit-primary-network-label"
-                      id="edit-primary-network"
-                      label="Primary network *"
-                      notched
-                      disabled={isLoadingNetworks}
-                      value={primaryNetwork}
-                      endAdornment={renderFieldHelpIcon(
-                        'The Compute Engine network for the cluster VMs.'
-                      )}
-                      onChange={e => {
-                        setPrimaryNetwork(e.target.value as string);
-                        setSubnetwork('');
-                      }}
+                  <div className="edit-drawer-col">
+                    <FormControl
+                      size="small"
+                      fullWidth
+                      variant="outlined"
+                      className="edit-drawer-select-with-help"
                     >
-                      {resolvedNetworkOptions.map(net => (
-                        <MenuItem key={net} value={net}>
-                          {net}
-                        </MenuItem>
-                      ))}
-                    </Select>
-                  </FormControl>
-
-                  <FormControl
-                    size="small"
-                    fullWidth
-                    variant="outlined"
-                    error={hasNoSubnetworks}
-                    className="edit-drawer-select-with-help"
-                  >
-                    <InputLabel
-                      id="edit-subnetwork-label"
-                      shrink
-                      error={hasNoSubnetworks}
-                    >
-                      Subnetwork
-                    </InputLabel>
-                    <Select
-                      labelId="edit-subnetwork-label"
-                      id="edit-subnetwork"
-                      label="Subnetwork"
-                      notched
-                      error={hasNoSubnetworks}
-                      disabled={isLoadingSubnetworks}
-                      value={
-                        resolvedSubnetworkOptions.includes(subnetwork)
-                          ? subnetwork
-                          : ''
-                      }
-                      endAdornment={renderFieldHelpIcon(
-                        'The Compute Engine subnetwork with Private Google Access enabled.'
-                      )}
-                      onChange={e => setSubnetwork(e.target.value as string)}
-                    >
-                      {resolvedSubnetworkOptions.length === 0 ? (
-                        <MenuItem value="__no_items__" disabled>
-                          No items to display
-                        </MenuItem>
-                      ) : (
-                        resolvedSubnetworkOptions.map(sub => (
-                          <MenuItem key={sub} value={sub}>
-                            {sub}
+                      <InputLabel id="edit-primary-network-label" shrink>
+                        Primary network *
+                      </InputLabel>
+                      <Select
+                        labelId="edit-primary-network-label"
+                        id="edit-primary-network"
+                        label="Primary network *"
+                        notched
+                        disabled={isLoadingNetworks}
+                        value={primaryNetwork}
+                        endAdornment={renderFieldHelpIcon(
+                          'The Compute Engine network for the cluster VMs.'
+                        )}
+                        onChange={e => {
+                          setPrimaryNetwork(e.target.value as string);
+                          setSubnetwork('');
+                          setSubnetworkTouched(false);
+                          setHasFetchedSubnetworks(false);
+                          setFetchedSubnetworks([]);
+                        }}
+                      >
+                        {resolvedNetworkOptions.map(net => (
+                          <MenuItem key={net} value={net}>
+                            {net}
                           </MenuItem>
-                        ))
-                      )}
-                    </Select>
-                  </FormControl>
+                        ))}
+                      </Select>
+                    </FormControl>
+                  </div>
+
+                  <div className="edit-drawer-col">
+                    <FormControl
+                      ref={subnetworkFormControlRef}
+                      size="small"
+                      fullWidth
+                      variant="outlined"
+                      error={showSubnetworkRequiredError}
+                      className="edit-drawer-select-with-help"
+                    >
+                      <InputLabel
+                        id="edit-subnetwork-label"
+                        error={showSubnetworkRequiredError}
+                      >
+                        Subnetwork *
+                      </InputLabel>
+                      <Select
+                        labelId="edit-subnetwork-label"
+                        id="edit-subnetwork"
+                        label="Subnetwork *"
+                        error={showSubnetworkRequiredError}
+                        disabled={isLoadingSubnetworks}
+                        value={
+                          resolvedSubnetworkOptions.some(
+                            opt => opt.name === subnetwork
+                          )
+                            ? subnetwork
+                            : ''
+                        }
+                        renderValue={selected => selected}
+                        SelectDisplayProps={{
+                          'aria-describedby': subnetworkDescribedBy
+                        }}
+                        endAdornment={renderFieldHelpIcon(
+                          'The Compute Engine subnetwork with Private Google Access enabled.'
+                        )}
+                        MenuProps={subnetworkMenuProps}
+                        onOpen={() => {
+                          const width =
+                            subnetworkFormControlRef.current?.clientWidth;
+                          if (width) {
+                            setSubnetworkMenuWidth(width);
+                          }
+                        }}
+                        onClose={() => setSubnetworkTouched(true)}
+                        onChange={e => {
+                          const nextVal = e.target.value as string;
+                          setSubnetwork(nextVal);
+                          if (nextVal) {
+                            setSubnetworkTouched(false);
+                          }
+                        }}
+                      >
+                        {resolvedSubnetworkOptions.length === 0 ? (
+                          <MenuItem
+                            value="__no_items__"
+                            disabled
+                            className="edit-drawer-subnetwork-empty-item"
+                          >
+                            No subnetworks with Private Google Access enabled.
+                          </MenuItem>
+                        ) : (
+                          resolvedSubnetworkOptions.map(sub => (
+                            <MenuItem
+                              key={sub.name}
+                              value={sub.name}
+                              className="edit-drawer-subnetwork-menu-item"
+                            >
+                              <span className="edit-drawer-subnetwork-option">
+                                <span className="edit-drawer-subnetwork-option-name">
+                                  {sub.name}
+                                </span>
+                                {sub.ipCidrRange && (
+                                  <span className="edit-drawer-subnetwork-option-cidr">
+                                    {`IP Range: ${sub.ipCidrRange}`}
+                                  </span>
+                                )}
+                              </span>
+                            </MenuItem>
+                          ))
+                        )}
+                      </Select>
+                    </FormControl>
+                    {showSubnetworkRequiredError && (
+                      <div
+                        className="edit-drawer-error-text edit-drawer-subnetwork-error-text"
+                        id="edit-subnetwork-error-text"
+                        role="alert"
+                      >
+                        <span
+                          className="edit-drawer-subnetwork-error-bang"
+                          aria-hidden="true"
+                        >
+                          !
+                        </span>
+                        <span>Subnetwork is required.</span>
+                      </div>
+                    )}
+                  </div>
                 </div>
 
                 {hasNoSubnetworks && (
-                  <div className="edit-drawer-error-text">
-                    Please select a valid network and subnetwork.
+                  <div
+                    className="edit-drawer-subnetwork-empty-note"
+                    id="edit-subnetwork-unavailable-note"
+                  >
+                    <svg
+                      className="edit-drawer-subnetwork-empty-icon"
+                      width="16"
+                      height="16"
+                      viewBox="0 0 24 24"
+                      fill="currentColor"
+                      aria-hidden="true"
+                    >
+                      <path d="M11 15h2v2h-2v-2zm0-8h2v6h-2V7zm.99-5C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8z" />
+                    </svg>
+                    <span>
+                      Selected network has no subnetworks in this region with
+                      Private Google Access turned on.
+                    </span>
                   </div>
                 )}
 
@@ -2663,6 +2837,7 @@ export const NetworkSecurityEditDrawer: React.FC<
             {networkSource === 'shared_from_host' && (
               <div className="edit-drawer-nested-fields">
                 <FormControl
+                  ref={sharedSubnetworkFormControlRef}
                   size="small"
                   fullWidth
                   variant="outlined"
@@ -2677,13 +2852,24 @@ export const NetworkSecurityEditDrawer: React.FC<
                     label="Shared subnetwork *"
                     disabled={isLoadingSharedSubnetworks}
                     value={
-                      resolvedSharedSubnetworkOptions.includes(sharedSubnetwork)
+                      resolvedSharedSubnetworkOptions.some(
+                        opt => opt.name === sharedSubnetwork
+                      )
                         ? sharedSubnetwork
                         : ''
                     }
+                    renderValue={selected => selected}
                     endAdornment={renderFieldHelpIcon(
                       'The Compute Engine subnetwork with Private Google Access enabled.'
                     )}
+                    MenuProps={sharedSubnetworkMenuProps}
+                    onOpen={() => {
+                      const width =
+                        sharedSubnetworkFormControlRef.current?.clientWidth;
+                      if (width) {
+                        setSharedSubnetworkMenuWidth(width);
+                      }
+                    }}
                     onChange={e =>
                       setSharedSubnetwork(e.target.value as string)
                     }
@@ -2694,8 +2880,21 @@ export const NetworkSecurityEditDrawer: React.FC<
                       </MenuItem>
                     ) : (
                       resolvedSharedSubnetworkOptions.map(sub => (
-                        <MenuItem key={sub} value={sub}>
-                          {sub}
+                        <MenuItem
+                          key={sub.name}
+                          value={sub.name}
+                          className="edit-drawer-subnetwork-menu-item"
+                        >
+                          <span className="edit-drawer-subnetwork-option">
+                            <span className="edit-drawer-subnetwork-option-name">
+                              {sub.name}
+                            </span>
+                            {sub.ipCidrRange && (
+                              <span className="edit-drawer-subnetwork-option-cidr">
+                                {`IP Range: ${sub.ipCidrRange}`}
+                              </span>
+                            )}
+                          </span>
                         </MenuItem>
                       ))
                     )}
