@@ -1316,3 +1316,146 @@ body[data-jp-theme-name='JupyterLab Dark']
   background-color: var(--jp-layout-color2);
   border-color: #8ab4f8;
 }
+
+.edit-drawer-subnetwork-menu-item.MuiMenuItem-root {
+  align-items: flex-start;
+  padding-top: 8px;
+  padding-bottom: 8px;
+  white-space: normal;
+}
+
+.edit-drawer-subnetwork-menu-item.MuiMenuItem-root.Mui-selected {
+  background-color: rgb(26 115 232 / 12%);
+}
+
+.edit-drawer-subnetwork-menu-item.MuiMenuItem-root.Mui-selected:hover {
+  background-color: rgb(26 115 232 / 18%);
+}
+
+.edit-drawer-subnetwork-option {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  min-width: 0;
+}
+
+.edit-drawer-subnetwork-option-name {
+  font-size: 13px;
+  line-height: 18px;
+  color: var(--jp-ui-font-color0, #202124);
+}
+
+.edit-drawer-subnetwork-option-cidr {
+  font-size: 12px;
+  line-height: 16px;
+  color: var(--jp-ui-font-color2, #5f6368);
+}
+
+body[data-jp-theme-light='false'] .edit-drawer-subnetwork-option-name,
+body[data-jp-theme-name='JupyterLab Dark'] .edit-drawer-subnetwork-option-name {
+  color: var(--jp-ui-font-color0, #e8eaed);
+}
+
+body[data-jp-theme-light='false'] .edit-drawer-subnetwork-option-cidr,
+body[data-jp-theme-name='JupyterLab Dark'] .edit-drawer-subnetwork-option-cidr {
+  color: var(--jp-ui-font-color2, #9aa0a6);
+}
+
+.edit-drawer-subnetwork-menu-item.Mui-selected
+  .edit-drawer-subnetwork-option-name {
+  color: var(--jp-brand-color1, #1a73e8);
+}
+
+body[data-jp-theme-light='false']
+  .edit-drawer-subnetwork-menu-item.MuiMenuItem-root.Mui-selected,
+body[data-jp-theme-name='JupyterLab Dark']
+  .edit-drawer-subnetwork-menu-item.MuiMenuItem-root.Mui-selected {
+  background-color: rgb(138 180 248 / 16%);
+}
+
+body[data-jp-theme-light='false']
+  .edit-drawer-subnetwork-menu-item.MuiMenuItem-root.Mui-selected:hover,
+body[data-jp-theme-name='JupyterLab Dark']
+  .edit-drawer-subnetwork-menu-item.MuiMenuItem-root.Mui-selected:hover {
+  background-color: rgb(138 180 248 / 24%);
+}
+
+body[data-jp-theme-light='false']
+  .edit-drawer-subnetwork-menu-item.Mui-selected
+  .edit-drawer-subnetwork-option-name,
+body[data-jp-theme-name='JupyterLab Dark']
+  .edit-drawer-subnetwork-menu-item.Mui-selected
+  .edit-drawer-subnetwork-option-name {
+  color: var(--jp-brand-color1, #8ab4f8);
+}
+
+.edit-drawer-subnetwork-menu-paper {
+  box-sizing: border-box;
+}
+
+.edit-drawer-subnetwork-menu-paper .MuiMenuItem-root {
+  white-space: normal;
+  overflow-wrap: break-word;
+}
+
+.edit-drawer-subnetwork-empty-item.MuiMenuItem-root {
+  font-style: italic;
+  font-size: 13px;
+  line-height: 18px;
+  color: var(--jp-ui-font-color2, #5f6368);
+  opacity: 1;
+}
+
+body[data-jp-theme-light='false']
+  .edit-drawer-subnetwork-empty-item.MuiMenuItem-root,
+body[data-jp-theme-name='JupyterLab Dark']
+  .edit-drawer-subnetwork-empty-item.MuiMenuItem-root {
+  color: var(--jp-ui-font-color2, #9aa0a6);
+}
+
+.edit-drawer-subnetwork-error-text {
+  align-items: center;
+  gap: 5px;
+  margin-top: 4px;
+  padding-left: 4px;
+}
+
+.edit-drawer-subnetwork-error-bang {
+  font-weight: 700;
+  font-size: 13px;
+  line-height: 16px;
+  flex-shrink: 0;
+}
+
+body[data-jp-theme-light='false'] .edit-drawer-subnetwork-error-text,
+body[data-jp-theme-name='JupyterLab Dark'] .edit-drawer-subnetwork-error-text {
+  color: var(--jp-error-color1, #f44336);
+}
+
+.edit-drawer-subnetwork-empty-note {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  gap: 8px;
+  font-size: 12px;
+  line-height: 18px;
+  color: var(--jp-ui-font-color1, #3c4043);
+  margin-top: 2px;
+}
+
+.edit-drawer-subnetwork-empty-icon {
+  flex-shrink: 0;
+  margin-top: 1px;
+  color: var(--jp-ui-font-color2, #5f6368);
+}
+
+body[data-jp-theme-light='false'] .edit-drawer-subnetwork-empty-note,
+body[data-jp-theme-name='JupyterLab Dark'] .edit-drawer-subnetwork-empty-note {
+  color: var(--jp-ui-font-color0, #e8eaed);
+}
+
+body[data-jp-theme-light='false'] .edit-drawer-subnetwork-empty-icon,
+body[data-jp-theme-name='JupyterLab Dark'] .edit-drawer-subnetwork-empty-icon {
+  color: var(--jp-ui-font-color2, #9aa0a6);
+}
