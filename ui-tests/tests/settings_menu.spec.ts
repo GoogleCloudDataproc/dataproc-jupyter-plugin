@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-import { test, expect, galata } from '@jupyterlab/galata';
+import { test, expect } from '@jupyterlab/galata';
 
 test.describe('Settings Menu', () => {
   test('Can find settings menu', async ({ page }) => {
@@ -25,6 +25,10 @@ test.describe('Settings Menu', () => {
       .click();
     const cloudSettings = page.getByText('Google Cloud Settings');
     await cloudSettings.click();
+
+    await expect(
+      page.getByText('Google Cloud Project Settings')
+    ).toBeVisible();
   });
 
   test('Can change project', async ({ page }) => {
@@ -32,8 +36,8 @@ test.describe('Settings Menu', () => {
       .getByLabel('main menu', { exact: true })
       .getByText('Settings')
       .click();
-      const cloudSettings = page.getByText('Google Cloud Settings');
-      await cloudSettings.click();
+    const cloudSettings = page.getByText('Google Cloud Settings');
+    await cloudSettings.click();
 
     // Assert clearing the Project ID disables the save button.
     await page.getByRole('combobox', { name: 'Project ID' }).click();
@@ -49,16 +53,8 @@ test.describe('Settings Menu', () => {
     // can cause other tests to fail as their access tokens get revoked from
     // underneath them.
   });
-  test('Renders SettingsLayout by default when enable_runtime_template_integration flag is false', async ({ page }) => {
-    // Mock the settings API response with default runtime template flag disabled
-    await page.route('**/dataproc-plugin/settings*', async route => {
-      await route.fulfill({
-        status: 200,
-        contentType: 'application/json',
-        body: JSON.stringify({ enable_runtime_template_integration: false })
-      });
-    });
 
+  test('Renders SettingsLayout', async ({ page }) => {
     await page
       .getByLabel('main menu', { exact: true })
       .getByText('Settings')
@@ -66,36 +62,12 @@ test.describe('Settings Menu', () => {
     const cloudSettings = page.getByText('Google Cloud Settings');
     await cloudSettings.click();
 
-    // The SettingsLayout renders sidebar tabs instead of the standard config selection.
-    // Verify the 'common' and 'spark' tabs or sidebar layout elements are visible.
-    const commonTab = page.locator('.settings-tab').filter({ hasText: 'common' });
+    // Verify the 'Common' and 'Spark' sidebar tabs are visible.
+    const commonTab = page
+      .locator('.settings-tab')
+      .filter({ hasText: 'Common' });
+    const sparkTab = page.locator('.settings-tab').filter({ hasText: 'Spark' });
     await expect(commonTab).toBeVisible();
-  });
-
-  test('Renders ConfigSelection when enable_runtime_template_integration flag is true', async ({ page }) => {
-    // Mock the settings API response to enable the legacy runtime template UI
-    await page.route('**/dataproc-plugin/settings*', async route => {
-      await route.fulfill({
-        status: 200,
-        contentType: 'application/json',
-        body: JSON.stringify({ enable_runtime_template_integration: true })
-      });
-    });
-
-    await page
-      .getByLabel('main menu', { exact: true })
-      .getByText('Settings')
-      .click();
-    const cloudSettings = page.getByText('Google Cloud Settings');
-    await cloudSettings.click();
-
-    // The ConfigSelection renders the old layout without the sidebar tabs.
-    // Verify that the 'common' tab from SettingsLayout is not visible.
-    const commonTab = page.locator('.settings-tab').filter({ hasText: 'common' });
-    await expect(commonTab).toHaveCount(0);
-
-    // Ensure the main configuration form title is visible (rendered by ConfigSelection)
-    const projectHeader = page.getByText('Google Cloud Project Settings');
-    await expect(projectHeader).toBeVisible();
+    await expect(sparkTab).toBeVisible();
   });
 });
