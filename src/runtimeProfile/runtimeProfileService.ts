@@ -113,16 +113,16 @@ export class RuntimeProfileService implements IRuntimeProfileService {
       sessionTemplates?: IRuntimeProfileTemplate[];
       nextPageToken?: string;
       error?: { message?: string };
-    } = await response.json();
+    } | null = await response.json().catch((err: unknown) => {
+      safeLog(`Failed to parse response JSON: ${err}`, LOG_LEVEL.WARN);
+      return null;
+    });
     if (data?.error) {
       throw new Error(data.error.message || 'Failed to fetch runtime profiles');
     }
 
-    const templates: IRuntimeProfileTemplate[] = Array.isArray(
-      data?.sessionTemplates
-    )
-      ? data.sessionTemplates
-      : [];
+    const templates: IRuntimeProfileTemplate[] =
+      data && Array.isArray(data.sessionTemplates) ? data.sessionTemplates : [];
 
     return {
       templates,

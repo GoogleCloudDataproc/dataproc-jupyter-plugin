@@ -1219,12 +1219,11 @@ export const CreateRuntimeProfileComponent: React.FC<
 
   // Verify default/selected project subnetwork availability in the chosen region
   useEffect(() => {
-    const getSubnetworks = service.getSubnetworks;
     if (
       isEditMode ||
       !selectedRegion ||
       (networkAndSecurityConfig.networkSource ?? 'project') !== 'project' ||
-      !getSubnetworks
+      !service.getSubnetworks
     ) {
       setIsDefaultNetworkUnavailable(false);
       setIsCheckingNetworkAvailability(false);
@@ -1243,8 +1242,7 @@ export const CreateRuntimeProfileComponent: React.FC<
     const checkDefaultSubnetwork = async () => {
       setIsCheckingNetworkAvailability(true);
       try {
-        const subnetworks = await getSubnetworks.call(
-          service,
+        const subnetworks = await service.getSubnetworks?.(
           activeNetwork,
           projectId,
           selectedRegion

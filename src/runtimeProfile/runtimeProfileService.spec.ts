@@ -122,6 +122,22 @@ describe('RuntimeProfileService', () => {
       });
     });
 
+    it('returns empty array if response is ok but JSON parsing fails', async () => {
+      (authenticatedFetch as jest.Mock).mockResolvedValue({
+        ok: true,
+        json: jest
+          .fn()
+          .mockRejectedValue(new SyntaxError('Unexpected end of JSON input'))
+      });
+
+      const result = await RuntimeProfileService.fetchRuntimeProfiles();
+
+      expect(result).toEqual({
+        templates: [],
+        nextPageToken: undefined
+      });
+    });
+
     it('throws error if response is not ok or contains error payload', async () => {
       (authenticatedFetch as jest.Mock).mockResolvedValue({
         ok: false,
