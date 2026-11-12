@@ -62,6 +62,7 @@ import {
   getDefaultLakehouseCatalogName,
   getLakehouseCatalogResource,
   isAcceleratedMachine,
+  isL4MachineType,
   LAKEHOUSE_CATALOG_PROPERTY_PREFIX,
   LAKEHOUSE_DEFAULT_CATALOG_PROPERTY,
   LAKEHOUSE_PROJECT_PROPERTY,
@@ -513,7 +514,9 @@ export const applyExecutorAndDriverUpdateToTemplate = (
   if (executorDisk.tier) {
     nextProps['spark.dataproc.executor.disk.tier'] = executorDisk.tier;
   }
-  if (executorDisk.size) {
+  // L4 shapes have a fixed-size local SSD and the service ignores a requested
+  // size, so only the tier is saved for them.
+  if (executorDisk.size && !isL4MachineType(executorMachineName)) {
     nextProps['spark.dataproc.executor.disk.size'] = executorDisk.size;
   }
 

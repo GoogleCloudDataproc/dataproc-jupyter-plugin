@@ -62,8 +62,10 @@ import {
   buildInitialExecutorAndDriverDraft,
   buildSavedExecutorAndDriverConfig,
   getDiskHelperText,
+  getSsdDiskSizeOptions,
   groupAndFilterMachineTypes,
   isAcceleratedMachine,
+  isL4MachineType,
   normalizeMachineTypeName,
   parseDiskTierAndSize
 } from './runtimeProfileMapper';
@@ -1204,6 +1206,8 @@ export const ExecutorAndDriverEditDrawer: React.FC<
     draftConfig.driverMachineType,
     allMachineTypes
   );
+  // An L4 executor's local SSD has a fixed size, so no size is offered.
+  const isExecutorL4 = isL4MachineType(draftConfig.executorType);
 
   const handleTierChange = (selectedTier: string) => {
     setDraftConfig(prev =>
@@ -1556,38 +1560,43 @@ export const ExecutorAndDriverEditDrawer: React.FC<
               </FormControl>
             </div>
 
-            <div className="executor-driver-disk-col">
-              <FormControl size="small" fullWidth variant="outlined">
-                <InputLabel id="edit-executor-disk-size-label" shrink>
-                  {draftConfig.useDifferentDriverConfig
-                    ? 'Executor disk size'
-                    : 'Disk size'}
-                </InputLabel>
-                <Select
-                  labelId="edit-executor-disk-size-label"
-                  id="edit-executor-disk-size"
-                  label={
-                    draftConfig.useDifferentDriverConfig
+            {!isExecutorL4 && (
+              <div className="executor-driver-disk-col">
+                <FormControl size="small" fullWidth variant="outlined">
+                  <InputLabel id="edit-executor-disk-size-label" shrink>
+                    {draftConfig.useDifferentDriverConfig
                       ? 'Executor disk size'
-                      : 'Disk size'
-                  }
-                  notched
-                  value={draftConfig.executorDiskSize}
-                  onChange={e =>
-                    handleExecutorDiskSizeChange(e.target.value as string)
-                  }
-                >
-                  {(draftConfig.executorDiskTier === DISK_TIER_SSD
-                    ? SSD_DISK_SIZES
-                    : HDD_DISK_SIZES
-                  ).map(size => (
-                    <MenuItem key={size} value={size}>
-                      {size}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-            </div>
+                      : 'Disk size'}
+                  </InputLabel>
+                  <Select
+                    labelId="edit-executor-disk-size-label"
+                    id="edit-executor-disk-size"
+                    label={
+                      draftConfig.useDifferentDriverConfig
+                        ? 'Executor disk size'
+                        : 'Disk size'
+                    }
+                    notched
+                    value={draftConfig.executorDiskSize}
+                    onChange={e =>
+                      handleExecutorDiskSizeChange(e.target.value as string)
+                    }
+                  >
+                    {(draftConfig.executorDiskTier === DISK_TIER_SSD
+                      ? getSsdDiskSizeOptions(
+                          draftConfig.executorType,
+                          draftConfig.executorDiskSize
+                        )
+                      : HDD_DISK_SIZES
+                    ).map(size => (
+                      <MenuItem key={size} value={size}>
+                        {size}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+              </div>
+            )}
           </div>
         </div>
 
@@ -1697,7 +1706,10 @@ export const ExecutorAndDriverEditDrawer: React.FC<
                     }
                   >
                     {(draftConfig.driverDiskTier === DISK_TIER_SSD
-                      ? SSD_DISK_SIZES
+                      ? getSsdDiskSizeOptions(
+                          draftConfig.driverMachineType,
+                          draftConfig.driverDiskSize
+                        )
                       : HDD_DISK_SIZES
                     ).map(size => (
                       <MenuItem key={size} value={size}>

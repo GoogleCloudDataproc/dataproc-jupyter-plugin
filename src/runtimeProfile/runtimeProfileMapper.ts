@@ -25,7 +25,10 @@ import {
   DEFAULT_STANDARD_TIER_EXECUTOR_TYPE,
   DISK_HELPER_TEXT_ACCELERATED,
   DISK_HELPER_TEXT_DEFAULT,
-  DISK_HELPER_TEXT_STANDARD_TIER
+  DISK_HELPER_TEXT_STANDARD_TIER,
+  MAX_VCPUS_FOR_SINGLE_LOCAL_SSD,
+  MIN_MULTI_LOCAL_SSD_DISK_SIZE,
+  SELECTABLE_SSD_DISK_SIZES
 } from '../utils/const';
 import {
   DEFAULT_HDD_DISK_SIZE,
@@ -799,6 +802,8 @@ export function mapRuntimeProfileToSessionTemplate(
   }
 
   // Executor disk properties
+  // L4 shapes have a fixed-size local SSD and the service ignores a requested
+  // size, so only the tier is sent for them.
   const executorDisk = parseDiskSpec(
     executorAndDriverConfig?.executorDisk,
     DEFAULT_DISK_SIZE
@@ -806,7 +811,7 @@ export function mapRuntimeProfileToSessionTemplate(
   if (executorDisk.tier) {
     setIfEmpty('spark.dataproc.executor.disk.tier', executorDisk.tier);
   }
-  if (executorDisk.size) {
+  if (executorDisk.size && !isL4MachineType(executorMachineType)) {
     setIfEmpty('spark.dataproc.executor.disk.size', executorDisk.size);
   }
 
@@ -975,15 +980,109 @@ export const isAcceleratedMachine = (
   );
 };
 
+/** Accelerator type of the L4 GPU machine shapes. */
+const L4_ACCELERATOR_TYPE = 'l4';
+
+/**
+ * Whether a machine type (name or label, e.g. 'l4-4' or 'L4 (4 vCPU)') is an
+ * L4 GPU shape. L4 shapes run on G2 machines, whose local SSD has a fixed
+ * size, so their executor disk size can't be chosen.
+ */
+export const isL4MachineType = (machineType?: string): boolean =>
+  parseMachineTypeSpec(machineType)?.acceleratorType === L4_ACCELERATOR_TYPE ||
+  /^(?:l4[-\s]|g2-)/i.test(machineType?.trim() ?? '');
+
+/**
+ * Whether a node of this machine type has more vCPUs than a single local SSD
+ * supports, so its SSD can't be 375 GiB. L4 shapes are exempt.
+ */
+const needsMultipleLocalSsds = (machineType?: string): boolean =>
+  !isL4MachineType(machineType) &&
+  (parseMachineTypeSpec(machineType)?.cores ?? 0) >
+    MAX_VCPUS_FOR_SINGLE_LOCAL_SSD;
+
+/** Size in GiB of a disk size such as '750 GiB'. */
+const toDiskSizeGib = (size: string): number => parseInt(size, 10);
+
+/**
+ * Default, and smallest, SSD size for a machine type: 750 GiB when it needs
+ * more than one local SSD, otherwise 375 GiB.
+ */
+export const getDefaultSsdDiskSize = (machineType?: string): string =>
+  needsMultipleLocalSsds(machineType)
+    ? MIN_MULTI_LOCAL_SSD_DISK_SIZE
+    : DEFAULT_SSD_DISK_SIZE;
+
+/**
+ * Fits an SSD size to a machine type. A valid SSD size is kept unless it is
+ * too small for the machine type, in which case it is raised to the smallest
+ * allowed size; anything else becomes the default. A size is never shrunk.
+ */
+export const fitSsdDiskSizeToShape = (
+  size: string | undefined,
+  machineType?: string
+): string => {
+  const minimumSize = getDefaultSsdDiskSize(machineType);
+  if (!size || !SSD_DISK_SIZES.includes(size)) {
+    return minimumSize;
+  }
+  return toDiskSizeGib(size) < toDiskSizeGib(minimumSize) ? minimumSize : size;
+};
+
+/**
+ * SSD sizes offered for a machine type: the selectable sizes it allows, plus
+ * the current size when a saved profile uses a larger one, so it isn't lost.
+ */
+export const getSsdDiskSizeOptions = (
+  machineType?: string,
+  currentSize?: string
+): string[] => {
+  const options = SELECTABLE_SSD_DISK_SIZES.filter(
+    size => fitSsdDiskSizeToShape(size, machineType) === size
+  );
+  return currentSize &&
+    !options.includes(currentSize) &&
+    fitSsdDiskSizeToShape(currentSize, machineType) === currentSize
+    ? [...options, currentSize]
+    : options;
+};
+
+/**
+ * Executor disk tier and size after the executor machine type changes.
+ * Accelerated shapes use SSD, and an SSD size is fitted to the new shape. L4
+ * shapes, whose local SSD has a fixed size, use the default size, which a
+ * driver sharing the executor configuration then uses too.
+ */
+export const resolveExecutorDiskForShape = (
+  disk: { tier: string; size: string },
+  machineType: string,
+  allMachineTypes: IMachineTypeOption[] = KNOWN_MACHINE_TYPES
+): { tier: string; size: string } => {
+  const tier = isAcceleratedMachine(machineType, allMachineTypes)
+    ? DISK_TIER_SSD
+    : disk.tier;
+  if (tier !== DISK_TIER_SSD) {
+    return { tier, size: disk.size };
+  }
+  return {
+    tier,
+    size: isL4MachineType(machineType)
+      ? DEFAULT_SSD_DISK_SIZE
+      : fitSsdDiskSizeToShape(disk.size, machineType)
+  };
+};
+
 /**
  * Resolves the appropriate disk size when switching disk tier.
+ * An SSD size is fitted to `machineType` when it is given.
  */
 export const resolveDiskSizeForTier = (
   diskTier: string,
-  currentSize: string
+  currentSize: string,
+  machineType?: string
 ): string => {
-  if (diskTier === DISK_TIER_SSD && !SSD_DISK_SIZES.includes(currentSize)) {
-    return DEFAULT_SSD_DISK_SIZE;
+  if (diskTier === DISK_TIER_SSD) {
+    return fitSsdDiskSizeToShape(currentSize, machineType);
   }
   if (diskTier === DISK_TIER_HDD && !HDD_DISK_SIZES.includes(currentSize)) {
     return DEFAULT_HDD_DISK_SIZE;
@@ -1031,9 +1130,10 @@ export const buildInitialExecutorAndDriverDraft = (
     : config.executorDiskTier || parsedExecDisk.tier;
   const execDiskSize =
     execDiskTier === DISK_TIER_SSD
-      ? SSD_DISK_SIZES.includes(config.executorDiskSize || parsedExecDisk.size)
-        ? config.executorDiskSize || parsedExecDisk.size
-        : DEFAULT_SSD_DISK_SIZE
+      ? fitSsdDiskSizeToShape(
+          config.executorDiskSize || parsedExecDisk.size,
+          initialExecType
+        )
       : config.executorDiskSize || parsedExecDisk.size;
 
   const drvDiskTier = diffDriver
@@ -1046,9 +1146,10 @@ export const buildInitialExecutorAndDriverDraft = (
 
   const drvDiskSize = diffDriver
     ? drvDiskTier === DISK_TIER_SSD
-      ? SSD_DISK_SIZES.includes(config.driverDiskSize || parsedDrvDisk.size)
-        ? config.driverDiskSize || parsedDrvDisk.size
-        : DEFAULT_SSD_DISK_SIZE
+      ? fitSsdDiskSizeToShape(
+          config.driverDiskSize || parsedDrvDisk.size,
+          initialDriverType
+        )
       : config.driverDiskSize || parsedDrvDisk.size
     : execDiskSize;
 
@@ -1119,12 +1220,12 @@ export const applyExecutorTypeChangeToDraft = (
   selectedType: string,
   allMachineTypes: IMachineTypeOption[] = KNOWN_MACHINE_TYPES
 ): IExecutorAndDriverDraftConfig => {
-  const isAcc = isAcceleratedMachine(selectedType, allMachineTypes);
-  const nextDiskTier = isAcc ? DISK_TIER_SSD : prev.executorDiskTier;
-  const nextDiskSize =
-    isAcc && !SSD_DISK_SIZES.includes(prev.executorDiskSize)
-      ? DEFAULT_SSD_DISK_SIZE
-      : prev.executorDiskSize;
+  const { tier: nextDiskTier, size: nextDiskSize } =
+    resolveExecutorDiskForShape(
+      { tier: prev.executorDiskTier, size: prev.executorDiskSize },
+      selectedType,
+      allMachineTypes
+    );
   return {
     ...prev,
     executorType: selectedType,
@@ -1149,7 +1250,11 @@ export const applyExecutorDiskTierChangeToDraft = (
   prev: IExecutorAndDriverDraftConfig,
   selectedTier: string
 ): IExecutorAndDriverDraftConfig => {
-  const nextSize = resolveDiskSizeForTier(selectedTier, prev.executorDiskSize);
+  const nextSize = resolveDiskSizeForTier(
+    selectedTier,
+    prev.executorDiskSize,
+    prev.executorType
+  );
   return {
     ...prev,
     executorDiskTier: selectedTier,
@@ -1173,9 +1278,10 @@ export const applyDriverTypeChangeToDraft = (
 ): IExecutorAndDriverDraftConfig => {
   const isAcc = isAcceleratedMachine(selectedType, allMachineTypes);
   const nextDiskTier = isAcc ? DISK_TIER_SSD : prev.driverDiskTier;
+  // Unlike the executor, an L4 driver's SSD size is chosen like any other.
   const nextDiskSize =
-    isAcc && !SSD_DISK_SIZES.includes(prev.driverDiskSize)
-      ? DEFAULT_SSD_DISK_SIZE
+    nextDiskTier === DISK_TIER_SSD
+      ? fitSsdDiskSizeToShape(prev.driverDiskSize, selectedType)
       : prev.driverDiskSize;
   return {
     ...prev,
@@ -1192,7 +1298,11 @@ export const applyDriverDiskTierChangeToDraft = (
   prev: IExecutorAndDriverDraftConfig,
   selectedTier: string
 ): IExecutorAndDriverDraftConfig => {
-  const nextSize = resolveDiskSizeForTier(selectedTier, prev.driverDiskSize);
+  const nextSize = resolveDiskSizeForTier(
+    selectedTier,
+    prev.driverDiskSize,
+    prev.driverMachineType
+  );
   return {
     ...prev,
     driverDiskTier: selectedTier,

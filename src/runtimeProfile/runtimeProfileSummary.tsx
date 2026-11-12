@@ -18,7 +18,10 @@
 import React from 'react';
 import { ISectionProperty } from '../controls/SectionDetail';
 import { IRuntimeProfileSummaryInput } from './runtimeProfileInterface';
-import { normalizeMachineTypeName } from './runtimeProfileMapper';
+import {
+  isL4MachineType,
+  normalizeMachineTypeName
+} from './runtimeProfileMapper';
 import {
   ALL_MACHINE_TYPES,
   DEFAULT_EMPTY_DISPLAY_VALUE,
@@ -74,7 +77,10 @@ export function formatRuntimeProfileSummaryProperties(
   const executorDisplayName = normalizedExecutorShape
     ? getMachineTypeLabel(normalizedExecutorShape) || ''
     : '';
-  const compactDisk = formatCompactDiskLabel(input.executorDisk);
+  const compactDisk = formatCompactDiskLabel(
+    input.executorDisk,
+    !isL4MachineType(normalizedExecutorShape)
+  );
   const executorTarget = [executorDisplayName, compactDisk]
     .filter(Boolean)
     .join(', ');
