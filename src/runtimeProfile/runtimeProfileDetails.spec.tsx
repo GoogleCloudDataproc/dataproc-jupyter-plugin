@@ -1063,6 +1063,14 @@ describe('RuntimeProfileDetails Component', () => {
     expect(
       updatedProps['spark.dataproc.executor.resource.accelerator.type']
     ).toBe('l4');
+    // L4 shapes have a fixed-size local SSD: the tier is saved, and the
+    // previously saved executor disk size is removed.
+    expect(updatedProps['spark.dataproc.executor.disk.tier']).toBe('premium');
+    expect(updatedProps['spark.dataproc.executor.disk.size']).toBeUndefined();
+    expect(
+      updatedProps['spark:spark.dataproc.executor.disk.size']
+    ).toBeUndefined();
+    expect(updatedProps['spark.dataproc.driver.disk.size']).toBe('375g');
     expect(updatedProps['spark.driver.cores']).toBe('4');
     expect(updatedProps['spark.driver.memory']).toBe('16g');
     expect(updatedProps['spark.dataproc.driver.compute.tier']).toBe('premium');

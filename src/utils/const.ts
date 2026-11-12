@@ -541,6 +541,24 @@ export const SSD_DISK_SIZES: string[] = [
   '9000 GiB'
 ];
 
+/**
+ * SSD sizes offered for selection. Like the Cloud console, sizes stop at
+ * 1500 GiB; SSD_DISK_SIZES also lists the larger sizes the service accepts,
+ * so a profile saved with one of them keeps it.
+ */
+export const SELECTABLE_SSD_DISK_SIZES: string[] = [
+  '375 GiB',
+  '750 GiB',
+  '1500 GiB'
+];
+
+/**
+ * Nodes with more than this many vCPUs can't use a single 375 GiB local SSD,
+ * so their SSD is at least MIN_MULTI_LOCAL_SSD_DISK_SIZE. L4 shapes are exempt.
+ */
+export const MAX_VCPUS_FOR_SINGLE_LOCAL_SSD = 10;
+export const MIN_MULTI_LOCAL_SSD_DISK_SIZE = '750 GiB';
+
 export const EXECUTOR_DRIVER_DRAWER_TITLE = 'Executor and driver configuration';
 export const EXECUTOR_DRIVER_DRAWER_SUBTITLE =
   'Customize compute tier, driver, and executor configuration for your workloads.';

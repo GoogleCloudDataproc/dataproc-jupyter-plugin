@@ -1868,6 +1868,117 @@ describe('CreateRuntimeProfileComponent UI & Service', () => {
     expect(getDrawerCheckbox()?.checked).toBe(false);
   });
 
+  it('shows the fixed L4 executor disk without a size and uses 750 GiB for A100', async () => {
+    await act(async () => {
+      root.render(<CreateRuntimeProfileComponent service={mockService} />);
+    });
+    await expandAdditionalConfig();
+
+    const acceleratedCard = container
+      .querySelectorAll('.node-config-cards-container')[1]
+      .querySelectorAll('.node-config-card')[1] as HTMLDivElement;
+    await act(async () => {
+      acceleratedCard.click();
+    });
+    expect(getFieldValue('Executor disk')).toBe('SSD (premium)');
+    expect(getFieldValue('Driver disk')).toBe('SSD (premium), 375 GiB');
+
+    await selectExecutorType('a100-40');
+    expect(getFieldValue('Executor disk')).toBe('SSD (premium), 750 GiB');
+    expect(getFieldValue('Driver disk')).toBe('SSD (premium), 750 GiB');
+  });
+
+  // Opens a disk size Select in the open drawer and returns the sizes it lists.
+  const openDiskSizeSelect = async (id: string) => {
+    const trigger = document.body.querySelector(`#${id}`) as HTMLElement;
+    expect(trigger).not.toBeNull();
+    await act(async () => {
+      trigger.dispatchEvent(
+        new MouseEvent('mousedown', { bubbles: true, button: 0 })
+      );
+    });
+    return Array.from(document.body.querySelectorAll('li[role="option"]'))
+      .map(option => option.getAttribute('data-value'))
+      .filter(value => value?.endsWith('GiB'));
+  };
+
+  it('offers only 750 and 1500 GiB SSDs for a 16 vCPU executor and saves 750 GiB', async () => {
+    const onSave = jest.fn();
+    await act(async () => {
+      root.render(
+        <ExecutorAndDriverEditDrawer
+          open
+          config={{
+            tier: 'Premium',
+            executorType: 'highmem-16',
+            executorMachineType: 'highmem-16',
+            executorDisk: 'SSD (premium), 375 GiB',
+            driverMachineType: 'highmem-16',
+            driverDisk: 'SSD (premium), 375 GiB'
+          }}
+          onClose={jest.fn()}
+          onSave={onSave}
+        />
+      );
+    });
+
+    expect(await openDiskSizeSelect('edit-executor-disk-size')).toEqual([
+      '750 GiB',
+      '1500 GiB'
+    ]);
+    await act(async () => {
+      (
+        document.body.querySelector(
+          'li[role="option"][data-value="750 GiB"]'
+        ) as HTMLElement
+      ).click();
+    });
+
+    const saveBtn = Array.from(
+      document.body.querySelectorAll('.edit-drawer-footer button')
+    ).find(b => b.textContent?.trim() === 'Save') as HTMLButtonElement;
+    await act(async () => {
+      saveBtn.click();
+    });
+    expect(onSave).toHaveBeenCalledWith(
+      expect.objectContaining({
+        executorDisk: 'SSD (premium), 750 GiB',
+        driverDisk: 'SSD (premium), 750 GiB'
+      })
+    );
+  });
+
+  it('hides the executor disk size for L4 but lets an L4 driver choose its size', async () => {
+    await act(async () => {
+      root.render(
+        <ExecutorAndDriverEditDrawer
+          open
+          config={{
+            tier: 'Premium',
+            executorType: 'l4-4',
+            executorMachineType: 'l4-4',
+            executorDisk: 'SSD (premium), 375 GiB',
+            useDifferentDriverConfig: true,
+            driverMachineType: 'l4-48',
+            driverDisk: 'SSD (premium), 375 GiB'
+          }}
+          onClose={jest.fn()}
+          onSave={jest.fn()}
+        />
+      );
+    });
+
+    expect(
+      document.body.querySelector('#edit-executor-disk-tier')
+    ).not.toBeNull();
+    expect(document.body.querySelector('#edit-executor-disk-size')).toBeNull();
+    expect(await openDiskSizeSelect('edit-driver-disk-size')).toEqual([
+      '375 GiB',
+      '750 GiB',
+      '1500 GiB'
+    ]);
+  });
+
   it('should format default runtime profile summary rows', () => {
     const rows: ISectionProperty[] = formatRuntimeProfileSummaryProperties({
       tier: 'Premium',
@@ -1989,8 +2100,9 @@ describe('CreateRuntimeProfileComponent UI & Service', () => {
       executorDisk: 'SSD (premium), 375 GiB',
       useDifferentDriverConfig: false
     });
+    // An L4 executor's local SSD has a fixed size, so no size is shown.
     expect(acceleratedRows.find(r => r.label === 'Executor node')?.value).toBe(
-      'L4 (4 vCPU), SSD (premium), 375 GiB'
+      'L4 (4 vCPU), SSD (premium)'
     );
 
     const emptyRows = formatRuntimeProfileSummaryProperties({

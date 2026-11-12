@@ -225,9 +225,13 @@ export function formatDcuNumber(value: number, locale = 'en-US'): string {
 
 /**
  * Formats a compact disk label for the Summary Executor and Driver node lines,
- * or empty string when no disk string is provided.
+ * or empty string when no disk string is provided. With `showSize` false only
+ * the tier is shown, as for an L4 executor, whose local SSD has a fixed size.
  */
-export function formatCompactDiskLabel(diskStr?: string): string {
+export function formatCompactDiskLabel(
+  diskStr?: string,
+  showSize = true
+): string {
   if (!diskStr || !diskStr.trim()) {
     return '';
   }
@@ -236,6 +240,9 @@ export function formatCompactDiskLabel(diskStr?: string): string {
     lower.includes('ssd') || lower.includes('premium')
       ? DISK_TIER_SSD
       : DISK_TIER_HDD;
+  if (!showSize) {
+    return diskTier;
+  }
   const sizeMatch =
     diskStr.match(/(\d+)\s*(?:GiB|GB)\b/i) || diskStr.match(/(\d+)/);
   if (!sizeMatch) {
