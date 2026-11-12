@@ -927,8 +927,8 @@ export const parseDiskTierAndSize = (
 };
 
 /**
- * Normalizes a machine type string or display label (e.g. 'highmem-4 (4 vCPU, 32 GB)' or 'L4 (4 vCPU)')
- * to its canonical machine type name (e.g. 'highmem-4' or 'l4-4').
+ * Normalizes a machine type string or display label (e.g. 'highmem-4 (4 vCPU, 32 GB)' or
+ * 'l4-4 (4 vCPU, 16 GB, 1 GPU)') to its canonical machine type name (e.g. 'highmem-4' or 'l4-4').
  */
 export const normalizeMachineTypeName = (
   raw?: string,
