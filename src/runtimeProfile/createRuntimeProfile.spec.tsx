@@ -2322,6 +2322,49 @@ describe('CreateRuntimeProfileComponent UI & Service', () => {
       expect(saveBtn.disabled).toBe(false);
     });
 
+    it('opens the Executor and driver drawer with the saved disks and keeps them on Save', async () => {
+      await renderEditForm(undefined, {
+        ...profileToEdit,
+        runtimeConfig: {
+          ...profileToEdit.runtimeConfig,
+          properties: {
+            ...profileToEdit.runtimeConfig?.properties,
+            'spark:spark.dataproc.executor.disk.tier': 'premium',
+            'spark:spark.dataproc.executor.disk.size': '1500g',
+            'spark:spark.driver.cores': '4',
+            'spark:spark.driver.memory': '16g',
+            'spark:spark.dataproc.driver.disk.tier': 'standard',
+            'spark:spark.dataproc.driver.disk.size': '600g'
+          }
+        }
+      });
+      await expandAdditionalConfig();
+
+      const editButtons = container.querySelectorAll(
+        '.section-detail-edit-button'
+      );
+      await act(async () => {
+        (editButtons[1] as HTMLButtonElement).click();
+      });
+
+      const selectedValue = (id: string) =>
+        document.body.querySelector(`#${id}`)?.textContent;
+      expect(selectedValue('edit-executor-disk-tier')).toBe('SSD (premium)');
+      expect(selectedValue('edit-executor-disk-size')).toBe('1500 GiB');
+      expect(selectedValue('edit-driver-disk-tier')).toBe('HDD (standard)');
+      expect(selectedValue('edit-driver-disk-size')).toBe('600 GiB');
+
+      // Saving the drawer without changes keeps the saved disks.
+      const saveBtn = Array.from(
+        document.body.querySelectorAll('.edit-drawer-footer button')
+      ).find(b => b.textContent?.trim() === 'Save') as HTMLButtonElement;
+      await act(async () => {
+        saveBtn.click();
+      });
+      expect(getFieldValue('Executor disk')).toBe('SSD (premium), 1500 GiB');
+      expect(getFieldValue('Driver disk')).toBe('HDD (standard), 600 GiB');
+    });
+
     it('lets every section be edited', async () => {
       await renderEditForm();
       await expandAdditionalConfig();
