@@ -1218,7 +1218,7 @@ describe('CreateRuntimeProfileComponent UI & Service', () => {
       (executorCards[1] as HTMLDivElement).click();
     });
 
-    expect(getFieldValue('Executor type')).toBe('L4 (4 vCPU)');
+    expect(getFieldValue('Executor type')).toBe('l4-4 (4 vCPU, 16 GB, 1 GPU)');
   });
 
   it('initializes executor category and type from a valid initial config machine id', async () => {
@@ -1236,7 +1236,11 @@ describe('CreateRuntimeProfileComponent UI & Service', () => {
       .querySelectorAll('.node-config-cards-container')[1]
       .querySelectorAll('.node-config-card');
     expect(executorCards[1].classList.contains('selected')).toBe(true);
-    expect(getFieldValue('Executor type')).toBe('L4 (8 vCPU)');
+    // The dropdown shows the label; the section shows the display name.
+    expect(
+      container.querySelector('#runtime-profile-executor-type')?.textContent
+    ).toBe('L4 (8 vCPU)');
+    expect(getFieldValue('Executor type')).toBe('l4-8 (8 vCPU, 32 GB, 1 GPU)');
   });
 
   it('opens RuntimeEnvironmentEditDrawer and updates runtime configuration on save', async () => {
@@ -1750,6 +1754,26 @@ describe('CreateRuntimeProfileComponent UI & Service', () => {
     expect(normalizeMachineTypeName('')).toBe('highmem-4');
   });
 
+  it.each([
+    ['l4-4', 'L4 (4 vCPU)', 'l4-4 (4 vCPU, 16 GB, 1 GPU)'],
+    ['l4-8', 'L4 (8 vCPU)', 'l4-8 (8 vCPU, 32 GB, 1 GPU)'],
+    ['l4-12', 'L4 (12 vCPU)', 'l4-12 (12 vCPU, 48 GB, 1 GPU)'],
+    ['l4-16', 'L4 (16 vCPU)', 'l4-16 (16 vCPU, 64 GB, 1 GPU)'],
+    ['l4-24', 'L4 (24 vCPU)', 'l4-24 (24 vCPU, 96 GB, 2 GPUs)'],
+    ['l4-48', 'L4 (48 vCPU)', 'l4-48 (48 vCPU, 192 GB, 4 GPUs)'],
+    ['l4-96', 'L4 (96 vCPU)', 'l4-96 (96 vCPU, 384 GB, 8 GPUs)'],
+    ['a100-40', 'A100 40GB (12 vCPU)', 'a100-40 (12 vCPU, 78 GB, 1 GPU)'],
+    ['a100-80', 'A100 80GB (12 vCPU)', 'a100-80 (12 vCPU, 165 GB, 1 GPU)']
+  ])(
+    'labels %s as %s in the dropdowns and %s in the Summary and section',
+    (name, label, displayName) => {
+      expect(
+        DATAPROC_ACCELERATED_MACHINE_TYPES.find(m => m.name === name)
+      ).toMatchObject({ label, displayName });
+      expect(normalizeMachineTypeName(label)).toBe(name);
+    }
+  );
+
   it('should detect accelerated machine shapes with isAcceleratedMachine', () => {
     expect(
       isAcceleratedMachine('l4-4', DATAPROC_ACCELERATED_MACHINE_TYPES)
@@ -1990,7 +2014,23 @@ describe('CreateRuntimeProfileComponent UI & Service', () => {
       useDifferentDriverConfig: false
     });
     expect(acceleratedRows.find(r => r.label === 'Executor node')?.value).toBe(
-      'L4 (4 vCPU), SSD (premium), 375 GiB'
+      'l4-4 (4 vCPU, 16 GB, 1 GPU), SSD (premium), 375 GiB'
+    );
+
+    // Dropdown labels, which the drawer saves for the driver, also show as
+    // display names.
+    const labelRows = formatRuntimeProfileSummaryProperties({
+      executorMachineType: 'L4 (48 vCPU)',
+      executorDisk: 'SSD (premium), 750 GiB',
+      driverMachineType: 'A100 40GB (12 vCPU)',
+      driverDisk: 'SSD (premium), 750 GiB',
+      useDifferentDriverConfig: true
+    });
+    expect(labelRows.find(r => r.label === 'Executor node')?.value).toBe(
+      'l4-48 (48 vCPU, 192 GB, 4 GPUs), SSD (premium), 750 GiB'
+    );
+    expect(labelRows.find(r => r.label === 'Driver node')?.value).toBe(
+      'a100-40 (12 vCPU, 78 GB, 1 GPU), SSD (premium), 750 GiB'
     );
 
     const emptyRows = formatRuntimeProfileSummaryProperties({
@@ -2320,6 +2360,49 @@ describe('CreateRuntimeProfileComponent UI & Service', () => {
         document.body.querySelectorAll('.edit-drawer-footer button')
       ).find(b => b.textContent?.trim() === 'Save') as HTMLButtonElement;
       expect(saveBtn.disabled).toBe(false);
+    });
+
+    it('opens the Executor and driver drawer with the saved disks and keeps them on Save', async () => {
+      await renderEditForm(undefined, {
+        ...profileToEdit,
+        runtimeConfig: {
+          ...profileToEdit.runtimeConfig,
+          properties: {
+            ...profileToEdit.runtimeConfig?.properties,
+            'spark:spark.dataproc.executor.disk.tier': 'premium',
+            'spark:spark.dataproc.executor.disk.size': '1500g',
+            'spark:spark.driver.cores': '4',
+            'spark:spark.driver.memory': '16g',
+            'spark:spark.dataproc.driver.disk.tier': 'standard',
+            'spark:spark.dataproc.driver.disk.size': '600g'
+          }
+        }
+      });
+      await expandAdditionalConfig();
+
+      const editButtons = container.querySelectorAll(
+        '.section-detail-edit-button'
+      );
+      await act(async () => {
+        (editButtons[1] as HTMLButtonElement).click();
+      });
+
+      const selectedValue = (id: string) =>
+        document.body.querySelector(`#${id}`)?.textContent;
+      expect(selectedValue('edit-executor-disk-tier')).toBe('SSD (premium)');
+      expect(selectedValue('edit-executor-disk-size')).toBe('1500 GiB');
+      expect(selectedValue('edit-driver-disk-tier')).toBe('HDD (standard)');
+      expect(selectedValue('edit-driver-disk-size')).toBe('600 GiB');
+
+      // Saving the drawer without changes keeps the saved disks.
+      const saveBtn = Array.from(
+        document.body.querySelectorAll('.edit-drawer-footer button')
+      ).find(b => b.textContent?.trim() === 'Save') as HTMLButtonElement;
+      await act(async () => {
+        saveBtn.click();
+      });
+      expect(getFieldValue('Executor disk')).toBe('SSD (premium), 1500 GiB');
+      expect(getFieldValue('Driver disk')).toBe('HDD (standard), 600 GiB');
     });
 
     it('lets every section be edited', async () => {

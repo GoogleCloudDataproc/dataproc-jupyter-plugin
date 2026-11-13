@@ -955,6 +955,23 @@ export const normalizeMachineTypeName = (
 };
 
 /**
+ * Name shown for a machine type in the Summary and the Executor and driver
+ * configuration section, e.g. 'l4-48 (48 vCPU, 192 GB, 4 GPUs)' for 'l4-48'
+ * or its dropdown label 'L4 (48 vCPU)'. Falls back to the label, and returns
+ * values that aren't a known machine type unchanged.
+ */
+export const getMachineTypeDisplayName = (
+  machineType?: string
+): string | undefined => {
+  if (!machineType?.trim()) {
+    return machineType;
+  }
+  const name = normalizeMachineTypeName(machineType);
+  const known = KNOWN_MACHINE_TYPES.find(m => m.name === name);
+  return known ? known.displayName ?? known.label : machineType;
+};
+
+/**
  * Determines whether a machine type name belongs to the accelerated (GPU) category.
  */
 export const isAcceleratedMachine = (

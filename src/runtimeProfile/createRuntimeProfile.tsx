@@ -43,8 +43,10 @@ import { SectionDetail, ISectionProperty } from '../controls/SectionDetail';
 import {
   LAKEHOUSE_RUNTIME_CATALOG,
   METASTORE_NONE,
+  getMachineTypeDisplayName,
   isAcceleratedMachine,
-  normalizeMachineTypeName
+  normalizeMachineTypeName,
+  parseDiskTierAndSize
 } from './runtimeProfileMapper';
 import '../../style/runtimeProfile.css';
 import {
@@ -316,7 +318,7 @@ export const formatExecutorAndDriverProperties = (
     },
     {
       label: 'Driver machine type',
-      value: getMachineTypeLabel(
+      value: getMachineTypeDisplayName(
         config.driverMachineType ||
           DEFAULT_EXECUTOR_AND_DRIVER_CONFIG.driverMachineType
       )
@@ -327,7 +329,7 @@ export const formatExecutorAndDriverProperties = (
     },
     {
       label: 'Executor type',
-      value: getMachineTypeLabel(
+      value: getMachineTypeDisplayName(
         config.executorType || DEFAULT_EXECUTOR_AND_DRIVER_CONFIG.executorType
       )
     },
@@ -767,6 +769,10 @@ export const CreateRuntimeProfileComponent: React.FC<
         initialExecutorAndDriverConfig.executorDisk ?? defaultDisk;
       const resolvedDrvDisk =
         initialExecutorAndDriverConfig.driverDisk ?? resolvedExecDisk;
+      // An opened profile only has disk labels; read the tier and size from
+      // them, or the drawer shows the defaults instead of the saved disk.
+      const execDisk = parseDiskTierAndSize(resolvedExecDisk, defaultDiskTier);
+      const drvDisk = parseDiskTierAndSize(resolvedDrvDisk, defaultDiskTier);
       const hasCustomDriver =
         initialExecutorAndDriverConfig.useDifferentDriverConfig ??
         Boolean(
@@ -794,14 +800,14 @@ export const CreateRuntimeProfileComponent: React.FC<
         executorType:
           initialExecutorAndDriverConfig.executorType ?? executorType,
         executorDiskTier:
-          initialExecutorAndDriverConfig.executorDiskTier ?? defaultDiskTier,
+          initialExecutorAndDriverConfig.executorDiskTier ?? execDisk.tier,
         executorDiskSize:
-          initialExecutorAndDriverConfig.executorDiskSize ?? defaultDiskSize,
+          initialExecutorAndDriverConfig.executorDiskSize ?? execDisk.size,
         executorDisk: resolvedExecDisk,
         driverDiskTier:
-          initialExecutorAndDriverConfig.driverDiskTier ?? defaultDiskTier,
+          initialExecutorAndDriverConfig.driverDiskTier ?? drvDisk.tier,
         driverDiskSize:
-          initialExecutorAndDriverConfig.driverDiskSize ?? defaultDiskSize,
+          initialExecutorAndDriverConfig.driverDiskSize ?? drvDisk.size,
         driverDisk: resolvedDrvDisk
       };
     });
