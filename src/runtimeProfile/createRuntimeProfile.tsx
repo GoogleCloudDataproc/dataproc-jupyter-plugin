@@ -43,6 +43,7 @@ import { SectionDetail, ISectionProperty } from '../controls/SectionDetail';
 import {
   LAKEHOUSE_RUNTIME_CATALOG,
   METASTORE_NONE,
+  getMachineTypeDisplayName,
   isAcceleratedMachine,
   normalizeMachineTypeName,
   parseDiskTierAndSize
@@ -317,7 +318,7 @@ export const formatExecutorAndDriverProperties = (
     },
     {
       label: 'Driver machine type',
-      value: getMachineTypeLabel(
+      value: getMachineTypeDisplayName(
         config.driverMachineType ||
           DEFAULT_EXECUTOR_AND_DRIVER_CONFIG.driverMachineType
       )
@@ -328,7 +329,7 @@ export const formatExecutorAndDriverProperties = (
     },
     {
       label: 'Executor type',
-      value: getMachineTypeLabel(
+      value: getMachineTypeDisplayName(
         config.executorType || DEFAULT_EXECUTOR_AND_DRIVER_CONFIG.executorType
       )
     },

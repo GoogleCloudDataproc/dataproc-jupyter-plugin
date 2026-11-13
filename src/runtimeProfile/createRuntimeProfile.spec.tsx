@@ -1236,6 +1236,10 @@ describe('CreateRuntimeProfileComponent UI & Service', () => {
       .querySelectorAll('.node-config-cards-container')[1]
       .querySelectorAll('.node-config-card');
     expect(executorCards[1].classList.contains('selected')).toBe(true);
+    // The dropdown shows the label; the section shows the display name.
+    expect(
+      container.querySelector('#runtime-profile-executor-type')?.textContent
+    ).toBe('L4 (8 vCPU)');
     expect(getFieldValue('Executor type')).toBe('l4-8 (8 vCPU, 32 GB, 1 GPU)');
   });
 
@@ -1744,13 +1748,6 @@ describe('CreateRuntimeProfileComponent UI & Service', () => {
     expect(normalizeMachineTypeName('standard-4 (4 vCPU, 16 GB)')).toBe(
       'standard-4'
     );
-    expect(normalizeMachineTypeName('l4-4 (4 vCPU, 16 GB, 1 GPU)')).toBe(
-      'l4-4'
-    );
-    expect(normalizeMachineTypeName('a100-40 (12 vCPU, 78 GB, 1 GPU)')).toBe(
-      'a100-40'
-    );
-    // Labels accelerated machine types had before matching the Cloud Console.
     expect(normalizeMachineTypeName('L4 (4 vCPU)')).toBe('l4-4');
     expect(normalizeMachineTypeName('A100 40GB (12 vCPU)')).toBe('a100-40');
     expect(normalizeMachineTypeName('highmem-4')).toBe('highmem-4');
@@ -1758,32 +1755,24 @@ describe('CreateRuntimeProfileComponent UI & Service', () => {
   });
 
   it.each([
-    ['L4 (4 vCPU)', 'l4-4'],
-    ['L4 (8 vCPU)', 'l4-8'],
-    ['L4 (12 vCPU)', 'l4-12'],
-    ['L4 (16 vCPU)', 'l4-16'],
-    ['L4 (24 vCPU)', 'l4-24'],
-    ['L4 (48 vCPU)', 'l4-48'],
-    ['L4 (96 vCPU)', 'l4-96'],
-    ['A100 40GB (12 vCPU)', 'a100-40'],
-    ['A100 80GB (12 vCPU)', 'a100-80']
-  ])('still resolves the previous label %s to %s', (label, machineName) => {
-    expect(normalizeMachineTypeName(label)).toBe(machineName);
-  });
-
-  it('labels accelerated machine types like the Cloud Console', () => {
-    expect(DATAPROC_ACCELERATED_MACHINE_TYPES.map(m => m.label)).toEqual([
-      'l4-4 (4 vCPU, 16 GB, 1 GPU)',
-      'l4-8 (8 vCPU, 32 GB, 1 GPU)',
-      'l4-12 (12 vCPU, 48 GB, 1 GPU)',
-      'l4-16 (16 vCPU, 64 GB, 1 GPU)',
-      'l4-24 (24 vCPU, 96 GB, 2 GPUs)',
-      'l4-48 (48 vCPU, 192 GB, 4 GPUs)',
-      'l4-96 (96 vCPU, 384 GB, 8 GPUs)',
-      'a100-40 (12 vCPU, 78 GB, 1 GPU)',
-      'a100-80 (12 vCPU, 165 GB, 1 GPU)'
-    ]);
-  });
+    ['l4-4', 'L4 (4 vCPU)', 'l4-4 (4 vCPU, 16 GB, 1 GPU)'],
+    ['l4-8', 'L4 (8 vCPU)', 'l4-8 (8 vCPU, 32 GB, 1 GPU)'],
+    ['l4-12', 'L4 (12 vCPU)', 'l4-12 (12 vCPU, 48 GB, 1 GPU)'],
+    ['l4-16', 'L4 (16 vCPU)', 'l4-16 (16 vCPU, 64 GB, 1 GPU)'],
+    ['l4-24', 'L4 (24 vCPU)', 'l4-24 (24 vCPU, 96 GB, 2 GPUs)'],
+    ['l4-48', 'L4 (48 vCPU)', 'l4-48 (48 vCPU, 192 GB, 4 GPUs)'],
+    ['l4-96', 'L4 (96 vCPU)', 'l4-96 (96 vCPU, 384 GB, 8 GPUs)'],
+    ['a100-40', 'A100 40GB (12 vCPU)', 'a100-40 (12 vCPU, 78 GB, 1 GPU)'],
+    ['a100-80', 'A100 80GB (12 vCPU)', 'a100-80 (12 vCPU, 165 GB, 1 GPU)']
+  ])(
+    'labels %s as %s in the dropdowns and %s in the Summary and section',
+    (name, label, displayName) => {
+      expect(
+        DATAPROC_ACCELERATED_MACHINE_TYPES.find(m => m.name === name)
+      ).toMatchObject({ label, displayName });
+      expect(normalizeMachineTypeName(label)).toBe(name);
+    }
+  );
 
   it('should detect accelerated machine shapes with isAcceleratedMachine', () => {
     expect(
@@ -2026,6 +2015,22 @@ describe('CreateRuntimeProfileComponent UI & Service', () => {
     });
     expect(acceleratedRows.find(r => r.label === 'Executor node')?.value).toBe(
       'l4-4 (4 vCPU, 16 GB, 1 GPU), SSD (premium), 375 GiB'
+    );
+
+    // Dropdown labels, which the drawer saves for the driver, also show as
+    // display names.
+    const labelRows = formatRuntimeProfileSummaryProperties({
+      executorMachineType: 'L4 (48 vCPU)',
+      executorDisk: 'SSD (premium), 750 GiB',
+      driverMachineType: 'A100 40GB (12 vCPU)',
+      driverDisk: 'SSD (premium), 750 GiB',
+      useDifferentDriverConfig: true
+    });
+    expect(labelRows.find(r => r.label === 'Executor node')?.value).toBe(
+      'l4-48 (48 vCPU, 192 GB, 4 GPUs), SSD (premium), 750 GiB'
+    );
+    expect(labelRows.find(r => r.label === 'Driver node')?.value).toBe(
+      'a100-40 (12 vCPU, 78 GB, 1 GPU), SSD (premium), 750 GiB'
     );
 
     const emptyRows = formatRuntimeProfileSummaryProperties({
@@ -2990,8 +2995,6 @@ describe('CreateRuntimeProfileComponent UI & Service', () => {
     expect(MACHINE_SHAPE_DCU['a100-40']).toBe(15.7);
     expect(MACHINE_SHAPE_DCU['a100-80']).toBe(31.6);
     expect(getShapeDcu('highmem-4 (4 vCPU, 32 GB)')).toBe(5.6);
-    expect(getShapeDcu('l4-4 (4 vCPU, 16 GB, 1 GPU)')).toBe(4);
-    expect(getShapeDcu('a100-80 (12 vCPU, 165 GB, 1 GPU)')).toBe(31.6);
     expect(getShapeDcu('L4 (4 vCPU)')).toBe(4);
     expect(getShapeDcu('A100 80GB (12 vCPU)')).toBe(31.6);
     expect(getShapeDcu('unknown-shape')).toBe(0);

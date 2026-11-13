@@ -47,6 +47,11 @@ export type ExecutorCategoryType = 'general' | 'accelerated';
 export interface IMachineTypeOption {
   name: string;
   label: string;
+  /**
+   * Shown in the Summary and the Executor and driver configuration section;
+   * defaults to `label`.
+   */
+  displayName?: string;
   vCPUs: number;
   memory: string;
   category: ExecutorCategoryType;

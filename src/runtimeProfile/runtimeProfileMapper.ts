@@ -137,23 +137,6 @@ const KNOWN_MACHINE_TYPES: IMachineTypeOption[] = [
 ];
 
 /**
- * Machine names for the labels accelerated machine types had before they
- * matched the Cloud console (e.g. 'L4 (4 vCPU)'), so values that still use
- * them resolve to the same machine type. Keys are lowercase.
- */
-const LEGACY_MACHINE_TYPE_LABELS = new Map<string, string>([
-  ['l4 (4 vcpu)', 'l4-4'],
-  ['l4 (8 vcpu)', 'l4-8'],
-  ['l4 (12 vcpu)', 'l4-12'],
-  ['l4 (16 vcpu)', 'l4-16'],
-  ['l4 (24 vcpu)', 'l4-24'],
-  ['l4 (48 vcpu)', 'l4-48'],
-  ['l4 (96 vcpu)', 'l4-96'],
-  ['a100 40gb (12 vcpu)', 'a100-40'],
-  ['a100 80gb (12 vcpu)', 'a100-80']
-]);
-
-/**
  * Converts a Spark memory string ('32g', '13384m') to megabytes.
  */
 const memoryToMb = (memory: string): number => {
@@ -194,7 +177,6 @@ const isHighmemMachineShape = (
  * Resolves a machine type name (or label, e.g. 'highmem-4 (4 vCPU, 32 GB)') into
  * CPU cores, memory and optional accelerator. Known shapes come from
  * DATAPROC_*_MACHINE_TYPES; other names fall back to a best-effort estimate.
- * Previous accelerated labels (e.g. 'L4 (4 vCPU)') resolve to the same shape.
  */
 export const parseMachineTypeSpec = (
   machineTypeName?: string
@@ -203,8 +185,7 @@ export const parseMachineTypeSpec = (
     return undefined;
   }
   const trimmedLower = machineTypeName.trim().toLowerCase();
-  const cleanName =
-    LEGACY_MACHINE_TYPE_LABELS.get(trimmedLower) ?? trimmedLower.split(' ')[0];
+  const cleanName = trimmedLower.split(' ')[0];
   const known = KNOWN_MACHINE_TYPES.find(
     m => m.name === cleanName || m.label.toLowerCase() === trimmedLower
   );
@@ -946,9 +927,8 @@ export const parseDiskTierAndSize = (
 };
 
 /**
- * Normalizes a machine type string or display label (e.g. 'highmem-4 (4 vCPU, 32 GB)' or
- * 'l4-4 (4 vCPU, 16 GB, 1 GPU)') to its canonical machine type name (e.g. 'highmem-4' or 'l4-4').
- * Previous accelerated labels (e.g. 'L4 (4 vCPU)') resolve to the same name.
+ * Normalizes a machine type string or display label (e.g. 'highmem-4 (4 vCPU, 32 GB)' or 'L4 (4 vCPU)')
+ * to its canonical machine type name (e.g. 'highmem-4' or 'l4-4').
  */
 export const normalizeMachineTypeName = (
   raw?: string,
@@ -966,17 +946,29 @@ export const normalizeMachineTypeName = (
   if (byLabel) {
     return byLabel.name;
   }
-  const legacyName = LEGACY_MACHINE_TYPE_LABELS.get(clean);
-  const byLegacyLabel = allTypes.find(m => m.name === legacyName);
-  if (byLegacyLabel) {
-    return byLegacyLabel.name;
-  }
   const firstWord = clean.split(' ')[0];
   const byFirstWord = allTypes.find(m => m.name.toLowerCase() === firstWord);
   if (byFirstWord) {
     return byFirstWord.name;
   }
   return firstWord || raw;
+};
+
+/**
+ * Name shown for a machine type in the Summary and the Executor and driver
+ * configuration section, e.g. 'l4-48 (48 vCPU, 192 GB, 4 GPUs)' for 'l4-48'
+ * or its dropdown label 'L4 (48 vCPU)'. Falls back to the label, and returns
+ * values that aren't a known machine type unchanged.
+ */
+export const getMachineTypeDisplayName = (
+  machineType?: string
+): string | undefined => {
+  if (!machineType?.trim()) {
+    return machineType;
+  }
+  const name = normalizeMachineTypeName(machineType);
+  const known = KNOWN_MACHINE_TYPES.find(m => m.name === name);
+  return known ? known.displayName ?? known.label : machineType;
 };
 
 /**

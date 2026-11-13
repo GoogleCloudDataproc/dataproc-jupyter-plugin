@@ -18,7 +18,10 @@
 import React from 'react';
 import { ISectionProperty } from '../controls/SectionDetail';
 import { IRuntimeProfileSummaryInput } from './runtimeProfileInterface';
-import { normalizeMachineTypeName } from './runtimeProfileMapper';
+import {
+  getMachineTypeDisplayName,
+  normalizeMachineTypeName
+} from './runtimeProfileMapper';
 import {
   ALL_MACHINE_TYPES,
   DEFAULT_EMPTY_DISPLAY_VALUE,
@@ -26,7 +29,6 @@ import {
   DEFAULT_MAX_EXECUTORS,
   DEFAULT_MIN_EXECUTORS,
   formatCompactDiskLabel,
-  getMachineTypeLabel,
   MSG_EXECUTOR_TIER_PREMIUM,
   MSG_EXECUTOR_TIER_PREMIUM_LIGHTNING,
   MSG_EXECUTOR_TIER_STANDARD,
@@ -72,7 +74,7 @@ export function formatRuntimeProfileSummaryProperties(
     ? normalizeMachineTypeName(input.executorMachineType, ALL_MACHINE_TYPES)
     : undefined;
   const executorDisplayName = normalizedExecutorShape
-    ? getMachineTypeLabel(normalizedExecutorShape) || ''
+    ? getMachineTypeDisplayName(normalizedExecutorShape) || ''
     : '';
   const compactDisk = formatCompactDiskLabel(input.executorDisk);
   const executorTarget = [executorDisplayName, compactDisk]
@@ -92,7 +94,7 @@ export function formatRuntimeProfileSummaryProperties(
     : undefined;
 
   const driverDisplayName = normalizedDriverShape
-    ? getMachineTypeLabel(normalizedDriverShape) || ''
+    ? getMachineTypeDisplayName(normalizedDriverShape) || ''
     : '';
   const driverDiskLabel = formatCompactDiskLabel(
     input.driverDisk || input.executorDisk
