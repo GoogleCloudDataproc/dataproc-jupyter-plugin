@@ -1750,8 +1750,25 @@ describe('CreateRuntimeProfileComponent UI & Service', () => {
     expect(normalizeMachineTypeName('a100-40 (12 vCPU, 78 GB, 1 GPU)')).toBe(
       'a100-40'
     );
+    // Labels accelerated machine types had before matching the Cloud Console.
+    expect(normalizeMachineTypeName('L4 (4 vCPU)')).toBe('l4-4');
+    expect(normalizeMachineTypeName('A100 40GB (12 vCPU)')).toBe('a100-40');
     expect(normalizeMachineTypeName('highmem-4')).toBe('highmem-4');
     expect(normalizeMachineTypeName('')).toBe('highmem-4');
+  });
+
+  it.each([
+    ['L4 (4 vCPU)', 'l4-4'],
+    ['L4 (8 vCPU)', 'l4-8'],
+    ['L4 (12 vCPU)', 'l4-12'],
+    ['L4 (16 vCPU)', 'l4-16'],
+    ['L4 (24 vCPU)', 'l4-24'],
+    ['L4 (48 vCPU)', 'l4-48'],
+    ['L4 (96 vCPU)', 'l4-96'],
+    ['A100 40GB (12 vCPU)', 'a100-40'],
+    ['A100 80GB (12 vCPU)', 'a100-80']
+  ])('still resolves the previous label %s to %s', (label, machineName) => {
+    expect(normalizeMachineTypeName(label)).toBe(machineName);
   });
 
   it('labels accelerated machine types like the Cloud Console', () => {
@@ -2975,6 +2992,8 @@ describe('CreateRuntimeProfileComponent UI & Service', () => {
     expect(getShapeDcu('highmem-4 (4 vCPU, 32 GB)')).toBe(5.6);
     expect(getShapeDcu('l4-4 (4 vCPU, 16 GB, 1 GPU)')).toBe(4);
     expect(getShapeDcu('a100-80 (12 vCPU, 165 GB, 1 GPU)')).toBe(31.6);
+    expect(getShapeDcu('L4 (4 vCPU)')).toBe(4);
+    expect(getShapeDcu('A100 80GB (12 vCPU)')).toBe(31.6);
     expect(getShapeDcu('unknown-shape')).toBe(0);
     expect(getShapeDcu('')).toBe(0);
 

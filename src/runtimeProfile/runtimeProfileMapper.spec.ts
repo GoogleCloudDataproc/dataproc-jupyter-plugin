@@ -230,6 +230,24 @@ describe('runtimeProfileMapper', () => {
         cores: 4,
         memory: '32g'
       });
+      expect(parseMachineTypeSpec('a100-40 (12 vCPU, 78 GB, 1 GPU)')).toEqual({
+        cores: 12,
+        memory: '78040m',
+        acceleratorType: 'a100-40'
+      });
+    });
+
+    it('should parse previous accelerated labels as the same machine type', () => {
+      expect(parseMachineTypeSpec('L4 (4 vCPU)')).toEqual({
+        cores: 4,
+        memory: '13384m',
+        acceleratorType: 'l4'
+      });
+      expect(parseMachineTypeSpec('A100 80GB (12 vCPU)')).toEqual({
+        cores: 12,
+        memory: '165080m',
+        acceleratorType: 'a100-80'
+      });
     });
 
     it('should parse dynamic machine types', () => {
