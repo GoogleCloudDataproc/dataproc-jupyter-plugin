@@ -75,6 +75,7 @@ export const MOCK_BUCKET_OBJECTS: string[] = [
 ];
 
 const DEFAULT_RUNTIME_PROFILE_PAGE_SIZE = 50;
+const MAX_EMPTY_PAGE_HOPS = 10;
 
 /**
  * Service to manage Dataproc Runtime Profiles.
@@ -88,45 +89,67 @@ export class RuntimeProfileService implements IRuntimeProfileService {
     pageToken: string = '',
     pageSize: number = DEFAULT_RUNTIME_PROFILE_PAGE_SIZE
   ): Promise<{ templates: IRuntimeProfileTemplate[]; nextPageToken?: string }> {
-    const queryParams = new URLSearchParams({
-      pageSize: pageSize.toString(),
-      pageToken: pageToken || ''
-    });
-    const response = await authenticatedFetch({
-      uri: 'sessionTemplates',
-      method: HTTP_METHOD.GET,
-      regionIdentifier: 'locations',
-      queryParams: queryParams
-    });
-    if (!response.ok) {
-      const errorData = await response.json().catch((err: unknown) => {
-        safeLog(`Failed to parse error response JSON: ${err}`, LOG_LEVEL.WARN);
+    let currentToken: string | undefined = pageToken;
+    let validTemplates: IRuntimeProfileTemplate[] = [];
+    let hops = 0;
+
+    do {
+      const queryParams = new URLSearchParams({
+        pageSize: pageSize.toString(),
+        pageToken: currentToken || ''
+      });
+      const response = await authenticatedFetch({
+        uri: 'sessionTemplates',
+        method: HTTP_METHOD.GET,
+        regionIdentifier: 'locations',
+        queryParams: queryParams
+      });
+      if (!response.ok) {
+        const errorData = await response.json().catch((err: unknown) => {
+          safeLog(
+            `Failed to parse error response JSON: ${err}`,
+            LOG_LEVEL.WARN
+          );
+          return null;
+        });
+        throw new Error(
+          errorData?.error?.message ||
+            `Failed to fetch runtime profiles: ${response.statusText}`
+        );
+      }
+
+      const data: {
+        sessionTemplates?: IRuntimeProfileTemplate[];
+        nextPageToken?: string;
+        error?: { message?: string };
+      } | null = await response.json().catch((err: unknown) => {
+        safeLog(`Failed to parse response JSON: ${err}`, LOG_LEVEL.WARN);
         return null;
       });
-      throw new Error(
-        errorData?.error?.message ||
-          `Failed to fetch runtime profiles: ${response.statusText}`
+      if (data?.error) {
+        throw new Error(
+          data.error.message || 'Failed to fetch runtime profiles'
+        );
+      }
+
+      const rawTemplates: IRuntimeProfileTemplate[] =
+        data && Array.isArray(data.sessionTemplates)
+          ? data.sessionTemplates
+          : [];
+      validTemplates = rawTemplates.filter((t: IRuntimeProfileTemplate) =>
+        Boolean(t.jupyterSession)
       );
-    }
-
-    const data: {
-      sessionTemplates?: IRuntimeProfileTemplate[];
-      nextPageToken?: string;
-      error?: { message?: string };
-    } | null = await response.json().catch((err: unknown) => {
-      safeLog(`Failed to parse response JSON: ${err}`, LOG_LEVEL.WARN);
-      return null;
-    });
-    if (data?.error) {
-      throw new Error(data.error.message || 'Failed to fetch runtime profiles');
-    }
-
-    const templates: IRuntimeProfileTemplate[] =
-      data && Array.isArray(data.sessionTemplates) ? data.sessionTemplates : [];
+      currentToken = data?.nextPageToken;
+      hops += 1;
+    } while (
+      validTemplates.length === 0 &&
+      Boolean(currentToken) &&
+      hops < MAX_EMPTY_PAGE_HOPS
+    );
 
     return {
-      templates,
-      nextPageToken: data?.nextPageToken
+      templates: validTemplates,
+      nextPageToken: currentToken
     };
   }
 

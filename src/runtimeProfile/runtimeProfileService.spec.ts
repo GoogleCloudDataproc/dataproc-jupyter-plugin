@@ -77,7 +77,7 @@ describe('RuntimeProfileService', () => {
       });
     });
 
-    it('returns all sessionTemplates including templates without jupyterSession', async () => {
+    it('filters out sparkConnectSession templates and returns only jupyterSession templates', async () => {
       const mockData = {
         sessionTemplates: [
           { name: 'spark-connect-template', sparkConnectSession: {} },
@@ -97,8 +97,59 @@ describe('RuntimeProfileService', () => {
 
       expect(authenticatedFetch).toHaveBeenCalledTimes(1);
       expect(result).toEqual({
-        templates: mockData.sessionTemplates,
+        templates: [{ name: 'jupyter-template', jupyterSession: {} }],
         nextPageToken: 'token-2'
+      });
+    });
+
+    it('skips blank pages containing no jupyterSession items and stops immediately once a non-empty page is found', async () => {
+      const blankPage = {
+        sessionTemplates: [{ name: 'non-jupyter-1', sparkConnectSession: {} }],
+        nextPageToken: 'token-2'
+      };
+      const validPage = {
+        sessionTemplates: [{ name: 'valid-template', jupyterSession: {} }],
+        nextPageToken: 'token-3'
+      };
+
+      (authenticatedFetch as jest.Mock)
+        .mockResolvedValueOnce({
+          ok: true,
+          json: jest.fn().mockResolvedValue(blankPage)
+        })
+        .mockResolvedValueOnce({
+          ok: true,
+          json: jest.fn().mockResolvedValue(validPage)
+        });
+
+      const result = await RuntimeProfileService.fetchRuntimeProfiles(
+        'token-1'
+      );
+
+      expect(authenticatedFetch).toHaveBeenCalledTimes(2);
+      expect(result).toEqual({
+        templates: validPage.sessionTemplates,
+        nextPageToken: 'token-3'
+      });
+    });
+
+    it('caps empty-page skipping at 10 hops when pages contain only non-Jupyter templates', async () => {
+      (authenticatedFetch as jest.Mock).mockResolvedValue({
+        ok: true,
+        json: jest.fn().mockResolvedValue({
+          sessionTemplates: [{ name: 'non-jupyter', sparkConnectSession: {} }],
+          nextPageToken: 'still-more-tokens'
+        })
+      });
+
+      const result = await RuntimeProfileService.fetchRuntimeProfiles(
+        'token-1'
+      );
+
+      expect(authenticatedFetch).toHaveBeenCalledTimes(10);
+      expect(result).toEqual({
+        templates: [],
+        nextPageToken: 'still-more-tokens'
       });
     });
 
