@@ -36,6 +36,7 @@ import {
   mapRuntimeProfileToSessionTemplateUpdate,
   mapSessionTemplateToFormValues,
   getDefaultLakehouseCatalogName,
+  getMachineTypeDisplayName,
   ISessionTemplateApiPayload,
   LAKEHOUSE_CATALOG_PROPERTY_PREFIX,
   LAKEHOUSE_DEFAULT_CATALOG_PROPERTY,
@@ -242,6 +243,38 @@ describe('runtimeProfileMapper', () => {
     it('should return undefined for empty or invalid machine type', () => {
       expect(parseMachineTypeSpec('')).toBeUndefined();
       expect(parseMachineTypeSpec(undefined)).toBeUndefined();
+    });
+  });
+
+  describe('getMachineTypeDisplayName', () => {
+    it('should return the display name for a machine name or dropdown label', () => {
+      expect(getMachineTypeDisplayName('l4-48')).toBe(
+        'l4-48 (48 vCPU, 192 GB, 4 GPUs)'
+      );
+      expect(getMachineTypeDisplayName('L4 (48 vCPU)')).toBe(
+        'l4-48 (48 vCPU, 192 GB, 4 GPUs)'
+      );
+      expect(getMachineTypeDisplayName('A100 80GB (12 vCPU)')).toBe(
+        'a100-80 (12 vCPU, 165 GB, 1 GPU)'
+      );
+      expect(getMachineTypeDisplayName('l4-48 (48 vCPU, 192 GB, 4 GPUs)')).toBe(
+        'l4-48 (48 vCPU, 192 GB, 4 GPUs)'
+      );
+    });
+
+    it('should fall back to the label for machine types without a display name', () => {
+      expect(getMachineTypeDisplayName('highmem-4')).toBe(
+        'highmem-4 (4 vCPU, 32 GB)'
+      );
+      expect(getMachineTypeDisplayName('standard-8 (8 vCPU, 32 GB)')).toBe(
+        'standard-8 (8 vCPU, 32 GB)'
+      );
+    });
+
+    it('should return unknown or empty values unchanged', () => {
+      expect(getMachineTypeDisplayName('custom-shape')).toBe('custom-shape');
+      expect(getMachineTypeDisplayName('')).toBe('');
+      expect(getMachineTypeDisplayName(undefined)).toBeUndefined();
     });
   });
 
