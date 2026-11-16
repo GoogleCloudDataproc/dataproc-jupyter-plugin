@@ -3147,4 +3147,348 @@ describe('CreateRuntimeProfileComponent UI & Service', () => {
       )
     ).toBeNull();
   });
+
+  it('displays IP Range in Subnetwork and Shared subnetwork dropdown options while keeping selected value as subnetwork name', async () => {
+    jest.spyOn(mockService, 'getNetworks').mockResolvedValue(['default-auto']);
+    jest.spyOn(mockService, 'getSubnetworks').mockResolvedValue([
+      { name: 'default-auto', ipCidrRange: '10.150.0.0/20' },
+      { name: 'subnet-iowa', ipCidrRange: '10.128.0.0/20' }
+    ]);
+    jest.spyOn(mockService, 'getSharedVpcSubnetworks').mockResolvedValue({
+      hostProjectId: 'hadoop-cloud-dev-devconsole',
+      subnetworks: [{ name: 'shared-sub', ipCidrRange: '10.200.0.0/24' }]
+    });
+
+    await act(async () => {
+      root.render(<CreateRuntimeProfileComponent service={mockService} />);
+    });
+    await expandAdditionalConfig();
+
+    const editButtons = container.querySelectorAll(
+      '.section-detail-edit-button'
+    );
+    await act(async () => {
+      (editButtons[4] as HTMLButtonElement).click();
+    });
+
+    const subnetLabel = document.body.querySelector('#edit-subnetwork-label');
+    expect(subnetLabel?.textContent).toBe('Subnetwork *');
+
+    const subnetTrigger = document.body.querySelector(
+      '#edit-subnetwork'
+    ) as HTMLElement;
+    expect(subnetTrigger.textContent).toBe('default-auto');
+
+    // Open project subnetwork dropdown and verify two-line options with IP Range
+    await act(async () => {
+      subnetTrigger.dispatchEvent(
+        new MouseEvent('mousedown', { bubbles: true, button: 0 })
+      );
+    });
+    const defaultAutoOption = document.body.querySelector(
+      'li[role="option"][data-value="default-auto"]'
+    );
+    const subnetIowaOption = document.body.querySelector(
+      'li[role="option"][data-value="subnet-iowa"]'
+    );
+    expect(
+      defaultAutoOption?.querySelector('.edit-drawer-subnetwork-option-name')
+        ?.textContent
+    ).toBe('default-auto');
+    expect(
+      defaultAutoOption?.querySelector('.edit-drawer-subnetwork-option-cidr')
+        ?.textContent
+    ).toBe('IP Range: 10.150.0.0/20');
+    expect(
+      subnetIowaOption?.querySelector('.edit-drawer-subnetwork-option-name')
+        ?.textContent
+    ).toBe('subnet-iowa');
+    expect(
+      subnetIowaOption?.querySelector('.edit-drawer-subnetwork-option-cidr')
+        ?.textContent
+    ).toBe('IP Range: 10.128.0.0/20');
+
+    // Select subnet-iowa and verify closed field shows only the subnetwork name
+    await act(async () => {
+      (subnetIowaOption as HTMLElement).click();
+    });
+    expect(subnetTrigger.textContent).toBe('subnet-iowa');
+
+    // Switch to Shared VPC and verify IP Range is rendered for shared subnetwork too
+    const sharedRadio = document.body.querySelector(
+      '#edit-network-source-shared'
+    ) as HTMLInputElement;
+    await act(async () => {
+      sharedRadio.click();
+    });
+
+    const sharedSubnetTrigger = document.body.querySelector(
+      '#edit-shared-subnetwork'
+    ) as HTMLElement;
+    expect(sharedSubnetTrigger.textContent).toBe('shared-sub');
+
+    await act(async () => {
+      sharedSubnetTrigger.dispatchEvent(
+        new MouseEvent('mousedown', { bubbles: true, button: 0 })
+      );
+    });
+    const sharedOption = document.body.querySelector(
+      'li[role="option"][data-value="shared-sub"]'
+    );
+    expect(
+      sharedOption?.querySelector('.edit-drawer-subnetwork-option-name')
+        ?.textContent
+    ).toBe('shared-sub');
+    expect(
+      sharedOption?.querySelector('.edit-drawer-subnetwork-option-cidr')
+        ?.textContent
+    ).toBe('IP Range: 10.200.0.0/24');
+  });
+
+  it('shows Additional configuration warning banner when default subnetwork is unavailable and handles empty/required Subnetwork states in drawer', async () => {
+    jest
+      .spyOn(mockService, 'getNetworks')
+      .mockResolvedValue(['network2', 'valid-vpc']);
+    jest
+      .spyOn(mockService, 'getSubnetworks')
+      .mockImplementation(async (network: string) =>
+        network === 'valid-vpc'
+          ? [{ name: 'valid-subnet', ipCidrRange: '10.142.0.0/20' }]
+          : []
+      );
+
+    await act(async () => {
+      root.render(<CreateRuntimeProfileComponent service={mockService} />);
+    });
+
+    // Additional configuration should auto-expand with "(Configuration required)" and banner
+    const header = container.querySelector(
+      '.additional-config-header-container'
+    );
+    expect(header?.getAttribute('aria-expanded')).toBe('true');
+    expect(
+      container.querySelector('.additional-config-header')?.textContent
+    ).toBe('Additional configuration (Configuration required)');
+
+    const banner = container.querySelector(
+      '[data-testid="default-network-warning-banner"]'
+    );
+    expect(banner).not.toBeNull();
+    const bannerAlert = banner?.querySelector('[role="alert"]');
+    expect(bannerAlert?.textContent).toBe(
+      'Default network is not available. Please configure a network.'
+    );
+
+    const getNetworkInProjectValue = () => {
+      const rows = Array.from(
+        container.querySelectorAll('.section-detail-row')
+      );
+      const netRow = rows.find(
+        row =>
+          row.querySelector('.section-detail-label')?.textContent?.trim() ===
+          'Network in this project'
+      );
+      return netRow
+        ?.querySelector('.section-detail-value')
+        ?.textContent?.trim();
+    };
+    expect(getNetworkInProjectValue()).toBe(
+      'Default network is not available. Please configure a network.'
+    );
+
+    const submitBtn = container.querySelector(
+      '.runtime-profile-submit-btn'
+    ) as HTMLButtonElement;
+    expect(submitBtn?.disabled).toBe(true);
+
+    // Clicking "Configure network" opens Network and security drawer
+    const configureBtn = banner?.querySelector('button') as HTMLButtonElement;
+    expect(configureBtn?.textContent).toBe('Configure network');
+    await act(async () => {
+      configureBtn.click();
+    });
+
+    // network2 has no PGA subnetworks: shows unavailable notice below dropdown,
+    // no required error before closing the dropdown without a selection
+    expect(
+      document.body.querySelector('#edit-subnetwork-unavailable-note')
+        ?.textContent
+    ).toBe(
+      'Selected network has no subnetworks in this region with Private Google Access turned on.'
+    );
+    expect(
+      document.body.querySelector('#edit-subnetwork-error-text')
+    ).toBeNull();
+    expect(document.body.textContent).not.toContain(
+      'Please select a valid network and subnetwork.'
+    );
+
+    // Opening the Subnetwork dropdown displays the Private Google Access message
+    const subnetTrigger = document.body.querySelector(
+      '#edit-subnetwork'
+    ) as HTMLElement;
+    expect(subnetTrigger.getAttribute('aria-describedby')).toBe(
+      'edit-subnetwork-unavailable-note'
+    );
+    await act(async () => {
+      subnetTrigger.dispatchEvent(
+        new MouseEvent('mousedown', { bubbles: true, button: 0 })
+      );
+    });
+    expect(
+      document.body.querySelector('.edit-drawer-subnetwork-menu-paper')
+    ).not.toBeNull();
+    const emptyOption = document.body.querySelector(
+      'li[role="option"][data-value="__no_items__"]'
+    );
+    expect(emptyOption?.textContent).toBe(
+      'No subnetworks with Private Google Access enabled.'
+    );
+
+    // Closing the dropdown without selecting anything shows "! Subnetwork is required."
+    const menuBackdrop = document.body.querySelector(
+      '.MuiPopover-root .MuiBackdrop-root'
+    ) as HTMLElement;
+    await act(async () => {
+      menuBackdrop.click();
+    });
+    const requiredError = document.body.querySelector(
+      '#edit-subnetwork-error-text'
+    );
+    expect(requiredError).not.toBeNull();
+    expect(requiredError?.textContent).toBe('!Subnetwork is required.');
+    expect(subnetTrigger.getAttribute('aria-describedby')).toBe(
+      'edit-subnetwork-error-text edit-subnetwork-unavailable-note'
+    );
+
+    // Selecting a valid network and saving clears the warning banner
+    const networkTrigger = document.body.querySelector(
+      '#edit-primary-network'
+    ) as HTMLElement;
+    await act(async () => {
+      networkTrigger.dispatchEvent(
+        new MouseEvent('mousedown', { bubbles: true, button: 0 })
+      );
+    });
+    const validVpcOption = document.body.querySelector(
+      'li[role="option"][data-value="valid-vpc"]'
+    ) as HTMLElement;
+    await act(async () => {
+      validVpcOption.click();
+    });
+    expect(
+      document.body.querySelector('#edit-subnetwork-error-text')
+    ).toBeNull();
+    expect(
+      document.body.querySelector('#edit-subnetwork-unavailable-note')
+    ).toBeNull();
+
+    const saveBtn = Array.from(
+      document.body.querySelectorAll('.edit-drawer-footer button')
+    ).find(b => b.textContent?.trim() === 'Save') as HTMLButtonElement;
+    await act(async () => {
+      saveBtn.click();
+    });
+
+    expect(
+      container.querySelector('[data-testid="default-network-warning-banner"]')
+    ).toBeNull();
+    expect(
+      container.querySelector('.additional-config-header')?.textContent
+    ).toBe('Additional configuration');
+    expect(getNetworkInProjectValue()).toBe('valid-vpc');
+    expect(submitBtn?.disabled).toBe(false);
+  });
+
+  it('updates warning message for custom network when switching to a region without that subnetwork and recovers on check errors', async () => {
+    const errorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+    try {
+      jest.spyOn(mockService, 'getRegions').mockResolvedValue([
+        { name: 'us-central1', displayName: 'us-central1 (Iowa)' },
+        { name: 'us-east1', displayName: 'us-east1 (South Carolina)' },
+        { name: 'europe-west1', displayName: 'europe-west1 (Belgium)' }
+      ]);
+      jest
+        .spyOn(mockService, 'getSubnetworks')
+        .mockImplementation(async (_network: string, _proj, region) => {
+          if (region === 'us-east1') {
+            return [];
+          }
+          if (region === 'europe-west1') {
+            throw new Error('network timeout');
+          }
+          return [{ name: 'custom-subnet', ipCidrRange: '10.10.0.0/20' }];
+        });
+
+      await act(async () => {
+        root.render(
+          <CreateRuntimeProfileComponent
+            service={mockService}
+            initialNetworkAndSecurityConfig={{
+              executionIdentity: 'service_account',
+              networkSource: 'project',
+              primaryNetwork: 'custom-vpc',
+              networkInThisProject: 'custom-vpc',
+              subnetwork: 'custom-subnet',
+              encryption: 'google_managed'
+            }}
+          />
+        );
+      });
+
+      expect(
+        container.querySelector(
+          '[data-testid="default-network-warning-banner"]'
+        )
+      ).toBeNull();
+
+      // Switch region to us-east1 where custom-subnet is unavailable
+      const regionTrigger = container.querySelector(
+        '#runtime-profile-region'
+      ) as HTMLElement;
+      await act(async () => {
+        regionTrigger.dispatchEvent(
+          new MouseEvent('mousedown', { bubbles: true, button: 0 })
+        );
+      });
+      const eastOption = document.body.querySelector(
+        'li[role="option"][data-value="us-east1"]'
+      ) as HTMLElement;
+      await act(async () => {
+        eastOption.click();
+      });
+
+      const banner = container.querySelector(
+        '[data-testid="default-network-warning-banner"]'
+      );
+      expect(banner?.querySelector('[role="alert"]')?.textContent).toBe(
+        'Selected network is not available in this region. Please configure a network.'
+      );
+
+      // Switch region to europe-west1 where getSubnetworks rejects
+      await act(async () => {
+        regionTrigger.dispatchEvent(
+          new MouseEvent('mousedown', { bubbles: true, button: 0 })
+        );
+      });
+      const europeOption = document.body.querySelector(
+        'li[role="option"][data-value="europe-west1"]'
+      ) as HTMLElement;
+      await act(async () => {
+        europeOption.click();
+      });
+
+      expect(errorSpy).toHaveBeenCalledWith(
+        'Failed to verify subnetwork availability:',
+        expect.any(Error)
+      );
+      expect(
+        container.querySelector(
+          '[data-testid="default-network-warning-banner"]'
+        )
+      ).toBeNull();
+    } finally {
+      errorSpy.mockRestore();
+    }
+  });
 });

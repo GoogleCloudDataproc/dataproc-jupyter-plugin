@@ -55,7 +55,8 @@ import {
   RuntimeEnvironmentEditDrawer,
   RUNTIME_VERSION_OPTIONS,
   SelectBucketEditDrawer,
-  SessionLifecycleEditDrawer
+  SessionLifecycleEditDrawer,
+  extractSubnetShortName
 } from './runtimeProfileEditDrawers';
 import { MetastoreEditDrawer } from './metastoreEditDrawer';
 import {
@@ -427,8 +428,24 @@ export const formatMetastoreProperties = (
   return properties;
 };
 
-export const formatNetworkSecurityProperties = (
+const MSG_DEFAULT_NETWORK_UNAVAILABLE =
+  'Default network is not available. Please configure a network.';
+const MSG_SELECTED_NETWORK_UNAVAILABLE =
+  'Selected network is not available in this region. Please configure a network.';
+
+const getUnavailableNetworkMessage = (
   config?: INetworkAndSecurityConfig
+): string => {
+  const activeNetwork =
+    config?.primaryNetwork || config?.networkInThisProject || 'default';
+  return activeNetwork === 'default'
+    ? MSG_DEFAULT_NETWORK_UNAVAILABLE
+    : MSG_SELECTED_NETWORK_UNAVAILABLE;
+};
+
+export const formatNetworkSecurityProperties = (
+  config?: INetworkAndSecurityConfig,
+  isDefaultNetworkUnavailable = false
 ): ISectionProperty[] => {
   if (!config) {
     return [];
@@ -451,6 +468,8 @@ export const formatNetworkSecurityProperties = (
         : 'Network in this project',
       value: isSharedNetwork
         ? config.sharedSubnetwork || 'default'
+        : isDefaultNetworkUnavailable
+        ? getUnavailableNetworkMessage(config)
         : config.primaryNetwork ||
           config.networkInThisProject ||
           DEFAULT_NETWORK_SECURITY_CONFIG.networkInThisProject
@@ -637,6 +656,10 @@ export const CreateRuntimeProfileComponent: React.FC<
   const [isLoadingOptions, setIsLoadingOptions] = useState<boolean>(true);
   // Collapsed by default; the summary panel already shows these settings.
   const [expandAdditionalConfig, setExpandAdditionalConfig] =
+    useState<boolean>(false);
+  const [isDefaultNetworkUnavailable, setIsDefaultNetworkUnavailable] =
+    useState<boolean>(false);
+  const [isCheckingNetworkAvailability, setIsCheckingNetworkAvailability] =
     useState<boolean>(false);
   const [isRuntimeConfigDrawerOpen, setIsRuntimeConfigDrawerOpen] =
     useState<boolean>(false);
@@ -962,7 +985,10 @@ export const CreateRuntimeProfileComponent: React.FC<
       },
       {
         title: 'Network and security',
-        properties: formatNetworkSecurityProperties(networkAndSecurityConfig),
+        properties: formatNetworkSecurityProperties(
+          networkAndSecurityConfig,
+          isDefaultNetworkUnavailable
+        ),
         isEditDisabled: false,
         onEdit: () => setIsNetworkSecurityDrawerOpen(true)
       },
@@ -986,6 +1012,7 @@ export const CreateRuntimeProfileComponent: React.FC<
       metastoreConfig,
       projectId,
       networkAndSecurityConfig,
+      isDefaultNetworkUnavailable,
       sessionLifecycleConfig,
       sparkProperties,
       labels
@@ -1189,6 +1216,77 @@ export const CreateRuntimeProfileComponent: React.FC<
       isMounted = false;
     };
   }, [service, setValue, isEditMode]);
+
+  // Verify default/selected project subnetwork availability in the chosen region
+  useEffect(() => {
+    if (
+      isEditMode ||
+      !selectedRegion ||
+      (networkAndSecurityConfig.networkSource ?? 'project') !== 'project' ||
+      !service.getSubnetworks
+    ) {
+      setIsDefaultNetworkUnavailable(false);
+      setIsCheckingNetworkAvailability(false);
+      return;
+    }
+
+    const activeNetwork =
+      networkAndSecurityConfig.primaryNetwork ||
+      networkAndSecurityConfig.networkInThisProject ||
+      'default';
+    const activeSubnetwork = extractSubnetShortName(
+      networkAndSecurityConfig.subnetwork || 'default'
+    );
+
+    let isMounted = true;
+    const checkDefaultSubnetwork = async () => {
+      setIsCheckingNetworkAvailability(true);
+      try {
+        const subnetworks = await service.getSubnetworks?.(
+          activeNetwork,
+          projectId,
+          selectedRegion
+        );
+        if (!isMounted) {
+          return;
+        }
+        const isAvailable =
+          Array.isArray(subnetworks) &&
+          subnetworks.some(
+            opt =>
+              (typeof opt === 'string' ? opt : opt.name) === activeSubnetwork
+          );
+        setIsDefaultNetworkUnavailable(!isAvailable);
+        if (!isAvailable) {
+          setExpandAdditionalConfig(true);
+        }
+      } catch (error) {
+        console.error('Failed to verify subnetwork availability:', error);
+        if (isMounted) {
+          setIsDefaultNetworkUnavailable(false);
+        }
+      } finally {
+        if (isMounted) {
+          setIsCheckingNetworkAvailability(false);
+        }
+      }
+    };
+
+    void checkDefaultSubnetwork();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [
+    isEditMode,
+    selectedRegion,
+    projectId,
+    service,
+    networkAndSecurityConfig.networkSource,
+    networkAndSecurityConfig.primaryNetwork,
+    networkAndSecurityConfig.networkInThisProject,
+    networkAndSecurityConfig.subnetwork
+  ]);
 
   const handleBack = () => {
     if (onBack) {
@@ -1723,7 +1821,9 @@ export const CreateRuntimeProfileComponent: React.FC<
                 aria-expanded={expandAdditionalConfig}
               >
                 <div className="additional-config-header">
-                  Additional configuration
+                  {isDefaultNetworkUnavailable
+                    ? 'Additional configuration (Configuration required)'
+                    : 'Additional configuration'}
                 </div>
                 <div className="expand-icon">
                   <ExpandIconComponent
@@ -1735,6 +1835,40 @@ export const CreateRuntimeProfileComponent: React.FC<
 
               {expandAdditionalConfig && (
                 <div className="additional-config-content">
+                  {isDefaultNetworkUnavailable && (
+                    <div
+                      className="additional-config-warning-banner"
+                      data-testid="default-network-warning-banner"
+                    >
+                      <div
+                        className="additional-config-warning-content"
+                        role="alert"
+                      >
+                        <svg
+                          className="additional-config-warning-icon"
+                          width="18"
+                          height="18"
+                          viewBox="0 0 24 24"
+                          fill="currentColor"
+                          aria-hidden="true"
+                        >
+                          <path d="M12 5.99L19.53 19H4.47L12 5.99M12 2L1 21h22L12 2zm1 14h-2v2h2v-2zm0-6h-2v4h2v-4z" />
+                        </svg>
+                        <span className="additional-config-warning-text">
+                          {getUnavailableNetworkMessage(
+                            networkAndSecurityConfig
+                          )}
+                        </span>
+                      </div>
+                      <button
+                        type="button"
+                        className="additional-config-warning-btn"
+                        onClick={() => setIsNetworkSecurityDrawerOpen(true)}
+                      >
+                        Configure network
+                      </button>
+                    </div>
+                  )}
                   {/* TODO: Wire up onEdit handlers for each section in upcoming edit drawer tasks */}
                   {additionalConfigSections.map(section => (
                     <SectionDetail
@@ -1753,9 +1887,17 @@ export const CreateRuntimeProfileComponent: React.FC<
             <div className="runtime-profile-buttons">
               <button
                 type="submit"
-                disabled={isSubmitting || hasFormErrors}
+                disabled={
+                  isSubmitting ||
+                  hasFormErrors ||
+                  isDefaultNetworkUnavailable ||
+                  isCheckingNetworkAvailability
+                }
                 className={`runtime-profile-submit-btn ${
-                  isSubmitting || hasFormErrors
+                  isSubmitting ||
+                  hasFormErrors ||
+                  isDefaultNetworkUnavailable ||
+                  isCheckingNetworkAvailability
                     ? 'submit-button-disable-style'
                     : 'submit-button-style'
                 }`}

@@ -29,7 +29,9 @@ import {
   IRegionOption,
   IRuntimeProfile,
   IRuntimeProfileService,
-  ISharedVpcSubnetworksResult
+  ISharedVpcSubnetworksResult,
+  ISubnetworkOption,
+  SubnetworkOption
 } from './runtimeProfileInterface';
 import {
   IRuntimeProfileTemplate,
@@ -116,7 +118,14 @@ export class RuntimeProfileService implements IRuntimeProfileService {
         );
       }
 
-      const data: any = await response.json();
+      const data: {
+        sessionTemplates?: IRuntimeProfileTemplate[];
+        nextPageToken?: string;
+        error?: { message?: string };
+      } | null = await response.json().catch((err: unknown) => {
+        safeLog(`Failed to parse response JSON: ${err}`, LOG_LEVEL.WARN);
+        return null;
+      });
       if (data?.error) {
         throw new Error(
           data.error.message || 'Failed to fetch runtime profiles'
@@ -124,7 +133,9 @@ export class RuntimeProfileService implements IRuntimeProfileService {
       }
 
       const rawTemplates: IRuntimeProfileTemplate[] =
-        data?.sessionTemplates || [];
+        data && Array.isArray(data.sessionTemplates)
+          ? data.sessionTemplates
+          : [];
       validTemplates = rawTemplates.filter((t: IRuntimeProfileTemplate) =>
         Boolean(t.jupyterSession)
       );
@@ -507,9 +518,13 @@ export class RuntimeProfileService implements IRuntimeProfileService {
       } = await response.json();
 
       if (responseResult?.error?.code) {
-        Notification.emit(responseResult.error.message, 'error', {
-          autoClose: 5000
-        });
+        if (responseResult.error.code === 404) {
+          safeLog(responseResult.error.message, LOG_LEVEL.WARN);
+        } else {
+          Notification.emit(responseResult.error.message, 'error', {
+            autoClose: 5000
+          });
+        }
         return '';
       }
 
@@ -537,7 +552,7 @@ export class RuntimeProfileService implements IRuntimeProfileService {
     network: string,
     projectId?: string,
     region?: string
-  ): Promise<string[]> {
+  ): Promise<SubnetworkOption[]> {
     if (!network) {
       return [];
     }
@@ -553,9 +568,15 @@ export class RuntimeProfileService implements IRuntimeProfileService {
         return [];
       }
 
-      const normalizedTargetNetwork =
-        /\/networks\/(?<network>[\w-]+)$/.exec(network)?.groups?.['network'] ||
-        network;
+      const extractNetworkName = (networkRef?: string): string =>
+        (networkRef &&
+          /\/networks\/(?<network>[^/?#]+)/.exec(networkRef)?.groups?.[
+            'network'
+          ]) ||
+        networkRef ||
+        '';
+
+      const normalizedTargetNetwork = extractNetworkName(network);
 
       const response = await loggedFetch(
         `${COMPUTE}/projects/${targetProject}/regions/${targetRegion}/subnetworks`,
@@ -571,27 +592,12 @@ export class RuntimeProfileService implements IRuntimeProfileService {
           name: string;
           selfLink?: string;
           network: string;
+          ipCidrRange?: string;
+          ipv6CidrRange?: string;
           privateIpGoogleAccess: boolean;
         }>;
         error?: { message: string; code: number };
       } = await response.json();
-
-      console.log('[RuntimeProfileService] getSubnetworks API response:', {
-        network: normalizedTargetNetwork,
-        targetProject,
-        targetRegion,
-        rawResponse: responseResult,
-        allSubnetworksInRegion: responseResult?.items?.map(item => ({
-          name: item.name,
-          selfLink: item.selfLink,
-          networkUrl: item.network,
-          extractedNetwork:
-            /\/networks\/(?<network>[\w-]+)$/.exec(item.network)?.groups?.[
-              'network'
-            ] || item.network?.split('/')[9],
-          privateIpGoogleAccess: item.privateIpGoogleAccess
-        }))
-      });
 
       if (responseResult?.error?.code) {
         Notification.emit(responseResult.error.message, 'error', {
@@ -601,46 +607,41 @@ export class RuntimeProfileService implements IRuntimeProfileService {
       }
 
       const filteredServices = responseResult?.items?.filter(item => {
-        const itemNetworkName =
-          /\/networks\/(?<network>[\w-]+)$/.exec(item.network)?.groups?.[
-            'network'
-          ] || item.network?.split('/')[9];
+        const itemNetworkName = extractNetworkName(item.network);
         return (
           itemNetworkName === normalizedTargetNetwork &&
           item.privateIpGoogleAccess === true
         );
       });
 
-      console.log(
-        `[RuntimeProfileService] getSubnetworks filtered for network "${normalizedTargetNetwork}":`,
-        filteredServices
-      );
-
       if (filteredServices) {
-        const transformedServiceList = filteredServices
+        const transformedServiceList: ISubnetworkOption[] = filteredServices
           .map(data => {
+            let name = data.name;
             if (data.selfLink) {
               const matches =
-                /\/compute\/v1\/projects\/(?<project>[\w-]+)\/regions\/(?<region>[\w-]+)\/subnetworks\/(?<subnetwork>[\w-]+)/.exec(
+                /\/compute\/v1\/projects\/(?<project>[^/]+)\/regions\/(?<region>[^/]+)\/subnetworks\/(?<subnetwork>[^/?#]+)/.exec(
                   data.selfLink
                 )?.groups;
               if (matches?.['subnetwork']) {
-                return matches['subnetwork'];
+                name = matches['subnetwork'];
               }
             }
-            return data.name;
+            if (!name) {
+              return undefined;
+            }
+            const ipCidrRange = data.ipCidrRange || data.ipv6CidrRange;
+            return ipCidrRange ? { name, ipCidrRange } : { name };
           })
-          .filter(Boolean);
+          .filter((sub): sub is ISubnetworkOption => Boolean(sub));
         if (transformedServiceList.length === 0) {
-          const errorMessage = `There are no subnetworks with Google Private Access enabled for network "${normalizedTargetNetwork}"`;
-          Notification.emit(errorMessage, 'error', { autoClose: 5000 });
-          safeLog(errorMessage, LOG_LEVEL.ERROR);
+          const errorMessage = `There are no subnetworks with Private Google Access enabled for network "${normalizedTargetNetwork}"`;
+          safeLog(errorMessage, LOG_LEVEL.WARN);
         }
         return transformedServiceList;
       } else {
-        const errorMessage = `No subNetworks found for network ${normalizedTargetNetwork}`;
-        Notification.emit(errorMessage, 'error', { autoClose: 5000 });
-        safeLog(errorMessage, LOG_LEVEL.ERROR);
+        const errorMessage = `No subnetworks found for network ${normalizedTargetNetwork}`;
+        safeLog(errorMessage, LOG_LEVEL.WARN);
         return [];
       }
     } catch (error) {
@@ -696,15 +697,6 @@ export class RuntimeProfileService implements IRuntimeProfileService {
         error?: { message: string; code: number };
       } = JSON.parse(hostText);
 
-      console.log(
-        '[RuntimeProfileService] getSharedVpcSubnetworks getXpnHost response:',
-        {
-          targetProject,
-          targetRegion,
-          hostResult
-        }
-      );
-
       if (hostResult?.error?.code) {
         Notification.emit(hostResult.error.message, 'error', {
           autoClose: 5000
@@ -728,47 +720,39 @@ export class RuntimeProfileService implements IRuntimeProfileService {
         }
       );
       const subnetworksResult: {
-        items?: Array<{ subnetwork: string }>;
+        items?: Array<{
+          subnetwork: string;
+          ipCidrRange?: string;
+          ipv6CidrRange?: string;
+        }>;
         error?: { message: string; code: number };
       } = await subnetworksResponse.json();
-
-      console.log(
-        '[RuntimeProfileService] getSharedVpcSubnetworks listUsable response:',
-        {
-          hostProjectName,
-          targetRegion,
-          subnetworksResult
-        }
-      );
 
       if (subnetworksResult?.error?.code) {
         Notification.emit(subnetworksResult.error.message, 'error', {
           autoClose: 5000
         });
+        return { hostProjectId: hostProjectName, subnetworks: [] };
       }
 
-      const transformedSharedvpcSubNetworkList: string[] =
+      const transformedSharedvpcSubNetworkList: ISubnetworkOption[] =
         subnetworksResult?.items
-          ?.map((data: { subnetwork: string }) => {
+          ?.map(data => {
             const matches =
-              /\/compute\/v1\/projects\/(?<project>[\w-]+)\/regions\/(?<region>[\w-]+)\/subnetworks\/(?<subnetwork>[\w-]+)/.exec(
+              /\/compute\/v1\/projects\/(?<project>[^/]+)\/regions\/(?<region>[^/]+)\/subnetworks\/(?<subnetwork>[^/?#]+)/.exec(
                 data.subnetwork
               )?.groups;
             if (targetRegion && matches?.['region'] !== targetRegion) {
               return undefined;
             }
-            return matches?.['subnetwork'];
+            const name = matches?.['subnetwork'];
+            if (!name) {
+              return undefined;
+            }
+            const ipCidrRange = data.ipCidrRange || data.ipv6CidrRange;
+            return ipCidrRange ? { name, ipCidrRange } : { name };
           })
-          .filter((subNetwork): subNetwork is string => Boolean(subNetwork)) ||
-        [];
-
-      console.log(
-        '[RuntimeProfileService] getSharedVpcSubnetworks parsed result:',
-        {
-          hostProjectId: hostProjectName,
-          subnetworks: transformedSharedvpcSubNetworkList
-        }
-      );
+          .filter((sub): sub is ISubnetworkOption => Boolean(sub)) || [];
 
       return {
         hostProjectId: hostProjectName,
