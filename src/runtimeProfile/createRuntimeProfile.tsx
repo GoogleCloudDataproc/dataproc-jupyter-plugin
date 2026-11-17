@@ -43,10 +43,13 @@ import { SectionDetail, ISectionProperty } from '../controls/SectionDetail';
 import {
   LAKEHOUSE_RUNTIME_CATALOG,
   METASTORE_NONE,
+  getDefaultSsdDiskSize,
   getMachineTypeDisplayName,
   isAcceleratedMachine,
+  isL4MachineType,
   normalizeMachineTypeName,
-  parseDiskTierAndSize
+  parseDiskTierAndSize,
+  resolveExecutorDiskForShape
 } from './runtimeProfileMapper';
 import '../../style/runtimeProfile.css';
 import {
@@ -312,6 +315,9 @@ export const formatExecutorAndDriverProperties = (
       : MSG_EXECUTOR_TIER_PREMIUM
     : resolvedTier || MSG_EXECUTOR_TIER_STANDARD;
 
+  const executorDisk =
+    config.executorDisk || DEFAULT_EXECUTOR_AND_DRIVER_CONFIG.executorDisk;
+
   return [
     {
       label: 'Tier',
@@ -336,8 +342,10 @@ export const formatExecutorAndDriverProperties = (
     },
     {
       label: 'Executor disk',
-      value:
-        config.executorDisk || DEFAULT_EXECUTOR_AND_DRIVER_CONFIG.executorDisk
+      // An L4 executor's local SSD has a fixed size, so only its tier is shown.
+      value: isL4MachineType(config.executorMachineType || config.executorType)
+        ? formatCompactDiskLabel(executorDisk, false)
+        : executorDisk
     }
   ];
 };
@@ -772,7 +780,7 @@ export const CreateRuntimeProfileComponent: React.FC<
           : DISK_TIER_HDD;
       const defaultDiskSize =
         resolvedInitialCategory === 'accelerated'
-          ? DEFAULT_SSD_DISK_SIZE
+          ? getDefaultSsdDiskSize(executorType)
           : DEFAULT_HDD_DISK_SIZE;
       const defaultDisk = `${defaultDiskTier}, ${defaultDiskSize}`;
 
@@ -1771,27 +1779,29 @@ export const CreateRuntimeProfileComponent: React.FC<
                     onChange={(e: SelectChangeEvent) => {
                       const newType = e.target.value as string;
                       setExecutorType(newType);
-                      const match = ALL_MACHINE_TYPES.find(
-                        m => m.name === newType
-                      );
-                      const isAcc =
-                        match?.category === 'accelerated' ||
-                        Boolean(match?.acceleratorType);
                       setExecutorAndDriverConfigState(prev => {
-                        const nextDiskTier = isAcc
-                          ? DISK_TIER_SSD
-                          : prev.executorDiskTier || DISK_TIER_HDD;
-                        const nextDiskSize = isAcc
-                          ? DEFAULT_SSD_DISK_SIZE
-                          : prev.executorDiskSize || DEFAULT_HDD_DISK_SIZE;
+                        // The disk label is what gets saved, so read the
+                        // current disk from it.
+                        const currentDisk = parseDiskTierAndSize(
+                          prev.executorDisk,
+                          prev.executorDiskTier || DISK_TIER_HDD
+                        );
+                        const nextDisk = resolveExecutorDiskForShape(
+                          currentDisk,
+                          newType,
+                          ALL_MACHINE_TYPES
+                        );
+                        const isDiskChanged =
+                          nextDisk.tier !== currentDisk.tier ||
+                          nextDisk.size !== currentDisk.size;
                         return {
                           ...prev,
                           executorType: newType,
                           executorMachineType: newType,
-                          ...(isAcc && {
-                            executorDiskTier: nextDiskTier,
-                            executorDiskSize: nextDiskSize,
-                            executorDisk: `${nextDiskTier}, ${nextDiskSize}`
+                          ...(isDiskChanged && {
+                            executorDiskTier: nextDisk.tier,
+                            executorDiskSize: nextDisk.size,
+                            executorDisk: `${nextDisk.tier}, ${nextDisk.size}`
                           })
                         };
                       });

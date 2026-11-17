@@ -41,20 +41,33 @@ import {
   LAKEHOUSE_CATALOG_PROPERTY_PREFIX,
   LAKEHOUSE_DEFAULT_CATALOG_PROPERTY,
   LAKEHOUSE_PROJECT_PROPERTY,
-  LAKEHOUSE_RUNTIME_CATALOG
+  LAKEHOUSE_RUNTIME_CATALOG,
+  applyDriverDiskTierChangeToDraft,
+  applyDriverTypeChangeToDraft,
+  applyExecutorDiskTierChangeToDraft,
+  applyExecutorTypeChangeToDraft,
+  buildInitialExecutorAndDriverDraft,
+  fitSsdDiskSizeToShape,
+  getDefaultSsdDiskSize,
+  getSsdDiskSizeOptions,
+  isL4MachineType
 } from './runtimeProfileMapper';
 import {
   ICreateRuntimeProfilePayload,
+  IExecutorAndDriverDraftConfig,
   IMetastoreConfig,
   INetworkAndSecurityConfig
 } from './runtimeProfileInterface';
 import { IRuntimeProfileTemplate } from './runtimeProfileListMapper';
 import {
+  DATAPROC_ACCELERATED_MACHINE_TYPES,
   DATAPROC_LIGHTNING_ENGINE_PROPERTY,
   DATAPROC_TIER_PROPERTY,
   DEFAULT_ACCELERATED_EXECUTOR_TYPE,
   DEFAULT_GENERAL_EXECUTOR_TYPE,
-  DEFAULT_STANDARD_TIER_EXECUTOR_TYPE
+  DEFAULT_STANDARD_TIER_EXECUTOR_TYPE,
+  DISK_TIER_HDD,
+  DISK_TIER_SSD
 } from '../utils/const';
 
 // Session templates shared by the update tests.
@@ -443,13 +456,99 @@ describe('runtimeProfileMapper', () => {
       expect(props?.['spark.dataproc.driver.disk.size']).toBe('500g');
 
       expect(props?.['spark.executor.cores']).toBe('4');
-      expect(props?.['spark.executor.memory']).toBe('13384m');
+      // Accelerated (GPU) shapes omit spark.executor.memory so Dataproc splits
+      // heap and memoryOverhead automatically instead of allocating 100% to heap.
+      expect(props?.['spark.executor.memory']).toBeUndefined();
       expect(props?.['spark.dataproc.executor.compute.tier']).toBe('premium');
       expect(props?.['spark.dataproc.executor.resource.accelerator.type']).toBe(
         'l4'
       );
       expect(props?.['spark.dataproc.executor.disk.tier']).toBe('premium');
-      expect(props?.['spark.dataproc.executor.disk.size']).toBe('200g');
+      // L4 shapes have a fixed-size local SSD, so no executor disk size is sent.
+      expect(props?.['spark.dataproc.executor.disk.size']).toBeUndefined();
+    });
+
+    it('should keep driver CPU-only, omit spark.executor.memory for all GPUs, and omit executor disk.size for L4 shapes', () => {
+      DATAPROC_ACCELERATED_MACHINE_TYPES.forEach(machine => {
+        const result = mapRuntimeProfileToSessionTemplate(
+          {
+            displayName: `GPU ${machine.name}`,
+            region: 'us-central1',
+            tier: 'Premium',
+            executorConfig: {
+              executorType: 'accelerated',
+              machineType: machine.name
+            },
+            executorAndDriverConfig: {
+              driverMachineType: machine.name,
+              driverDisk: 'SSD (premium), 750 GiB',
+              executorType: machine.name,
+              executorMachineType: machine.name,
+              executorDisk: 'SSD (premium), 750 GiB'
+            }
+          },
+          'test-project',
+          'us-central1'
+        );
+
+        const props = result.runtimeConfig?.properties;
+        // Drivers always run on standard CPU shapes (highmem-4 fallback), never GPUs
+        expect(props?.['spark.driver.cores']).toBe('4');
+        expect(props?.['spark.driver.memory']).toBe('32g');
+        expect(props?.['spark.dataproc.driver.compute.tier']).toBe('premium');
+        expect(
+          props?.['spark.dataproc.driver.resource.accelerator.type']
+        ).toBeUndefined();
+        expect(props?.['spark.dataproc.driver.disk.size']).toBe('750g');
+
+        expect(props?.['spark.executor.cores']).toBe(String(machine.vCPUs));
+        expect(props?.['spark.executor.memory']).toBeUndefined();
+        expect(props?.['spark.dataproc.executor.compute.tier']).toBe('premium');
+        expect(
+          props?.['spark.dataproc.executor.resource.accelerator.type']
+        ).toBe(machine.acceleratorType);
+        expect(props?.['spark.dataproc.executor.disk.tier']).toBe('premium');
+        if (machine.acceleratorType === 'l4') {
+          expect(props?.['spark.dataproc.executor.disk.size']).toBeUndefined();
+        } else {
+          expect(props?.['spark.dataproc.executor.disk.size']).toBe('750g');
+        }
+      });
+    });
+
+    it('should preserve explicit user spark.driver.memory and spark.executor.memory overrides on GPU profiles', () => {
+      const result = mapRuntimeProfileToSessionTemplate(
+        {
+          displayName: 'Custom GPU Memory',
+          region: 'us-central1',
+          tier: 'Premium',
+          executorConfig: {
+            executorType: 'accelerated',
+            machineType: 'a100-40'
+          },
+          executorAndDriverConfig: {
+            driverMachineType: 'a100-40',
+            executorType: 'a100-40',
+            executorMachineType: 'a100-40'
+          },
+          sparkProperties: {
+            'spark.driver.memory': '50000m',
+            'spark.executor.memory': '60000m'
+          }
+        },
+        'test-project',
+        'us-central1'
+      );
+
+      const props = result.runtimeConfig?.properties;
+      expect(props?.['spark.driver.memory']).toBe('50000m');
+      expect(props?.['spark.executor.memory']).toBe('60000m');
+      expect(
+        props?.['spark.dataproc.driver.resource.accelerator.type']
+      ).toBeUndefined();
+      expect(props?.['spark.dataproc.executor.resource.accelerator.type']).toBe(
+        'a100-40'
+      );
     });
 
     it('should automatically set spark.dataproc.executor.compute.tier and driver.compute.tier to premium for highmem shapes', () => {
@@ -1826,6 +1925,449 @@ describe('runtimeProfileMapper', () => {
 
       expect(body.environmentConfig?.executionConfig?.idleTtl).toBe('1800s');
       expect(body.environmentConfig?.executionConfig?.ttl).toBe('259200s');
+    });
+
+    it('removes the saved executor disk size when the executor changes to an L4 shape', () => {
+      const ssdProfile = {
+        ...savedProfile,
+        runtimeConfig: {
+          ...savedProfile.runtimeConfig,
+          properties: {
+            ...savedProfile.runtimeConfig?.properties,
+            'spark.dataproc.executor.disk.tier': 'premium',
+            'spark.dataproc.executor.disk.size': '375g'
+          }
+        }
+      } as IRuntimeProfileTemplate;
+
+      const body = saveEdits(ssdProfile, payload => {
+        payload.executorConfig = {
+          executorType: 'accelerated',
+          machineType: 'l4-4'
+        };
+        payload.executorAndDriverConfig = {
+          ...payload.executorAndDriverConfig,
+          executorType: 'l4-4',
+          executorMachineType: 'l4-4'
+        };
+      });
+
+      const props = body.runtimeConfig?.properties ?? {};
+      expect(props['spark.dataproc.executor.resource.accelerator.type']).toBe(
+        'l4'
+      );
+      expect(props['spark.dataproc.executor.disk.tier']).toBe('premium');
+      expect(props['spark.dataproc.executor.disk.size']).toBeUndefined();
+    });
+  });
+});
+
+describe('SSD disk sizes and L4 executor disks', () => {
+  const draft = (
+    overrides: Partial<IExecutorAndDriverDraftConfig> = {}
+  ): IExecutorAndDriverDraftConfig => ({
+    tier: 'Premium',
+    lightningEngineEnabled: true,
+    executorType: 'highmem-4',
+    executorDiskTier: DISK_TIER_HDD,
+    executorDiskSize: '400 GiB',
+    useDifferentDriverConfig: false,
+    driverMachineType: 'highmem-4',
+    driverDiskTier: DISK_TIER_HDD,
+    driverDiskSize: '400 GiB',
+    ...overrides
+  });
+
+  /** A draft whose executor and shared driver use an SSD of the given size. */
+  const ssdDraft = (
+    executorType: string,
+    size: string
+  ): IExecutorAndDriverDraftConfig =>
+    draft({
+      executorType,
+      executorDiskTier: DISK_TIER_SSD,
+      executorDiskSize: size,
+      driverMachineType: executorType,
+      driverDiskTier: DISK_TIER_SSD,
+      driverDiskSize: size
+    });
+
+  it('detects L4 shapes by name or label', () => {
+    expect(isL4MachineType('l4-4')).toBe(true);
+    expect(isL4MachineType('l4-96')).toBe(true);
+    expect(isL4MachineType('L4 (48 vCPU)')).toBe(true);
+    expect(isL4MachineType('a100-40')).toBe(false);
+    expect(isL4MachineType('highmem-16')).toBe(false);
+    expect(isL4MachineType(undefined)).toBe(false);
+  });
+
+  it.each([
+    ['highmem-4', '375 GiB'],
+    ['highmem-8', '375 GiB'],
+    ['standard-8', '375 GiB'],
+    ['highmem-16', '750 GiB'],
+    ['standard-16', '750 GiB'],
+    ['highmem-16 (16 vCPU, 128 GB)', '750 GiB'],
+    ['a100-40', '750 GiB'],
+    ['a100-80', '750 GiB'],
+    ['l4-4', '375 GiB'],
+    ['l4-96', '375 GiB']
+  ])('defaults the SSD of %s to %s', (machineType, size) => {
+    expect(getDefaultSsdDiskSize(machineType)).toBe(size);
+  });
+
+  it('offers SSD sizes up to 1500 GiB, without 375 GiB above 10 vCPUs', () => {
+    expect(getSsdDiskSizeOptions('highmem-4')).toEqual([
+      '375 GiB',
+      '750 GiB',
+      '1500 GiB'
+    ]);
+    expect(getSsdDiskSizeOptions('highmem-16')).toEqual([
+      '750 GiB',
+      '1500 GiB'
+    ]);
+    expect(getSsdDiskSizeOptions('a100-80')).toEqual(['750 GiB', '1500 GiB']);
+    // L4 shapes are exempt, whatever their vCPU count.
+    expect(getSsdDiskSizeOptions('l4-48')).toEqual([
+      '375 GiB',
+      '750 GiB',
+      '1500 GiB'
+    ]);
+  });
+
+  it('keeps a larger saved SSD size selectable', () => {
+    expect(getSsdDiskSizeOptions('highmem-16', '3000 GiB')).toEqual([
+      '750 GiB',
+      '1500 GiB',
+      '3000 GiB'
+    ]);
+    expect(getSsdDiskSizeOptions('highmem-16', '375 GiB')).toEqual([
+      '750 GiB',
+      '1500 GiB'
+    ]);
+  });
+
+  it('raises an SSD size that is too small and never shrinks one', () => {
+    expect(fitSsdDiskSizeToShape('375 GiB', 'highmem-16')).toBe('750 GiB');
+    expect(fitSsdDiskSizeToShape('375 GiB', 'a100-40')).toBe('750 GiB');
+    expect(fitSsdDiskSizeToShape('375 GiB', 'l4-48')).toBe('375 GiB');
+    expect(fitSsdDiskSizeToShape('1500 GiB', 'highmem-4')).toBe('1500 GiB');
+    expect(fitSsdDiskSizeToShape('3000 GiB', 'highmem-16')).toBe('3000 GiB');
+    expect(fitSsdDiskSizeToShape('400 GiB', 'a100-40')).toBe('750 GiB');
+    expect(fitSsdDiskSizeToShape(undefined, 'highmem-4')).toBe('375 GiB');
+  });
+
+  describe('Executor and driver drawer', () => {
+    it.each(['a100-40', 'a100-80'])(
+      'uses a 750 GiB SSD when the executor changes to %s',
+      machineType => {
+        const next = applyExecutorTypeChangeToDraft(draft(), machineType);
+        expect(next.executorDiskTier).toBe(DISK_TIER_SSD);
+        expect(next.executorDiskSize).toBe('750 GiB');
+        expect(next.driverDiskSize).toBe('750 GiB');
+      }
+    );
+
+    it('raises a 375 GiB SSD to 750 GiB when the executor grows past 10 vCPUs', () => {
+      const next = applyExecutorTypeChangeToDraft(
+        ssdDraft('highmem-4', '375 GiB'),
+        'highmem-16'
+      );
+      expect(next.executorDiskSize).toBe('750 GiB');
+      expect(next.driverDiskSize).toBe('750 GiB');
+    });
+
+    it('keeps the SSD size when the executor gets smaller', () => {
+      const next = applyExecutorTypeChangeToDraft(
+        ssdDraft('highmem-16', '1500 GiB'),
+        'standard-4'
+      );
+      expect(next.executorDiskSize).toBe('1500 GiB');
+    });
+
+    it('uses a 375 GiB SSD for an L4 executor, which a shared driver uses too', () => {
+      const next = applyExecutorTypeChangeToDraft(
+        ssdDraft('standard-8', '750 GiB'),
+        'l4-48'
+      );
+      expect(next.executorDiskSize).toBe('375 GiB');
+      expect(next.driverDiskTier).toBe(DISK_TIER_SSD);
+      expect(next.driverDiskSize).toBe('375 GiB');
+    });
+
+    it('uses 750 GiB when SSD is chosen for a 16 vCPU executor', () => {
+      const next = applyExecutorDiskTierChangeToDraft(
+        draft({ executorType: 'highmem-16', driverMachineType: 'highmem-16' }),
+        DISK_TIER_SSD
+      );
+      expect(next.executorDiskSize).toBe('750 GiB');
+      expect(next.driverDiskSize).toBe('750 GiB');
+    });
+
+    it('applies the same minimum to a separately configured driver', () => {
+      expect(
+        applyDriverTypeChangeToDraft(
+          draft({ useDifferentDriverConfig: true }),
+          'a100-40'
+        ).driverDiskSize
+      ).toBe('750 GiB');
+      expect(
+        applyDriverDiskTierChangeToDraft(
+          draft({
+            useDifferentDriverConfig: true,
+            driverMachineType: 'highmem-16'
+          }),
+          DISK_TIER_SSD
+        ).driverDiskSize
+      ).toBe('750 GiB');
+    });
+
+    it("keeps an L4 driver's chosen SSD size", () => {
+      const next = applyDriverTypeChangeToDraft(
+        draft({
+          useDifferentDriverConfig: true,
+          driverDiskTier: DISK_TIER_SSD,
+          driverDiskSize: '1500 GiB'
+        }),
+        'l4-4'
+      );
+      expect(next.driverDiskTier).toBe(DISK_TIER_SSD);
+      expect(next.driverDiskSize).toBe('1500 GiB');
+    });
+
+    it('raises a saved 375 GiB SSD on a large shape when the drawer opens', () => {
+      expect(
+        buildInitialExecutorAndDriverDraft({
+          tier: 'Premium',
+          executorType: 'a100-40',
+          executorMachineType: 'a100-40'
+        }).executorDiskSize
+      ).toBe('750 GiB');
+      expect(
+        buildInitialExecutorAndDriverDraft({
+          tier: 'Premium',
+          executorType: 'highmem-16',
+          executorMachineType: 'highmem-16',
+          executorDisk: 'SSD (premium), 375 GiB'
+        }).executorDiskSize
+      ).toBe('750 GiB');
+    });
+
+    it('keeps a saved L4 disk unchanged when the drawer opens', () => {
+      expect(
+        buildInitialExecutorAndDriverDraft({
+          tier: 'Premium',
+          executorType: 'l4-4',
+          executorMachineType: 'l4-4',
+          executorDisk: 'SSD (premium), 1500 GiB'
+        }).executorDiskSize
+      ).toBe('1500 GiB');
+    });
+  });
+
+  describe('session template properties', () => {
+    const propertiesFor = (machineType: string, disk: string) =>
+      mapRuntimeProfileToSessionTemplate(
+        {
+          displayName: 'Disk profile',
+          region: 'us-central1',
+          tier: 'Premium',
+          executorConfig: { executorType: 'accelerated', machineType },
+          executorAndDriverConfig: {
+            tier: 'Premium',
+            executorType: machineType,
+            executorMachineType: machineType,
+            executorDisk: disk,
+            driverMachineType: machineType,
+            driverDisk: disk
+          }
+        },
+        'test-project',
+        'us-central1'
+      ).runtimeConfig?.properties ?? {};
+
+    it.each(['l4-4', 'l4-24', 'l4-96'])(
+      'sends the disk tier but no executor disk size for %s',
+      machineType => {
+        const props = propertiesFor(machineType, 'SSD (premium), 375 GiB');
+        expect(props['spark.dataproc.executor.disk.tier']).toBe('premium');
+        expect(props['spark.dataproc.executor.disk.size']).toBeUndefined();
+        // The driver's disk size is still sent.
+        expect(props['spark.dataproc.driver.disk.size']).toBe('375g');
+      }
+    );
+
+    it('sends the executor disk size for an A100 shape', () => {
+      const props = propertiesFor('a100-40', 'SSD (premium), 750 GiB');
+      expect(props['spark.dataproc.executor.disk.size']).toBe('750g');
+      expect(props['spark.dataproc.driver.disk.size']).toBe('750g');
+    });
+
+    it('maps saved L4 templates without executor.disk.size cleanly without leaking executor.disk.tier to Spark properties', () => {
+      const l4Template: IRuntimeProfileTemplate = {
+        name: 'projects/test-project/locations/us-central1/sessionTemplates/l4_saved',
+        jupyterSession: { displayName: 'L4 Profile', kernel: 'PYTHON' },
+        runtimeConfig: {
+          version: '2.3',
+          properties: {
+            'dataproc.tier': 'premium',
+            'spark.executor.cores': '4',
+            'spark.dataproc.executor.compute.tier': 'premium',
+            'spark.dataproc.executor.resource.accelerator.type': 'l4',
+            'spark.dataproc.executor.disk.tier': 'premium',
+            'spark.driver.cores': '4',
+            'spark.driver.memory': '32g',
+            'spark.dataproc.driver.compute.tier': 'premium',
+            'spark.dataproc.driver.disk.tier': 'premium',
+            'spark.dataproc.driver.disk.size': '750g'
+          }
+        }
+      };
+
+      const formValues = mapSessionTemplateToFormValues(l4Template);
+      expect(formValues.initialExecutorCategory).toBe('accelerated');
+      expect(formValues.initialExecutorType).toBe('l4-4');
+      expect(formValues.initialExecutorAndDriverConfig?.executorDisk).toBe(
+        'Premium persistent disk, 750 GB'
+      );
+      expect(
+        formValues.initialSparkProperties?.['spark.dataproc.executor.disk.tier']
+      ).toBeUndefined();
+      expect(
+        formValues.initialSparkProperties?.['spark.executor.cores']
+      ).toBeUndefined();
+    });
+
+    it.each(['a100-40', 'a100-80', 'l4-4', 'l4-24'])(
+      'omits spark.executor.memory and uses CPU-only highmem-4 driver for accelerated shape %s',
+      machineType => {
+        const props = propertiesFor(machineType, 'SSD (premium), 750 GiB');
+        expect(props['spark.executor.memory']).toBeUndefined();
+        expect(props['spark.driver.cores']).toBe('4');
+        expect(props['spark.driver.memory']).toBe('32g');
+        expect(
+          props['spark.dataproc.driver.resource.accelerator.type']
+        ).toBeUndefined();
+      }
+    );
+
+    it('resolves saved A100 templates without spark.*.memory and preserves custom heap overrides', () => {
+      const a100Template: IRuntimeProfileTemplate = {
+        name: 'projects/test-project/locations/us-central1/sessionTemplates/a100_saved',
+        jupyterSession: { displayName: 'A100 Profile', kernel: 'PYTHON' },
+        runtimeConfig: {
+          version: '2.3',
+          properties: {
+            'dataproc.tier': 'premium',
+            'spark.executor.cores': '12',
+            'spark.dataproc.executor.compute.tier': 'premium',
+            'spark.dataproc.executor.resource.accelerator.type': 'a100-40',
+            'spark.dataproc.executor.disk.tier': 'premium',
+            'spark.dataproc.executor.disk.size': '750g',
+            'spark.driver.cores': '12',
+            'spark.dataproc.driver.compute.tier': 'premium',
+            'spark.dataproc.driver.resource.accelerator.type': 'a100-40',
+            'spark.dataproc.driver.disk.tier': 'premium',
+            'spark.dataproc.driver.disk.size': '750g'
+          }
+        }
+      };
+
+      const formValues = mapSessionTemplateToFormValues(a100Template);
+      expect(formValues.initialExecutorCategory).toBe('accelerated');
+      expect(formValues.initialExecutorType).toBe('a100-40');
+      expect(formValues.initialExecutorAndDriverConfig?.driverMachineType).toBe(
+        'a100-40'
+      );
+      expect(formValues.initialSparkProperties).toEqual({});
+
+      const customHeapValues = mapSessionTemplateToFormValues({
+        ...a100Template,
+        runtimeConfig: {
+          ...a100Template.runtimeConfig,
+          properties: {
+            ...a100Template.runtimeConfig?.properties,
+            'spark.executor.memory': '48g'
+          }
+        }
+      });
+      expect(customHeapValues.initialExecutorType).toBe('a100-40');
+      expect(customHeapValues.initialSparkProperties).toEqual({
+        'spark.executor.memory': '48g'
+      });
+    });
+
+    it('strips spark.executor.memory and keeps driver CPU-only when updating from general to accelerated', () => {
+      const initialTemplate: IRuntimeProfileTemplate = {
+        name: 'projects/test-project/locations/us-central1/sessionTemplates/cpu_to_gpu',
+        jupyterSession: { displayName: 'CPU to GPU', kernel: 'PYTHON' },
+        runtimeConfig: {
+          version: '2.3',
+          properties: {
+            'dataproc.tier': 'premium',
+            'spark.executor.cores': '4',
+            'spark.executor.memory': '32g',
+            'spark.dataproc.executor.compute.tier': 'premium',
+            'spark.dataproc.executor.disk.tier': 'standard',
+            'spark.dataproc.executor.disk.size': '500g',
+            'spark.driver.cores': '4',
+            'spark.driver.memory': '32g',
+            'spark.dataproc.driver.compute.tier': 'premium',
+            'spark.dataproc.driver.disk.tier': 'standard',
+            'spark.dataproc.driver.disk.size': '500g'
+          }
+        }
+      };
+      const initialPayload: ICreateRuntimeProfilePayload = {
+        displayName: 'CPU to GPU',
+        region: 'us-central1',
+        tier: 'Premium',
+        executorConfig: {
+          executorType: 'general',
+          machineType: 'highmem-4'
+        },
+        executorAndDriverConfig: {
+          tier: 'Premium',
+          executorType: 'highmem-4',
+          executorMachineType: 'highmem-4',
+          executorDisk: 'HDD (standard), 500 GiB',
+          driverMachineType: 'highmem-4',
+          driverDisk: 'HDD (standard), 500 GiB'
+        }
+      };
+      const editedPayload: ICreateRuntimeProfilePayload = {
+        ...initialPayload,
+        executorConfig: {
+          executorType: 'accelerated',
+          machineType: 'a100-40'
+        },
+        executorAndDriverConfig: {
+          tier: 'Premium',
+          executorType: 'a100-40',
+          executorMachineType: 'a100-40',
+          executorDisk: 'SSD (premium), 750 GiB',
+          driverMachineType: 'a100-40',
+          driverDisk: 'SSD (premium), 750 GiB'
+        }
+      };
+
+      const updated = mapRuntimeProfileToSessionTemplateUpdate(
+        editedPayload,
+        initialPayload,
+        initialTemplate
+      );
+      const props = updated.runtimeConfig?.properties ?? {};
+      expect(props['spark.executor.cores']).toBe('12');
+      expect(props['spark.executor.memory']).toBeUndefined();
+      expect(props['spark.driver.cores']).toBe('4');
+      expect(props['spark.driver.memory']).toBe('32g');
+      expect(
+        props['spark.dataproc.driver.resource.accelerator.type']
+      ).toBeUndefined();
+      expect(props['spark.dataproc.executor.resource.accelerator.type']).toBe(
+        'a100-40'
+      );
+      expect(props['spark.dataproc.executor.disk.size']).toBe('750g');
     });
   });
 });
