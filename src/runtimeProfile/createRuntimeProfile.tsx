@@ -1472,7 +1472,7 @@ export const CreateRuntimeProfileComponent: React.FC<
           />
         </div>
         <div className="cluster-details-title">
-          {isEditMode ? 'Edit Runtime Profile' : 'Create a runtime profile'}
+          {isEditMode ? 'Edit Runtime Profile' : 'Create runtime profile'}
         </div>
       </div>
 
@@ -1913,7 +1913,7 @@ export const CreateRuntimeProfileComponent: React.FC<
                 ) : isEditMode ? (
                   'Save'
                 ) : (
-                  'Create a runtime profile'
+                  'Create runtime profile'
                 )}
               </button>
               <button
