@@ -21,6 +21,7 @@ import {
   IRuntimePricingEstimateResult
 } from './runtimeProfileInterface';
 import {
+  ALL_MACHINE_TYPES,
   DEFAULT_INITIAL_EXECUTORS,
   DEFAULT_MAX_EXECUTORS,
   DEFAULT_MIN_EXECUTORS,
@@ -42,6 +43,10 @@ import {
   MSG_PRICING_ESTIMATE_TOTAL_BASELINE,
   parseExecutorCount
 } from './runtimeProfileConstants';
+import {
+  isAcceleratedMachine,
+  resolveStandardDriverMachineName
+} from './runtimeProfileMapper';
 
 /**
  * Computes the complete Dataproc Serverless Spark Runtime Profile pricing estimate.
@@ -56,9 +61,21 @@ export function calculateRuntimePricingEstimate(
   const executorDcu = getShapeDcu(safeInput.executorMachineType);
   const rawDriverShape =
     safeInput.driverMachineType?.trim() || safeInput.driverShape?.trim();
-  const driverDcu = safeInput.useDifferentDriverConfig
-    ? getShapeDcu(rawDriverShape)
-    : executorDcu;
+  const effectiveDriverShape = safeInput.useDifferentDriverConfig
+    ? rawDriverShape
+    : safeInput.executorMachineType?.trim();
+  const driverDcu =
+    effectiveDriverShape &&
+    isAcceleratedMachine(effectiveDriverShape, ALL_MACHINE_TYPES)
+      ? getShapeDcu(
+          resolveStandardDriverMachineName(
+            effectiveDriverShape,
+            ALL_MACHINE_TYPES
+          )
+        )
+      : safeInput.useDifferentDriverConfig
+      ? getShapeDcu(rawDriverShape)
+      : executorDcu;
 
   const initialExecutors = parseExecutorCount(
     safeInput.initialExecutors,

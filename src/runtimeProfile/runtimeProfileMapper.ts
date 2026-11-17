@@ -211,6 +211,50 @@ export const parseMachineTypeSpec = (
 };
 
 /**
+ * Resolves a driver machine type name to a standard CPU-only machine name.
+ * Drivers run on standard CPU shapes rather than GPU accelerator shapes
+ * (mirrors helper.ts buildSizingProperties / getStandardSizingProperties).
+ */
+export const resolveStandardDriverMachineName = (
+  machineTypeName?: string,
+  allTypes: IMachineTypeOption[] = KNOWN_MACHINE_TYPES
+): string => {
+  if (!machineTypeName || machineTypeName.trim() === '') {
+    return DEFAULT_STANDARD_TIER_EXECUTOR_TYPE;
+  }
+  const normalized = normalizeMachineTypeName(machineTypeName, allTypes);
+  if (isAcceleratedMachine(normalized, allTypes)) {
+    return DEFAULT_GENERAL_EXECUTOR_TYPE;
+  }
+  return normalized;
+};
+
+/**
+ * Resolves a driver machine type into its CPU-only cores and memory spec.
+ * Never returns an acceleratorType; accelerated shapes fall back to the
+ * default general CPU shape (`highmem-4`, matching helper.ts).
+ */
+export const resolveStandardDriverMachineSpec = (
+  machineTypeName?: string
+): IMachineSpec | undefined => {
+  if (!machineTypeName || machineTypeName.trim() === '') {
+    return undefined;
+  }
+  const normalized = normalizeMachineTypeName(machineTypeName);
+  if (isAcceleratedMachine(normalized)) {
+    return parseMachineTypeSpec(DEFAULT_GENERAL_EXECUTOR_TYPE);
+  }
+  const spec = parseMachineTypeSpec(machineTypeName);
+  if (!spec) {
+    return undefined;
+  }
+  if (spec.acceleratorType) {
+    return parseMachineTypeSpec(DEFAULT_GENERAL_EXECUTOR_TYPE);
+  }
+  return spec;
+};
+
+/**
  * Default disk size for Dataproc Serverless driver and executors
  * (matches RESOURCE_ALLOCATION_DEFAULT in const.ts).
  */
@@ -731,23 +775,20 @@ export function mapRuntimeProfileToSessionTemplate(
     );
   }
 
-  // Driver machine type & disk properties
+  // Driver machine type & disk properties.
+  // Drivers always run on standard CPU shapes rather than GPU accelerator shapes.
   const driverMachineType = executorAndDriverConfig?.driverMachineType;
-  const driverMachine = parseMachineTypeSpec(driverMachineType);
+  const driverMachine = resolveStandardDriverMachineSpec(driverMachineType);
   if (driverMachine) {
     setIfEmpty('spark.driver.cores', String(driverMachine.cores));
     setIfEmpty('spark.driver.memory', driverMachine.memory);
     if (
-      isHighmemMachineShape(driverMachineType, driverMachine) ||
-      driverMachine.acceleratorType
+      isHighmemMachineShape(
+        resolveStandardDriverMachineName(driverMachineType),
+        driverMachine
+      )
     ) {
       setIfEmpty('spark.dataproc.driver.compute.tier', 'premium');
-    }
-    if (driverMachine.acceleratorType) {
-      setIfEmpty(
-        'spark.dataproc.driver.resource.accelerator.type',
-        driverMachine.acceleratorType
-      );
     }
   }
 
@@ -774,10 +815,17 @@ export function mapRuntimeProfileToSessionTemplate(
     executorAndDriverConfig?.executorMachineType ||
     executorAndDriverConfig?.executorType;
 
+  const isAcceleratedExecutorCategory =
+    payload.executorConfig?.executorType === 'accelerated';
   const executorMachine = parseMachineTypeSpec(executorMachineType);
   if (executorMachine) {
     setIfEmpty('spark.executor.cores', String(executorMachine.cores));
-    setIfEmpty('spark.executor.memory', executorMachine.memory);
+    // Accelerated (GPU) shapes have a fixed total container memory; omitting
+    // spark.executor.memory lets Dataproc split heap and memoryOverhead
+    // automatically instead of allocating 100% to heap (0mb overhead).
+    if (!executorMachine.acceleratorType && !isAcceleratedExecutorCategory) {
+      setIfEmpty('spark.executor.memory', executorMachine.memory);
+    }
     if (
       isHighmemMachineShape(executorMachineType, executorMachine) ||
       executorMachine.acceleratorType
@@ -793,7 +841,7 @@ export function mapRuntimeProfileToSessionTemplate(
     }
   }
 
-  if (payload.executorConfig?.executorType === 'accelerated') {
+  if (isAcceleratedExecutorCategory) {
     setIfEmpty('spark.dataproc.executor.compute.tier', 'premium');
     setIfEmpty(
       'spark.dataproc.executor.resource.accelerator.type',
@@ -804,14 +852,23 @@ export function mapRuntimeProfileToSessionTemplate(
   // Executor disk properties
   // L4 shapes have a fixed-size local SSD and the service ignores a requested
   // size, so only the tier is sent for them.
+  const resolvedExecutorAccelerator =
+    executorMachine?.acceleratorType ||
+    (isAcceleratedExecutorCategory ? DATAPROC_DEFAULT_ACCELERATOR : undefined);
+  const isExecutorL4 =
+    isL4MachineType(executorMachineType) ||
+    resolvedExecutorAccelerator?.toLowerCase() === L4_ACCELERATOR_TYPE;
   const executorDisk = parseDiskSpec(
     executorAndDriverConfig?.executorDisk,
     DEFAULT_DISK_SIZE
   );
-  if (executorDisk.tier) {
+  if (isExecutorL4) {
+    setIfEmpty('spark.dataproc.executor.disk.tier', 'premium');
+    setIfEmpty('spark.dataproc.executor.compute.tier', 'premium');
+  } else if (executorDisk.tier) {
     setIfEmpty('spark.dataproc.executor.disk.tier', executorDisk.tier);
   }
-  if (executorDisk.size && !isL4MachineType(executorMachineType)) {
+  if (executorDisk.size && !isExecutorL4) {
     setIfEmpty('spark.dataproc.executor.disk.size', executorDisk.size);
   }
 
@@ -1479,6 +1536,7 @@ const CONTROL_PROPERTY_GROUPS: IPropertyGroup[] = [
   propertyGroup([
     'spark.driver.cores',
     'spark.driver.memory',
+    'spark.dataproc.driver.compute.tier',
     'spark.dataproc.driver.resource.accelerator.type'
   ]),
   propertyGroup([
@@ -1506,14 +1564,36 @@ export const FORM_DERIVED_PROPERTY_KEYS: ReadonlySet<string> = new Set(
   )
 );
 
-/** Known machine type with the given Spark cores and memory, e.g. 4 and '32g' -> highmem-4. */
+/**
+ * Known machine type matching the given Spark properties:
+ * - General shapes match by cores and memory (e.g. 4 and '32g' -> highmem-4).
+ * - Accelerated shapes match by accelerator type and cores (e.g. 'a100-40' and
+ *   12 -> a100-40), since spark.*.memory is omitted so Dataproc auto-sizes GPU
+ *   heap and memoryOverhead.
+ */
 const findMachineType = (
   cores: string | undefined,
   memory: string | undefined,
-  category: ExecutorCategoryType
+  category: ExecutorCategoryType,
+  acceleratorType?: string
 ): IMachineTypeOption | undefined => {
+  if (!cores) {
+    return undefined;
+  }
+  if (category === 'accelerated') {
+    const normalizedAccelerator = acceleratorType?.trim().toLowerCase();
+    if (!normalizedAccelerator) {
+      return undefined;
+    }
+    return KNOWN_MACHINE_TYPES.find(
+      machine =>
+        machine.category === 'accelerated' &&
+        machine.acceleratorType?.toLowerCase() === normalizedAccelerator &&
+        String(machine.vCPUs) === cores
+    );
+  }
   const memoryMb = memory ? memoryToMb(memory) : 0;
-  if (!cores || !memoryMb) {
+  if (!memoryMb) {
     return undefined;
   }
   return KNOWN_MACHINE_TYPES.find(
@@ -1776,42 +1856,63 @@ export function mapSessionTemplateToFormValues(
       : 'Standard';
   markMapped(DATAPROC_TIER_PROPERTY, DATAPROC_LIGHTNING_ENGINE_PROPERTY);
 
-  const executorCategory: ExecutorCategoryType = getProperty(
+  const executorAccelerator = getProperty(
     'spark.dataproc.executor.resource.accelerator.type'
-  )
+  );
+  const executorCategory: ExecutorCategoryType = executorAccelerator
     ? 'accelerated'
     : 'general';
+  const executorMemory = getProperty('spark.executor.memory');
   const executorMachine = findMachineType(
     getProperty('spark.executor.cores'),
-    getProperty('spark.executor.memory'),
-    executorCategory
+    executorMemory,
+    executorCategory,
+    executorAccelerator
   );
   if (executorMachine) {
     markMapped(
       'spark.executor.cores',
-      'spark.executor.memory',
       'spark.dataproc.executor.compute.tier',
       'spark.dataproc.executor.resource.accelerator.type'
     );
+    // Accelerated shapes omit spark.executor.memory; keep any custom heap
+    // override visible in initialSparkProperties while treating legacy
+    // max-memory values as mapped.
+    if (
+      executorCategory !== 'accelerated' ||
+      !executorMemory ||
+      memoryToMb(executorMemory) === memoryToMb(executorMachine.memory)
+    ) {
+      markMapped('spark.executor.memory');
+    }
   }
 
-  const driverCategory: ExecutorCategoryType = getProperty(
+  const driverAccelerator = getProperty(
     'spark.dataproc.driver.resource.accelerator.type'
-  )
+  );
+  const driverCategory: ExecutorCategoryType = driverAccelerator
     ? 'accelerated'
     : 'general';
+  const driverMemory = getProperty('spark.driver.memory');
   const driverMachine = findMachineType(
     getProperty('spark.driver.cores'),
-    getProperty('spark.driver.memory'),
-    driverCategory
+    driverMemory,
+    driverCategory,
+    driverAccelerator
   );
   if (driverMachine) {
     markMapped(
       'spark.driver.cores',
-      'spark.driver.memory',
       'spark.dataproc.driver.compute.tier',
       'spark.dataproc.driver.resource.accelerator.type'
     );
+    if (
+      driverCategory !== 'accelerated' ||
+      !driverMemory ||
+      memoryToMb(driverMemory) === memoryToMb(driverMachine.memory)
+    ) {
+      markMapped('spark.driver.memory');
+    }
   }
 
   const driverDisk = formatDiskSpec(
@@ -1824,10 +1925,20 @@ export function mapSessionTemplateToFormValues(
       'spark.dataproc.driver.disk.size'
     );
   }
-  const executorDisk = formatDiskSpec(
-    getProperty('spark.dataproc.executor.disk.tier'),
-    getProperty('spark.dataproc.executor.disk.size')
-  );
+  const execDiskTierProp = getProperty('spark.dataproc.executor.disk.tier');
+  const execDiskSizeProp = getProperty('spark.dataproc.executor.disk.size');
+  const isL4TemplateExecutor =
+    executorAccelerator?.toLowerCase() === L4_ACCELERATOR_TYPE ||
+    isL4MachineType(executorMachine?.name);
+  const executorDisk =
+    formatDiskSpec(execDiskTierProp, execDiskSizeProp) ??
+    (isL4TemplateExecutor &&
+    execDiskTierProp?.toLowerCase() === 'premium' &&
+    !execDiskSizeProp
+      ? driverDisk && driverDisk.toLowerCase().startsWith('premium')
+        ? driverDisk
+        : `Premium persistent disk, ${toDiskSizeGib(DEFAULT_SSD_DISK_SIZE)} GB`
+      : undefined);
   if (executorDisk) {
     markMapped(
       'spark.dataproc.executor.disk.tier',

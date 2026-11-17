@@ -3035,9 +3035,9 @@ describe('CreateRuntimeProfileComponent UI & Service', () => {
     await act(async () => {
       (editButtons[6] as HTMLButtonElement).click();
     });
-    expect(
-      document.body.querySelectorAll('.edit-drawer-kv-list')
-    ).toHaveLength(0);
+    expect(document.body.querySelectorAll('.edit-drawer-kv-list')).toHaveLength(
+      0
+    );
     const addBtns = Array.from(
       document.body.querySelectorAll('.edit-drawer-add-btn')
     ) as HTMLButtonElement[];
@@ -3045,9 +3045,9 @@ describe('CreateRuntimeProfileComponent UI & Service', () => {
       addBtns[0].click();
       addBtns[1].click();
     });
-    expect(
-      document.body.querySelectorAll('.edit-drawer-kv-list')
-    ).toHaveLength(2);
+    expect(document.body.querySelectorAll('.edit-drawer-kv-list')).toHaveLength(
+      2
+    );
     expect(document.body.querySelector('#spark-key-error-0')?.textContent).toBe(
       'Key is required'
     );
@@ -3212,6 +3212,19 @@ describe('CreateRuntimeProfileComponent UI & Service', () => {
     expect(separateDriverEstimate.totalRowValue).toBe(
       '32 DCU hours / hour of usage'
     );
+
+    // 4b. Accelerated executor with shared driver uses CPU-only driver fallback (highmem-4 = 5.6 DCU)
+    const acceleratedSharedDriverEstimate = calculateRuntimePricingEstimate({
+      executorMachineType: 'a100-40',
+      useDifferentDriverConfig: false,
+      autoscalingEnabled: true,
+      initialExecutors: 2,
+      minExecutors: 2,
+      maxExecutors: 10
+    });
+    expect(acceleratedSharedDriverEstimate.executorDcu).toBe(15.7);
+    expect(acceleratedSharedDriverEstimate.driverDcu).toBe(5.6);
+    expect(acceleratedSharedDriverEstimate.baselineDcu).toBeCloseTo(37, 5);
 
     // 5. Autoscaling disabled -> hides Subject to autoscaling and autoscaling range row
     const noAutoscalingEstimate = calculateRuntimePricingEstimate({
