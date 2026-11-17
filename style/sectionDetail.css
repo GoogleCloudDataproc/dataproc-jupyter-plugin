@@ -241,3 +241,102 @@ body[data-jp-theme-light='false'] .section-detail-link:hover,
 body[data-jp-theme-name='JupyterLab Dark'] .section-detail-link:hover {
   color: #aecbfa;
 }
+
+.additional-config-warning-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 8px 16px;
+  margin-bottom: 16px;
+  border-radius: 6px;
+  border: 1px solid var(--jp-warn-color1, #e37400);
+  background-color: #fef7e0;
+  box-sizing: border-box;
+}
+
+.additional-config-warning-content {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.additional-config-warning-icon {
+  flex-shrink: 0;
+  color: var(--jp-warn-color1, #e37400);
+}
+
+.additional-config-warning-text {
+  font-family: var(
+    --jp-ui-font-family,
+    Roboto,
+    -apple-system,
+    BlinkMacSystemFont,
+    sans-serif
+  );
+  font-size: 13px;
+  line-height: 18px;
+  color: #5f4300;
+}
+
+.additional-config-warning-banner button.additional-config-warning-btn {
+  flex-shrink: 0;
+  white-space: nowrap;
+  padding: 4px 14px;
+  border-radius: 18px;
+  border: 1px solid var(--jp-border-color1, #dadce0);
+  background-color: var(--jp-layout-color0, #ffffff);
+  color: var(--jp-ui-font-color0, #202124);
+  font-family: var(
+    --jp-ui-font-family,
+    Roboto,
+    -apple-system,
+    BlinkMacSystemFont,
+    sans-serif
+  );
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 18px;
+  cursor: pointer;
+}
+
+.additional-config-warning-banner button.additional-config-warning-btn:hover {
+  background-color: var(--jp-layout-color2, #f1f3f4);
+}
+
+body[data-jp-theme-light='false'] .additional-config-warning-banner,
+body[data-jp-theme-name='JupyterLab Dark'] .additional-config-warning-banner {
+  border-color: rgb(251 188 4 / 55%);
+  background-color: rgb(251 188 4 / 10%);
+}
+
+body[data-jp-theme-light='false'] .additional-config-warning-icon,
+body[data-jp-theme-name='JupyterLab Dark'] .additional-config-warning-icon {
+  color: var(--jp-warn-color1, #fbbc04);
+}
+
+body[data-jp-theme-light='false'] .additional-config-warning-text,
+body[data-jp-theme-name='JupyterLab Dark'] .additional-config-warning-text {
+  color: #fde293;
+}
+
+body[data-jp-theme-light='false']
+  .additional-config-warning-banner
+  button.additional-config-warning-btn,
+body[data-jp-theme-name='JupyterLab Dark']
+  .additional-config-warning-banner
+  button.additional-config-warning-btn {
+  border-color: var(--jp-border-color1, rgb(255 255 255 / 12%));
+  background-color: var(--jp-layout-color1, #2b2d30);
+  color: var(--jp-ui-font-color0, #e8eaed);
+}
+
+body[data-jp-theme-light='false']
+  .additional-config-warning-banner
+  button.additional-config-warning-btn:hover,
+body[data-jp-theme-name='JupyterLab Dark']
+  .additional-config-warning-banner
+  button.additional-config-warning-btn:hover {
+  background-color: var(--jp-layout-color2, #3c4043);
+}
