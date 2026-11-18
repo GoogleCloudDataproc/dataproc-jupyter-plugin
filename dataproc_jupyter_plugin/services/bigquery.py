@@ -27,6 +27,9 @@ from dataproc_jupyter_plugin.commons.constants import (
     BQ_PUBLIC_DATASET_PROJECT_ID,BASE_PROJECT_ID,PAGE_SIZE_LIMIT
 )
 
+MAX_SEARCH_PAGES = 100
+
+
 class Client:
     def __init__(self, credentials, log, client_session):
         self.log = log
@@ -60,7 +63,7 @@ class Client:
                 # Use Dataplex API for user-specific datasets
                 dataplex_url = await urls.gcp_service_url(DATAPLEX_SERVICE_NAME)
                 api_endpoint = (
-                    f"{dataplex_url}/v1/projects/{project_id}/locations/{location}/entryGroups/@bigquery/entries?filter=entry_type=projects/{BASE_PROJECT_ID}/locations/global/entryTypes/bigquery-dataset&pageSize={PAGE_SIZE_LIMIT}"
+                    f"{dataplex_url.rstrip('/')}/v1/projects/{project_id}/locations/{location}/entryGroups/@bigquery/entries?filter=entry_type=projects/{BASE_PROJECT_ID}/locations/global/entryTypes/bigquery-dataset&pageSize={PAGE_SIZE_LIMIT}"
                 )
                 if page_token:
                     api_endpoint += f"&pageToken={page_token}"
@@ -185,16 +188,17 @@ class Client:
                 self.log.warning("No search query provided. Returning empty result.")
                 return {}
 
-            payload = {
-                "query": full_query,
-                "pageSize": 500,
-            }
-            
-            has_next = True
             search_results = []
-            
-            # Handle pagination to retrieve all results.
-            while has_next:
+            page_token = None
+
+            # Handle pagination to retrieve all results with a hard page cap.
+            for _ in range(MAX_SEARCH_PAGES):
+                payload = {
+                    "query": full_query,
+                    "pageSize": 500,
+                }
+                if page_token:
+                    payload["pageToken"] = page_token
                 try:
                     async with self.client_session.post(
                         api_endpoint, headers=headers, json=payload
@@ -204,10 +208,9 @@ class Client:
                             if "results" in resp:
                                 search_results.extend(resp["results"])
 
-                            if "nextPageToken" in resp:
-                                payload["pageToken"] = resp["nextPageToken"]
-                            else:
-                                has_next = False
+                            page_token = resp.get("nextPageToken")
+                            if not page_token:
+                                break
                         else:
                             response_text = await response.text()
                             self.log.error(f"Error searching in Dataplex: {response.status} - {response_text}")
@@ -216,6 +219,10 @@ class Client:
                 except aiohttp.ClientError as e:
                     self.log.error(f"Aiohttp client error during API call: {e}")
                     raise
+            else:
+                self.log.warning(
+                    f"Dataplex search reached maximum page limit ({MAX_SEARCH_PAGES})"
+                )
 
             if not search_results:
                 return {}

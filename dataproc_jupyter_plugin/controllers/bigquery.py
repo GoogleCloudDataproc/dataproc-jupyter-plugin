@@ -28,14 +28,20 @@ from dataproc_jupyter_plugin.commons.constants import (
 )
     
 class BigQueryClient:
-    _client = None
-    _session = None
-    _creation_time = None
-    _lock = asyncio.Lock()
-	
+    def __init__(self):
+        self._client = None
+        self._session = None
+        self._creation_time = None
+        self._lock = None
+
     async def get_client(self, log):
+        if self._lock is None:
+            self._lock = asyncio.Lock()
         async with self._lock:
-            if self._client is None or (time.time() - self._creation_time) > BQ_CLIENT_EXPIRY_DURATION:
+            if (
+                self._client is None
+                or (time.time() - self._creation_time) > BQ_CLIENT_EXPIRY_DURATION
+            ):
                 if self._session:
                     await self._session.close()
 
@@ -45,6 +51,7 @@ class BigQueryClient:
                 )
                 self._creation_time = time.time()
             return self._client
+
 
 bigquery_client = BigQueryClient()
 
