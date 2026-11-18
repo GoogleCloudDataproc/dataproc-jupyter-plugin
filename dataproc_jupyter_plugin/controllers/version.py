@@ -13,13 +13,16 @@
 # limitations under the License.
 
 import json
+import re
 
 import aiohttp
 import tornado
 from jupyter_server.base.handlers import APIHandler
 
-from dataproc_jupyter_plugin import credentials
 from dataproc_jupyter_plugin.services import version
+
+# PEP 508 distribution name format (blocks path traversal and pip CLI option injection).
+PACKAGE_NAME_REGEXP = re.compile(r"^[A-Za-z0-9]([A-Za-z0-9._-]*[A-Za-z0-9])?$")
 
 
 class LatestVersionController(APIHandler):
@@ -27,12 +30,15 @@ class LatestVersionController(APIHandler):
     async def get(self):
         try:
             package_name = self.get_argument("packageName")
+            if not PACKAGE_NAME_REGEXP.match(package_name):
+                self.set_status(400)
+                self.finish({"error": f"Invalid package name: {package_name}"})
+                return
+
             async with aiohttp.ClientSession() as client_session:
-                client = version.Client(
-                    await credentials.get_cached(), self.log, client_session
-                )
+                client = version.Client(self.log, client_session)
                 version_id = await client.get_latest_version(package_name)
-            
+
             self.finish(json.dumps(version_id))
         except Exception as e:
             self.log.exception("Error fetching version")
@@ -44,11 +50,15 @@ class UpdatePackage(APIHandler):
     async def post(self):
         try:
             package_name = self.get_argument("packageName")
-            client = version.Client(await credentials.get_cached(), self.log)
+            if not PACKAGE_NAME_REGEXP.match(package_name):
+                self.set_status(400)
+                self.finish({"error": f"Invalid package name: {package_name}"})
+                return
+
+            client = version.Client(self.log)
             is_updated = await client.updatePlugin(package_name)
 
             self.finish(json.dumps(is_updated))
         except Exception as e:
             self.log.exception("Error updating package")
             self.finish({"error": str(e)})
-
