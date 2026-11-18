@@ -144,6 +144,7 @@ describe('SubmitJob Component', () => {
   let container: HTMLDivElement;
   let root: Root;
   let setSubmitJobView: jest.Mock;
+  const originalCrypto = window.crypto;
 
   beforeEach(() => {
     jest.clearAllMocks();
@@ -171,6 +172,11 @@ describe('SubmitJob Component', () => {
       root.unmount();
     });
     container.remove();
+    jest.restoreAllMocks();
+    Object.defineProperty(window, 'crypto', {
+      configurable: true,
+      value: originalCrypto
+    });
   });
 
   const renderSubmitJob = async (
@@ -273,7 +279,7 @@ describe('SubmitJob Component', () => {
     expect(container.textContent).toContain('Duplicate paths are not allowed');
   });
 
-  it('submits a Spark job with mainClass and a Spark jar job', async () => {
+  it('submits a Spark job with mainClass', async () => {
     await renderSubmitJob();
 
     // Disabled initially -> clicking SUBMIT should not invoke submitJobService
@@ -420,7 +426,7 @@ describe('SubmitJob Component', () => {
     );
   });
 
-  it('pre-fills and submits cloned PySpark and SparkSql jobs', async () => {
+  it('pre-fills and submits cloned PySpark jobs', async () => {
     const clonedPySpark = {
       placement: { clusterName: 'cluster-run-1' },
       labels: { env: 'staging' },
