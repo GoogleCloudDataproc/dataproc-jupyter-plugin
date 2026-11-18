@@ -115,11 +115,21 @@ async def test_check_api_controller_missing_domain(jp_fetch, monkeypatch, servic
     mock_run_gcloud.assert_not_awaited()
 
 
-async def test_check_api_controller_strips_port_from_url(jp_fetch, monkeypatch):
-    """Test API check extracts only the hostname when service URL includes a port."""
+@pytest.mark.parametrize(
+    "service_url",
+    [
+        "https://dataproc.googleapis.com:443/",
+        "dataproc.googleapis.com/",
+        "dataproc.googleapis.com:443/v1",
+    ],
+)
+async def test_check_api_controller_extracts_hostname_from_url_variants(
+    jp_fetch, monkeypatch, service_url
+):
+    """Test API check extracts only the hostname for URLs with ports or without a scheme."""
     mock_run_gcloud = AsyncMock(return_value="dataproc.googleapis.com\n")
     mock_gcp_project = AsyncMock(return_value="my-project-123")
-    mock_service_url = AsyncMock(return_value="https://dataproc.googleapis.com:443/")
+    mock_service_url = AsyncMock(return_value=service_url)
 
     monkeypatch.setattr(
         "dataproc_jupyter_plugin.controllers.checkApiEnabled.async_run_gcloud_subcommand",
