@@ -29,7 +29,10 @@ jest.mock('../handler/handler', () => ({
   })
 }));
 
-jest.mock('../utils/pollingTimer', () => jest.fn(() => undefined));
+jest.mock('../utils/pollingTimer', () => ({
+  __esModule: true,
+  default: jest.fn(() => undefined)
+}));
 
 jest.mock('./submitJob', () => ({
   __esModule: true,
@@ -119,6 +122,7 @@ describe('JobComponent', () => {
       root.unmount();
     });
     container.remove();
+    jest.restoreAllMocks();
   });
 
   it('shows loading spinner initially and empty message when no jobs are returned', async () => {
