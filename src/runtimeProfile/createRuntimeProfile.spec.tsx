@@ -1033,10 +1033,10 @@ describe('CreateRuntimeProfileComponent UI & Service', () => {
     expect(consumeRuntimeProfileListTabRequest()).toBe(true);
 
     // Even when shell.activeWidget is null (e.g. submit button disabled blurred focus),
-    // the 'Create Runtime Profile' tab in main widgets is closed
+    // the 'Create a runtime profile' tab in main widgets is closed
     const createTabWidget = {
       id: 'create-tab',
-      title: { label: 'Create Runtime Profile' },
+      title: { label: 'Create a runtime profile' },
       close: jest.fn()
     };
     mockApp.shell.activeWidget = null;
@@ -2207,7 +2207,7 @@ describe('CreateRuntimeProfileComponent UI & Service', () => {
 
       expect(
         container.querySelector('.cluster-details-title')?.textContent
-      ).toBe('Edit Runtime Profile');
+      ).toBe('Edit runtime profile');
       expect(
         (
           container.querySelector(

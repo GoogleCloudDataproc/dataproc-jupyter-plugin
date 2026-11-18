@@ -578,7 +578,7 @@ describe('extension index.ts comprehensive test suite', () => {
         expect.any(MainAreaWidget),
         'main'
       );
-      expect(lastOpenedTabTitle()).toBe('Create Runtime Profile');
+      expect(lastOpenedTabTitle()).toBe('Create a runtime profile');
     });
 
     it('should open create-runtime-profile-component in edit mode for the given profile', () => {
@@ -596,7 +596,7 @@ describe('extension index.ts comprehensive test suite', () => {
         settingRegistryMock,
         profile
       );
-      expect(lastOpenedTabTitle()).toBe('Edit Runtime Profile');
+      expect(lastOpenedTabTitle()).toBe('Edit runtime profile');
 
       // A profile without edit mode still opens the create form
       command.execute({ profile });
@@ -607,7 +607,7 @@ describe('extension index.ts comprehensive test suite', () => {
         settingRegistryMock,
         undefined
       );
-      expect(lastOpenedTabTitle()).toBe('Create Runtime Profile');
+      expect(lastOpenedTabTitle()).toBe('Create a runtime profile');
     });
 
     it('should show the open edit tab instead of opening a second one for the same profile', () => {
