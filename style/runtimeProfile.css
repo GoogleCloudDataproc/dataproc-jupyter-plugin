@@ -31,7 +31,11 @@
 }
 
 .runtime-profile-container {
-  padding: 24px 16px 40px 32px;
+  /* Bottom spacing comes from the sticky .runtime-profile-buttons bar (scroll
+     container padding would stop it sticking flush to the bottom edge);
+     scroll-padding-bottom keeps focused fields from scrolling behind it. */
+  padding: 24px 16px 0 32px;
+  scroll-padding-bottom: 80px;
   max-width: 668px;
   flex: 0 1 668px;
   width: 100%;
@@ -348,13 +352,21 @@ body[data-jp-theme-name='JupyterLab Dark'] .MuiListSubheader-root.machine-type-g
   color: var(--jp-ui-font-color0, #202124);
 }
 
+/* Sticky action bar: pinned to the bottom of the scrollable form column while
+   the form scrolls beneath it. Negative side margins bleed into the container's
+   32px/16px horizontal padding so the opaque bar spans the full column width;
+   z-index keeps it above the outlined input labels (z-index: 2). */
 .runtime-profile-buttons {
+  position: sticky;
+  bottom: 0;
+  z-index: 3;
   display: flex;
   align-items: center;
   gap: 12px;
-  margin-top: 24px;
-  padding-top: 16px;
-  width: 100%;
+  margin: 24px -16px 0 -32px;
+  padding: 16px 16px 16px 32px;
+  background-color: var(--jp-layout-color1, #fff);
+  border-top: 1px solid var(--jp-border-color2, #e0e0e0);
 }
 
 .runtime-profile-buttons button {

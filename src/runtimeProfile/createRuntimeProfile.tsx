@@ -1326,8 +1326,8 @@ export const CreateRuntimeProfileComponent: React.FC<
       return;
     }
     const formWidgetTitle = isEditMode
-      ? 'Edit Runtime Profile'
-      : 'Create Runtime Profile';
+      ? 'Edit runtime profile'
+      : 'Create a runtime profile';
     const formWidgetsToClose = new Set<{ close: () => void }>();
     const targetWidget =
       submittingWidget ?? shell.activeWidget ?? shell.currentWidget;
@@ -1480,7 +1480,7 @@ export const CreateRuntimeProfileComponent: React.FC<
           />
         </div>
         <div className="cluster-details-title">
-          {isEditMode ? 'Edit Runtime Profile' : 'Create a runtime profile'}
+          {isEditMode ? 'Edit runtime profile' : 'Create a runtime profile'}
         </div>
       </div>
 
@@ -1923,7 +1923,7 @@ export const CreateRuntimeProfileComponent: React.FC<
                 ) : isEditMode ? (
                   'Save'
                 ) : (
-                  'Create a runtime profile'
+                  'Create runtime profile'
                 )}
               </button>
               <button
