@@ -1218,7 +1218,7 @@ describe('CreateRuntimeProfileComponent UI & Service', () => {
       (executorCards[1] as HTMLDivElement).click();
     });
 
-    expect(getFieldValue('Executor type')).toBe('L4 (4 vCPU)');
+    expect(getFieldValue('Executor type')).toBe('l4-4 (4 vCPU, 16 GB, 1 GPU)');
   });
 
   it('initializes executor category and type from a valid initial config machine id', async () => {
@@ -1236,7 +1236,11 @@ describe('CreateRuntimeProfileComponent UI & Service', () => {
       .querySelectorAll('.node-config-cards-container')[1]
       .querySelectorAll('.node-config-card');
     expect(executorCards[1].classList.contains('selected')).toBe(true);
-    expect(getFieldValue('Executor type')).toBe('L4 (8 vCPU)');
+    // The dropdown shows the label; the section shows the display name.
+    expect(
+      container.querySelector('#runtime-profile-executor-type')?.textContent
+    ).toBe('L4 (8 vCPU)');
+    expect(getFieldValue('Executor type')).toBe('l4-8 (8 vCPU, 32 GB, 1 GPU)');
   });
 
   it('opens RuntimeEnvironmentEditDrawer and updates runtime configuration on save', async () => {
@@ -1750,6 +1754,26 @@ describe('CreateRuntimeProfileComponent UI & Service', () => {
     expect(normalizeMachineTypeName('')).toBe('highmem-4');
   });
 
+  it.each([
+    ['l4-4', 'L4 (4 vCPU)', 'l4-4 (4 vCPU, 16 GB, 1 GPU)'],
+    ['l4-8', 'L4 (8 vCPU)', 'l4-8 (8 vCPU, 32 GB, 1 GPU)'],
+    ['l4-12', 'L4 (12 vCPU)', 'l4-12 (12 vCPU, 48 GB, 1 GPU)'],
+    ['l4-16', 'L4 (16 vCPU)', 'l4-16 (16 vCPU, 64 GB, 1 GPU)'],
+    ['l4-24', 'L4 (24 vCPU)', 'l4-24 (24 vCPU, 96 GB, 2 GPUs)'],
+    ['l4-48', 'L4 (48 vCPU)', 'l4-48 (48 vCPU, 192 GB, 4 GPUs)'],
+    ['l4-96', 'L4 (96 vCPU)', 'l4-96 (96 vCPU, 384 GB, 8 GPUs)'],
+    ['a100-40', 'A100 40GB (12 vCPU)', 'a100-40 (12 vCPU, 78 GB, 1 GPU)'],
+    ['a100-80', 'A100 80GB (12 vCPU)', 'a100-80 (12 vCPU, 165 GB, 1 GPU)']
+  ])(
+    'labels %s as %s in the dropdowns and %s in the Summary and section',
+    (name, label, displayName) => {
+      expect(
+        DATAPROC_ACCELERATED_MACHINE_TYPES.find(m => m.name === name)
+      ).toMatchObject({ label, displayName });
+      expect(normalizeMachineTypeName(label)).toBe(name);
+    }
+  );
+
   it('should detect accelerated machine shapes with isAcceleratedMachine', () => {
     expect(
       isAcceleratedMachine('l4-4', DATAPROC_ACCELERATED_MACHINE_TYPES)
@@ -1866,6 +1890,117 @@ describe('CreateRuntimeProfileComponent UI & Service', () => {
     });
     // Unchecked state must be preserved
     expect(getDrawerCheckbox()?.checked).toBe(false);
+  });
+
+  it('shows the fixed L4 executor disk without a size and uses 750 GiB for A100', async () => {
+    await act(async () => {
+      root.render(<CreateRuntimeProfileComponent service={mockService} />);
+    });
+    await expandAdditionalConfig();
+
+    const acceleratedCard = container
+      .querySelectorAll('.node-config-cards-container')[1]
+      .querySelectorAll('.node-config-card')[1] as HTMLDivElement;
+    await act(async () => {
+      acceleratedCard.click();
+    });
+    expect(getFieldValue('Executor disk')).toBe('SSD (premium)');
+    expect(getFieldValue('Driver disk')).toBe('SSD (premium), 375 GiB');
+
+    await selectExecutorType('a100-40');
+    expect(getFieldValue('Executor disk')).toBe('SSD (premium), 750 GiB');
+    expect(getFieldValue('Driver disk')).toBe('SSD (premium), 750 GiB');
+  });
+
+  // Opens a disk size Select in the open drawer and returns the sizes it lists.
+  const openDiskSizeSelect = async (id: string) => {
+    const trigger = document.body.querySelector(`#${id}`) as HTMLElement;
+    expect(trigger).not.toBeNull();
+    await act(async () => {
+      trigger.dispatchEvent(
+        new MouseEvent('mousedown', { bubbles: true, button: 0 })
+      );
+    });
+    return Array.from(document.body.querySelectorAll('li[role="option"]'))
+      .map(option => option.getAttribute('data-value'))
+      .filter(value => value?.endsWith('GiB'));
+  };
+
+  it('offers only 750 and 1500 GiB SSDs for a 16 vCPU executor and saves 750 GiB', async () => {
+    const onSave = jest.fn();
+    await act(async () => {
+      root.render(
+        <ExecutorAndDriverEditDrawer
+          open
+          config={{
+            tier: 'Premium',
+            executorType: 'highmem-16',
+            executorMachineType: 'highmem-16',
+            executorDisk: 'SSD (premium), 375 GiB',
+            driverMachineType: 'highmem-16',
+            driverDisk: 'SSD (premium), 375 GiB'
+          }}
+          onClose={jest.fn()}
+          onSave={onSave}
+        />
+      );
+    });
+
+    expect(await openDiskSizeSelect('edit-executor-disk-size')).toEqual([
+      '750 GiB',
+      '1500 GiB'
+    ]);
+    await act(async () => {
+      (
+        document.body.querySelector(
+          'li[role="option"][data-value="750 GiB"]'
+        ) as HTMLElement
+      ).click();
+    });
+
+    const saveBtn = Array.from(
+      document.body.querySelectorAll('.edit-drawer-footer button')
+    ).find(b => b.textContent?.trim() === 'Save') as HTMLButtonElement;
+    await act(async () => {
+      saveBtn.click();
+    });
+    expect(onSave).toHaveBeenCalledWith(
+      expect.objectContaining({
+        executorDisk: 'SSD (premium), 750 GiB',
+        driverDisk: 'SSD (premium), 750 GiB'
+      })
+    );
+  });
+
+  it('hides the executor disk size for L4 but lets an L4 driver choose its size', async () => {
+    await act(async () => {
+      root.render(
+        <ExecutorAndDriverEditDrawer
+          open
+          config={{
+            tier: 'Premium',
+            executorType: 'l4-4',
+            executorMachineType: 'l4-4',
+            executorDisk: 'SSD (premium), 375 GiB',
+            useDifferentDriverConfig: true,
+            driverMachineType: 'l4-48',
+            driverDisk: 'SSD (premium), 375 GiB'
+          }}
+          onClose={jest.fn()}
+          onSave={jest.fn()}
+        />
+      );
+    });
+
+    expect(
+      document.body.querySelector('#edit-executor-disk-tier')
+    ).not.toBeNull();
+    expect(document.body.querySelector('#edit-executor-disk-size')).toBeNull();
+    expect(await openDiskSizeSelect('edit-driver-disk-size')).toEqual([
+      '375 GiB',
+      '750 GiB',
+      '1500 GiB'
+    ]);
   });
 
   it('should format default runtime profile summary rows', () => {
@@ -1989,8 +2124,25 @@ describe('CreateRuntimeProfileComponent UI & Service', () => {
       executorDisk: 'SSD (premium), 375 GiB',
       useDifferentDriverConfig: false
     });
+    // An L4 executor's local SSD has a fixed size, so no size is shown.
     expect(acceleratedRows.find(r => r.label === 'Executor node')?.value).toBe(
-      'L4 (4 vCPU), SSD (premium), 375 GiB'
+      'l4-4 (4 vCPU, 16 GB, 1 GPU), SSD (premium)'
+    );
+
+    // Dropdown labels, which the drawer saves for the driver, also show as
+    // display names.
+    const labelRows = formatRuntimeProfileSummaryProperties({
+      executorMachineType: 'L4 (48 vCPU)',
+      executorDisk: 'SSD (premium), 750 GiB',
+      driverMachineType: 'A100 40GB (12 vCPU)',
+      driverDisk: 'SSD (premium), 750 GiB',
+      useDifferentDriverConfig: true
+    });
+    expect(labelRows.find(r => r.label === 'Executor node')?.value).toBe(
+      'l4-48 (48 vCPU, 192 GB, 4 GPUs), SSD (premium)'
+    );
+    expect(labelRows.find(r => r.label === 'Driver node')?.value).toBe(
+      'a100-40 (12 vCPU, 78 GB, 1 GPU), SSD (premium), 750 GiB'
     );
 
     const emptyRows = formatRuntimeProfileSummaryProperties({
@@ -2320,6 +2472,49 @@ describe('CreateRuntimeProfileComponent UI & Service', () => {
         document.body.querySelectorAll('.edit-drawer-footer button')
       ).find(b => b.textContent?.trim() === 'Save') as HTMLButtonElement;
       expect(saveBtn.disabled).toBe(false);
+    });
+
+    it('opens the Executor and driver drawer with the saved disks and keeps them on Save', async () => {
+      await renderEditForm(undefined, {
+        ...profileToEdit,
+        runtimeConfig: {
+          ...profileToEdit.runtimeConfig,
+          properties: {
+            ...profileToEdit.runtimeConfig?.properties,
+            'spark:spark.dataproc.executor.disk.tier': 'premium',
+            'spark:spark.dataproc.executor.disk.size': '1500g',
+            'spark:spark.driver.cores': '4',
+            'spark:spark.driver.memory': '16g',
+            'spark:spark.dataproc.driver.disk.tier': 'standard',
+            'spark:spark.dataproc.driver.disk.size': '600g'
+          }
+        }
+      });
+      await expandAdditionalConfig();
+
+      const editButtons = container.querySelectorAll(
+        '.section-detail-edit-button'
+      );
+      await act(async () => {
+        (editButtons[1] as HTMLButtonElement).click();
+      });
+
+      const selectedValue = (id: string) =>
+        document.body.querySelector(`#${id}`)?.textContent;
+      expect(selectedValue('edit-executor-disk-tier')).toBe('SSD (premium)');
+      expect(selectedValue('edit-executor-disk-size')).toBe('1500 GiB');
+      expect(selectedValue('edit-driver-disk-tier')).toBe('HDD (standard)');
+      expect(selectedValue('edit-driver-disk-size')).toBe('600 GiB');
+
+      // Saving the drawer without changes keeps the saved disks.
+      const saveBtn = Array.from(
+        document.body.querySelectorAll('.edit-drawer-footer button')
+      ).find(b => b.textContent?.trim() === 'Save') as HTMLButtonElement;
+      await act(async () => {
+        saveBtn.click();
+      });
+      expect(getFieldValue('Executor disk')).toBe('SSD (premium), 1500 GiB');
+      expect(getFieldValue('Driver disk')).toBe('HDD (standard), 600 GiB');
     });
 
     it('lets every section be edited', async () => {
@@ -2840,9 +3035,9 @@ describe('CreateRuntimeProfileComponent UI & Service', () => {
     await act(async () => {
       (editButtons[6] as HTMLButtonElement).click();
     });
-    expect(
-      document.body.querySelectorAll('.edit-drawer-kv-list')
-    ).toHaveLength(0);
+    expect(document.body.querySelectorAll('.edit-drawer-kv-list')).toHaveLength(
+      0
+    );
     const addBtns = Array.from(
       document.body.querySelectorAll('.edit-drawer-add-btn')
     ) as HTMLButtonElement[];
@@ -2850,9 +3045,9 @@ describe('CreateRuntimeProfileComponent UI & Service', () => {
       addBtns[0].click();
       addBtns[1].click();
     });
-    expect(
-      document.body.querySelectorAll('.edit-drawer-kv-list')
-    ).toHaveLength(2);
+    expect(document.body.querySelectorAll('.edit-drawer-kv-list')).toHaveLength(
+      2
+    );
     expect(document.body.querySelector('#spark-key-error-0')?.textContent).toBe(
       'Key is required'
     );
@@ -3018,6 +3213,19 @@ describe('CreateRuntimeProfileComponent UI & Service', () => {
       '32 DCU hours / hour of usage'
     );
 
+    // 4b. Accelerated executor with shared driver uses CPU-only driver fallback (highmem-4 = 5.6 DCU)
+    const acceleratedSharedDriverEstimate = calculateRuntimePricingEstimate({
+      executorMachineType: 'a100-40',
+      useDifferentDriverConfig: false,
+      autoscalingEnabled: true,
+      initialExecutors: 2,
+      minExecutors: 2,
+      maxExecutors: 10
+    });
+    expect(acceleratedSharedDriverEstimate.executorDcu).toBe(15.7);
+    expect(acceleratedSharedDriverEstimate.driverDcu).toBe(5.6);
+    expect(acceleratedSharedDriverEstimate.baselineDcu).toBeCloseTo(37, 5);
+
     // 5. Autoscaling disabled -> hides Subject to autoscaling and autoscaling range row
     const noAutoscalingEstimate = calculateRuntimePricingEstimate({
       executorMachineType: 'highmem-4',
@@ -3146,5 +3354,349 @@ describe('CreateRuntimeProfileComponent UI & Service', () => {
         '[data-testid="pricing-autoscaling-row"]'
       )
     ).toBeNull();
+  });
+
+  it('displays IP Range in Subnetwork and Shared subnetwork dropdown options while keeping selected value as subnetwork name', async () => {
+    jest.spyOn(mockService, 'getNetworks').mockResolvedValue(['default-auto']);
+    jest.spyOn(mockService, 'getSubnetworks').mockResolvedValue([
+      { name: 'default-auto', ipCidrRange: '10.150.0.0/20' },
+      { name: 'subnet-iowa', ipCidrRange: '10.128.0.0/20' }
+    ]);
+    jest.spyOn(mockService, 'getSharedVpcSubnetworks').mockResolvedValue({
+      hostProjectId: 'hadoop-cloud-dev-devconsole',
+      subnetworks: [{ name: 'shared-sub', ipCidrRange: '10.200.0.0/24' }]
+    });
+
+    await act(async () => {
+      root.render(<CreateRuntimeProfileComponent service={mockService} />);
+    });
+    await expandAdditionalConfig();
+
+    const editButtons = container.querySelectorAll(
+      '.section-detail-edit-button'
+    );
+    await act(async () => {
+      (editButtons[4] as HTMLButtonElement).click();
+    });
+
+    const subnetLabel = document.body.querySelector('#edit-subnetwork-label');
+    expect(subnetLabel?.textContent).toBe('Subnetwork *');
+
+    const subnetTrigger = document.body.querySelector(
+      '#edit-subnetwork'
+    ) as HTMLElement;
+    expect(subnetTrigger.textContent).toBe('default-auto');
+
+    // Open project subnetwork dropdown and verify two-line options with IP Range
+    await act(async () => {
+      subnetTrigger.dispatchEvent(
+        new MouseEvent('mousedown', { bubbles: true, button: 0 })
+      );
+    });
+    const defaultAutoOption = document.body.querySelector(
+      'li[role="option"][data-value="default-auto"]'
+    );
+    const subnetIowaOption = document.body.querySelector(
+      'li[role="option"][data-value="subnet-iowa"]'
+    );
+    expect(
+      defaultAutoOption?.querySelector('.edit-drawer-subnetwork-option-name')
+        ?.textContent
+    ).toBe('default-auto');
+    expect(
+      defaultAutoOption?.querySelector('.edit-drawer-subnetwork-option-cidr')
+        ?.textContent
+    ).toBe('IP Range: 10.150.0.0/20');
+    expect(
+      subnetIowaOption?.querySelector('.edit-drawer-subnetwork-option-name')
+        ?.textContent
+    ).toBe('subnet-iowa');
+    expect(
+      subnetIowaOption?.querySelector('.edit-drawer-subnetwork-option-cidr')
+        ?.textContent
+    ).toBe('IP Range: 10.128.0.0/20');
+
+    // Select subnet-iowa and verify closed field shows only the subnetwork name
+    await act(async () => {
+      (subnetIowaOption as HTMLElement).click();
+    });
+    expect(subnetTrigger.textContent).toBe('subnet-iowa');
+
+    // Switch to Shared VPC and verify IP Range is rendered for shared subnetwork too
+    const sharedRadio = document.body.querySelector(
+      '#edit-network-source-shared'
+    ) as HTMLInputElement;
+    await act(async () => {
+      sharedRadio.click();
+    });
+
+    const sharedSubnetTrigger = document.body.querySelector(
+      '#edit-shared-subnetwork'
+    ) as HTMLElement;
+    expect(sharedSubnetTrigger.textContent).toBe('shared-sub');
+
+    await act(async () => {
+      sharedSubnetTrigger.dispatchEvent(
+        new MouseEvent('mousedown', { bubbles: true, button: 0 })
+      );
+    });
+    const sharedOption = document.body.querySelector(
+      'li[role="option"][data-value="shared-sub"]'
+    );
+    expect(
+      sharedOption?.querySelector('.edit-drawer-subnetwork-option-name')
+        ?.textContent
+    ).toBe('shared-sub');
+    expect(
+      sharedOption?.querySelector('.edit-drawer-subnetwork-option-cidr')
+        ?.textContent
+    ).toBe('IP Range: 10.200.0.0/24');
+  });
+
+  it('shows Additional configuration warning banner when default subnetwork is unavailable and handles empty/required Subnetwork states in drawer', async () => {
+    jest
+      .spyOn(mockService, 'getNetworks')
+      .mockResolvedValue(['network2', 'valid-vpc']);
+    jest
+      .spyOn(mockService, 'getSubnetworks')
+      .mockImplementation(async (network: string) =>
+        network === 'valid-vpc'
+          ? [{ name: 'valid-subnet', ipCidrRange: '10.142.0.0/20' }]
+          : []
+      );
+
+    await act(async () => {
+      root.render(<CreateRuntimeProfileComponent service={mockService} />);
+    });
+
+    // Additional configuration should auto-expand with "(Configuration required)" and banner
+    const header = container.querySelector(
+      '.additional-config-header-container'
+    );
+    expect(header?.getAttribute('aria-expanded')).toBe('true');
+    expect(
+      container.querySelector('.additional-config-header')?.textContent
+    ).toBe('Additional configuration (Configuration required)');
+
+    const banner = container.querySelector(
+      '[data-testid="default-network-warning-banner"]'
+    );
+    expect(banner).not.toBeNull();
+    const bannerAlert = banner?.querySelector('[role="alert"]');
+    expect(bannerAlert?.textContent).toBe(
+      'Default network is not available. Please configure a network.'
+    );
+
+    const getNetworkInProjectValue = () => {
+      const rows = Array.from(
+        container.querySelectorAll('.section-detail-row')
+      );
+      const netRow = rows.find(
+        row =>
+          row.querySelector('.section-detail-label')?.textContent?.trim() ===
+          'Network in this project'
+      );
+      return netRow
+        ?.querySelector('.section-detail-value')
+        ?.textContent?.trim();
+    };
+    expect(getNetworkInProjectValue()).toBe(
+      'Default network is not available. Please configure a network.'
+    );
+
+    const submitBtn = container.querySelector(
+      '.runtime-profile-submit-btn'
+    ) as HTMLButtonElement;
+    expect(submitBtn?.disabled).toBe(true);
+
+    // Clicking "Configure network" opens Network and security drawer
+    const configureBtn = banner?.querySelector('button') as HTMLButtonElement;
+    expect(configureBtn?.textContent).toBe('Configure network');
+    await act(async () => {
+      configureBtn.click();
+    });
+
+    // network2 has no PGA subnetworks: shows unavailable notice below dropdown,
+    // no required error before closing the dropdown without a selection
+    expect(
+      document.body.querySelector('#edit-subnetwork-unavailable-note')
+        ?.textContent
+    ).toBe(
+      'Selected network has no subnetworks in this region with Private Google Access turned on.'
+    );
+    expect(
+      document.body.querySelector('#edit-subnetwork-error-text')
+    ).toBeNull();
+    expect(document.body.textContent).not.toContain(
+      'Please select a valid network and subnetwork.'
+    );
+
+    // Opening the Subnetwork dropdown displays the Private Google Access message
+    const subnetTrigger = document.body.querySelector(
+      '#edit-subnetwork'
+    ) as HTMLElement;
+    expect(subnetTrigger.getAttribute('aria-describedby')).toBe(
+      'edit-subnetwork-unavailable-note'
+    );
+    await act(async () => {
+      subnetTrigger.dispatchEvent(
+        new MouseEvent('mousedown', { bubbles: true, button: 0 })
+      );
+    });
+    expect(
+      document.body.querySelector('.edit-drawer-subnetwork-menu-paper')
+    ).not.toBeNull();
+    const emptyOption = document.body.querySelector(
+      'li[role="option"][data-value="__no_items__"]'
+    );
+    expect(emptyOption?.textContent).toBe(
+      'No subnetworks with Private Google Access enabled.'
+    );
+
+    // Closing the dropdown without selecting anything shows "! Subnetwork is required."
+    const menuBackdrop = document.body.querySelector(
+      '.MuiPopover-root .MuiBackdrop-root'
+    ) as HTMLElement;
+    await act(async () => {
+      menuBackdrop.click();
+    });
+    const requiredError = document.body.querySelector(
+      '#edit-subnetwork-error-text'
+    );
+    expect(requiredError).not.toBeNull();
+    expect(requiredError?.textContent).toBe('!Subnetwork is required.');
+    expect(subnetTrigger.getAttribute('aria-describedby')).toBe(
+      'edit-subnetwork-error-text edit-subnetwork-unavailable-note'
+    );
+
+    // Selecting a valid network and saving clears the warning banner
+    const networkTrigger = document.body.querySelector(
+      '#edit-primary-network'
+    ) as HTMLElement;
+    await act(async () => {
+      networkTrigger.dispatchEvent(
+        new MouseEvent('mousedown', { bubbles: true, button: 0 })
+      );
+    });
+    const validVpcOption = document.body.querySelector(
+      'li[role="option"][data-value="valid-vpc"]'
+    ) as HTMLElement;
+    await act(async () => {
+      validVpcOption.click();
+    });
+    expect(
+      document.body.querySelector('#edit-subnetwork-error-text')
+    ).toBeNull();
+    expect(
+      document.body.querySelector('#edit-subnetwork-unavailable-note')
+    ).toBeNull();
+
+    const saveBtn = Array.from(
+      document.body.querySelectorAll('.edit-drawer-footer button')
+    ).find(b => b.textContent?.trim() === 'Save') as HTMLButtonElement;
+    await act(async () => {
+      saveBtn.click();
+    });
+
+    expect(
+      container.querySelector('[data-testid="default-network-warning-banner"]')
+    ).toBeNull();
+    expect(
+      container.querySelector('.additional-config-header')?.textContent
+    ).toBe('Additional configuration');
+    expect(getNetworkInProjectValue()).toBe('valid-vpc');
+    expect(submitBtn?.disabled).toBe(false);
+  });
+
+  it('updates warning message for custom network when switching to a region without that subnetwork and recovers on check errors', async () => {
+    const errorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+    try {
+      jest.spyOn(mockService, 'getRegions').mockResolvedValue([
+        { name: 'us-central1', displayName: 'us-central1 (Iowa)' },
+        { name: 'us-east1', displayName: 'us-east1 (South Carolina)' },
+        { name: 'europe-west1', displayName: 'europe-west1 (Belgium)' }
+      ]);
+      jest
+        .spyOn(mockService, 'getSubnetworks')
+        .mockImplementation(async (_network: string, _proj, region) => {
+          if (region === 'us-east1') {
+            return [];
+          }
+          if (region === 'europe-west1') {
+            throw new Error('network timeout');
+          }
+          return [{ name: 'custom-subnet', ipCidrRange: '10.10.0.0/20' }];
+        });
+
+      await act(async () => {
+        root.render(
+          <CreateRuntimeProfileComponent
+            service={mockService}
+            initialNetworkAndSecurityConfig={{
+              executionIdentity: 'service_account',
+              networkSource: 'project',
+              primaryNetwork: 'custom-vpc',
+              networkInThisProject: 'custom-vpc',
+              subnetwork: 'custom-subnet',
+              encryption: 'google_managed'
+            }}
+          />
+        );
+      });
+
+      expect(
+        container.querySelector(
+          '[data-testid="default-network-warning-banner"]'
+        )
+      ).toBeNull();
+
+      // Switch region to us-east1 where custom-subnet is unavailable
+      const regionTrigger = container.querySelector(
+        '#runtime-profile-region'
+      ) as HTMLElement;
+      await act(async () => {
+        regionTrigger.dispatchEvent(
+          new MouseEvent('mousedown', { bubbles: true, button: 0 })
+        );
+      });
+      const eastOption = document.body.querySelector(
+        'li[role="option"][data-value="us-east1"]'
+      ) as HTMLElement;
+      await act(async () => {
+        eastOption.click();
+      });
+
+      const banner = container.querySelector(
+        '[data-testid="default-network-warning-banner"]'
+      );
+      expect(banner?.querySelector('[role="alert"]')?.textContent).toBe(
+        'Selected network is not available in this region. Please configure a network.'
+      );
+
+      // Switch region to europe-west1 where getSubnetworks rejects
+      await act(async () => {
+        regionTrigger.dispatchEvent(
+          new MouseEvent('mousedown', { bubbles: true, button: 0 })
+        );
+      });
+      const europeOption = document.body.querySelector(
+        'li[role="option"][data-value="europe-west1"]'
+      ) as HTMLElement;
+      await act(async () => {
+        europeOption.click();
+      });
+
+      expect(errorSpy).toHaveBeenCalledWith(
+        'Failed to verify subnetwork availability:',
+        expect.any(Error)
+      );
+      expect(
+        container.querySelector(
+          '[data-testid="default-network-warning-banner"]'
+        )
+      ).toBeNull();
+    } finally {
+      errorSpy.mockRestore();
+    }
   });
 });

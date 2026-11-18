@@ -47,6 +47,11 @@ export type ExecutorCategoryType = 'general' | 'accelerated';
 export interface IMachineTypeOption {
   name: string;
   label: string;
+  /**
+   * Shown in the Summary and the Executor and driver configuration section;
+   * defaults to `label`.
+   */
+  displayName?: string;
   vCPUs: number;
   memory: string;
   category: ExecutorCategoryType;
@@ -314,9 +319,16 @@ export interface IRuntimeProfileFormInitialValues {
   initialLabels?: ProfileLabels;
 }
 
+export interface ISubnetworkOption {
+  name: string;
+  ipCidrRange?: string;
+}
+
+export type SubnetworkOption = string | ISubnetworkOption;
+
 export interface ISharedVpcSubnetworksResult {
   hostProjectId: string;
-  subnetworks: string[];
+  subnetworks: SubnetworkOption[];
 }
 
 export interface IRuntimeProfileService {
@@ -337,7 +349,7 @@ export interface IRuntimeProfileService {
     network: string,
     projectId?: string,
     region?: string
-  ): Promise<string[]>;
+  ): Promise<SubnetworkOption[]>;
   getSharedVpcSubnetworks?(
     projectId?: string,
     region?: string

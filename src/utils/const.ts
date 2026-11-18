@@ -367,11 +367,15 @@ export const DATAPROC_STANDARD_MACHINE_TYPES = [
 /**
  * Predefined Dataproc Serverless Accelerated (GPU-attached) machine types
  * Ref: One-Pager: Executor Configuration & Sizing Option Mapping
+ * `label` is shown in the machine type dropdowns and `displayName` in the
+ * Summary and the Executor and driver configuration section, as in the
+ * Cloud Console.
  */
 export const DATAPROC_ACCELERATED_MACHINE_TYPES = [
   {
     name: 'l4-4',
     label: 'L4 (4 vCPU)',
+    displayName: 'l4-4 (4 vCPU, 16 GB, 1 GPU)',
     vCPUs: 4,
     memory: '13384m',
     acceleratorType: 'l4',
@@ -381,6 +385,7 @@ export const DATAPROC_ACCELERATED_MACHINE_TYPES = [
   {
     name: 'l4-8',
     label: 'L4 (8 vCPU)',
+    displayName: 'l4-8 (8 vCPU, 32 GB, 1 GPU)',
     vCPUs: 8,
     memory: '26768m',
     acceleratorType: 'l4',
@@ -390,6 +395,7 @@ export const DATAPROC_ACCELERATED_MACHINE_TYPES = [
   {
     name: 'l4-12',
     label: 'L4 (12 vCPU)',
+    displayName: 'l4-12 (12 vCPU, 48 GB, 1 GPU)',
     vCPUs: 12,
     memory: '40152m',
     acceleratorType: 'l4',
@@ -399,6 +405,7 @@ export const DATAPROC_ACCELERATED_MACHINE_TYPES = [
   {
     name: 'l4-16',
     label: 'L4 (16 vCPU)',
+    displayName: 'l4-16 (16 vCPU, 64 GB, 1 GPU)',
     vCPUs: 16,
     memory: '53536m',
     acceleratorType: 'l4',
@@ -408,6 +415,7 @@ export const DATAPROC_ACCELERATED_MACHINE_TYPES = [
   {
     name: 'l4-24',
     label: 'L4 (24 vCPU)',
+    displayName: 'l4-24 (24 vCPU, 96 GB, 2 GPUs)',
     vCPUs: 24,
     memory: '113072m',
     acceleratorType: 'l4',
@@ -417,6 +425,7 @@ export const DATAPROC_ACCELERATED_MACHINE_TYPES = [
   {
     name: 'l4-48',
     label: 'L4 (48 vCPU)',
+    displayName: 'l4-48 (48 vCPU, 192 GB, 4 GPUs)',
     vCPUs: 48,
     memory: '160608m',
     acceleratorType: 'l4',
@@ -426,6 +435,7 @@ export const DATAPROC_ACCELERATED_MACHINE_TYPES = [
   {
     name: 'l4-96',
     label: 'L4 (96 vCPU)',
+    displayName: 'l4-96 (96 vCPU, 384 GB, 8 GPUs)',
     vCPUs: 96,
     memory: '321216m',
     acceleratorType: 'l4',
@@ -435,6 +445,7 @@ export const DATAPROC_ACCELERATED_MACHINE_TYPES = [
   {
     name: 'a100-40',
     label: 'A100 40GB (12 vCPU)',
+    displayName: 'a100-40 (12 vCPU, 78 GB, 1 GPU)',
     vCPUs: 12,
     memory: '78040m',
     acceleratorType: 'a100-40',
@@ -444,6 +455,7 @@ export const DATAPROC_ACCELERATED_MACHINE_TYPES = [
   {
     name: 'a100-80',
     label: 'A100 80GB (12 vCPU)',
+    displayName: 'a100-80 (12 vCPU, 165 GB, 1 GPU)',
     vCPUs: 12,
     memory: '165080m',
     acceleratorType: 'a100-80',
@@ -540,6 +552,24 @@ export const SSD_DISK_SIZES: string[] = [
   '6000 GiB',
   '9000 GiB'
 ];
+
+/**
+ * SSD sizes offered for selection. Like the Cloud console, sizes stop at
+ * 1500 GiB; SSD_DISK_SIZES also lists the larger sizes the service accepts,
+ * so a profile saved with one of them keeps it.
+ */
+export const SELECTABLE_SSD_DISK_SIZES: string[] = [
+  '375 GiB',
+  '750 GiB',
+  '1500 GiB'
+];
+
+/**
+ * Nodes with more than this many vCPUs can't use a single 375 GiB local SSD,
+ * so their SSD is at least MIN_MULTI_LOCAL_SSD_DISK_SIZE. L4 shapes are exempt.
+ */
+export const MAX_VCPUS_FOR_SINGLE_LOCAL_SSD = 10;
+export const MIN_MULTI_LOCAL_SSD_DISK_SIZE = '750 GiB';
 
 export const EXECUTOR_DRIVER_DRAWER_TITLE = 'Executor and driver configuration';
 export const EXECUTOR_DRIVER_DRAWER_SUBTITLE =
