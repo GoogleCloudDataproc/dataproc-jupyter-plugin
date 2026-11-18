@@ -231,7 +231,7 @@ describe('extension index.ts comprehensive test suite', () => {
             enable_bigquery_integration: true,
             enable_metastore_integration: true,
             enable_cloud_storage_integration: true,
-            enable_runtime_profile_integration: true
+            enable_runtime_template_integration: false
           });
         }
         if (endpoint === 'getGcpServiceUrls') {
@@ -842,7 +842,7 @@ describe('extension index.ts comprehensive test suite', () => {
       );
     });
 
-    it('should add create-runtime-template-component to launcher when runtime profile is disabled', async () => {
+    it('should add create-runtime-template-component to launcher when runtime template integration is enabled', async () => {
       launcherMock.add.mockClear();
       (requestAPI as jest.Mock).mockImplementation((endpoint: string) => {
         if (endpoint === 'settings') {
@@ -850,7 +850,7 @@ describe('extension index.ts comprehensive test suite', () => {
             enable_bigquery_integration: true,
             enable_metastore_integration: true,
             enable_cloud_storage_integration: true,
-            enable_runtime_profile_integration: false
+            enable_runtime_template_integration: true
           });
         }
         return Promise.resolve({});
