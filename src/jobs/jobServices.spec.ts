@@ -95,7 +95,7 @@ describe('JobService', () => {
       );
     });
 
-    it('logs and notifies on rejection, and skips when unauthenticated', async () => {
+    it('logs and notifies on rejection', async () => {
       (loggedFetch as jest.Mock).mockRejectedValue(new Error('Network fail'));
       await JobService.stopJobApi('job-123');
       await flush();
@@ -109,8 +109,9 @@ describe('JobService', () => {
         'error',
         { autoClose: 5000 }
       );
+    });
 
-      jest.clearAllMocks();
+    it('skips when unauthenticated', async () => {
       (authApi as jest.Mock).mockResolvedValue(undefined);
       await JobService.stopJobApi('job-123');
       expect(loggedFetch).not.toHaveBeenCalled();
@@ -186,7 +187,7 @@ describe('JobService', () => {
       expect(setIsLoading).toHaveBeenCalledWith(false);
     });
 
-    it('sets errorView on 404 and handles fetch rejection', async () => {
+    it('sets errorView on 404', async () => {
       (loggedFetch as jest.Mock).mockResolvedValue(
         mockJson({ error: { code: 404, message: 'Job not found' } })
       );
@@ -208,7 +209,10 @@ describe('JobService', () => {
       expect(Notification.emit).toHaveBeenCalledWith('Job not found', 'error', {
         autoClose: 5000
       });
+    });
 
+    it('handles fetch rejection on getting job details', async () => {
+      const setIsLoading = jest.fn();
       (loggedFetch as jest.Mock).mockRejectedValue(new Error('Timeout'));
       await JobService.getJobDetailsService(
         'job-1',
@@ -248,6 +252,8 @@ describe('JobService', () => {
       expect(Notification.emit).toHaveBeenCalledWith('Update error', 'error', {
         autoClose: 5000
       });
+      // TODO: Fix the underlying implementation bug in updateJobDetailsService
+      // which incorrectly emits a success notification even when an error occurs.
       expect(Notification.emit).toHaveBeenCalledWith(
         'Job job-789 updated successfully',
         'success',
@@ -407,6 +413,10 @@ describe('JobService', () => {
         { clusterUuid: 'u1', status: 'RUNNING', clusterName: 'c1' },
         { clusterUuid: 'u2', status: 'STOPPED', clusterName: 'c2' }
       ]);
+      // TODO: Once the bug in listClustersAPIService is fixed (where successful fetches
+      // trigger an empty error notification because undefined !== 403 is true),
+      // uncomment the assertion below to prevent future regressions.
+      // expect(Notification.emit).not.toHaveBeenCalled();
     });
 
     it('handles non-403 vs 403 error payloads and fetch rejection', async () => {
