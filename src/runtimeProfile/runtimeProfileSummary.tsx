@@ -20,6 +20,7 @@ import { ISectionProperty } from '../controls/SectionDetail';
 import { IRuntimeProfileSummaryInput } from './runtimeProfileInterface';
 import {
   getMachineTypeDisplayName,
+  isL4MachineType,
   normalizeMachineTypeName
 } from './runtimeProfileMapper';
 import {
@@ -76,7 +77,10 @@ export function formatRuntimeProfileSummaryProperties(
   const executorDisplayName = normalizedExecutorShape
     ? getMachineTypeDisplayName(normalizedExecutorShape) || ''
     : '';
-  const compactDisk = formatCompactDiskLabel(input.executorDisk);
+  const compactDisk = formatCompactDiskLabel(
+    input.executorDisk,
+    !isL4MachineType(normalizedExecutorShape)
+  );
   const executorTarget = [executorDisplayName, compactDisk]
     .filter(Boolean)
     .join(', ');
