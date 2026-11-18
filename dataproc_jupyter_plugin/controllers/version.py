@@ -44,12 +44,9 @@ class UpdatePackage(APIHandler):
     async def post(self):
         try:
             package_name = self.get_argument("packageName")
-            async with aiohttp.ClientSession() as client_session:
-                client = version.Client(
-                    await credentials.get_cached(), self.log, client_session
-                )
-                is_updated = await client.updatePlugin(package_name)
-            
+            client = version.Client(await credentials.get_cached(), self.log)
+            is_updated = await client.updatePlugin(package_name)
+
             self.finish(json.dumps(is_updated))
         except Exception as e:
             self.log.exception("Error updating package")

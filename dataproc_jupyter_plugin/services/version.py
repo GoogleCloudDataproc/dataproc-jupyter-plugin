@@ -11,14 +11,12 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-import aiohttp
 import subprocess
 import sys
-from jupyter_server.base.handlers import APIHandler
 
 class Client:
 
-    def __init__(self, credentials, log, client_session):
+    def __init__(self, credentials, log, client_session=None):
         self.log = log
         if not (
             ("access_token" in credentials)
@@ -35,11 +33,12 @@ class Client:
 
     async def get_latest_version(self, package_name):
         try:
-            async with aiohttp.ClientSession() as session:
-                async with session.get(f"https://pypi.org/pypi/{package_name}/json", timeout=3) as response:
-                    response.raise_for_status()
-                    data = await response.json()
-                    return data["info"]["version"]
+            async with self.client_session.get(
+                f"https://pypi.org/pypi/{package_name}/json", timeout=3
+            ) as response:
+                response.raise_for_status()
+                data = await response.json()
+                return data["info"]["version"]
 
         except Exception as e:
             self.log.exception("Error fetching jupyter lab version")
@@ -48,7 +47,6 @@ class Client:
 
     def upgrade_package(self, package_name):
         try:
-            print("installing...................")
             subprocess.check_call([sys.executable, "-m", "pip", "install", "--upgrade", package_name])
         except subprocess.CalledProcessError as e:
             self.log.exception(f"Failed to upgrade package: {package_name}")

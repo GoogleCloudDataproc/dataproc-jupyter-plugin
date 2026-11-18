@@ -17,10 +17,15 @@ import subprocess
 from unittest.mock import ANY, AsyncMock, Mock, call
 
 import pytest
-from dataproc_jupyter_plugin.services import biglake
-from dataproc_jupyter_plugin.tests import mocks
 from google.cloud import jupyter_config
 from tornado.simple_httpclient import HTTPTimeoutError
+from traitlets.config import Config
+
+import dataproc_jupyter_plugin
+from dataproc_jupyter_plugin.commons import constants
+from dataproc_jupyter_plugin.handlers import configure_gateway_client_url
+from dataproc_jupyter_plugin.services import biglake
+from dataproc_jupyter_plugin.tests import mocks
 
 
 async def test_get_default_settings(jp_fetch):
@@ -169,7 +174,6 @@ async def test_invalid_project_ids(jp_fetch, monkeypatch, invalid_project_id):
 
     assert response.code == 400
     payload = json.loads(response.body)
-    print("sss", payload)
     assert "Unsupported project ID:" in payload["error"]
 
 
@@ -521,3 +525,311 @@ async def test_biglake_catalogs_handler_rejects_unsupported_input(
     assert response.code == 400
     assert json.loads(response.body)["error"]["code"] == 400
     assert client.requests == []
+
+
+async def test_biglake_catalogs_handler_unexpected_credentials_error(
+    jp_fetch, monkeypatch
+):
+    client = mocks.patch_biglake_client(monkeypatch)
+    monkeypatch.setattr(
+        "dataproc_jupyter_plugin.credentials.get_cached",
+        AsyncMock(side_effect=RuntimeError("unexpected error")),
+    )
+    params = {"endpoint": "hive", "project_id": "my-project"}
+
+    response = await jp_fetch(
+        "dataproc-plugin", "biglakeCatalogs", params=params, raise_error=False
+    )
+    assert response.code == 500
+    error = json.loads(response.body)["error"]
+    assert error["code"] == 500
+    assert "unexpected error" not in error["message"]
+    assert client.requests == []
+
+
+def test_configure_gateway_client_url_missing_region(monkeypatch):
+    log = Mock()
+    c = Config()
+    monkeypatch.setattr("dataproc_jupyter_plugin.handlers.gcp_region", lambda: "")
+
+    assert configure_gateway_client_url(c, log, "") is False
+    assert "GatewayClient" not in c
+    log.error.assert_called_once()
+
+
+def test_configure_gateway_client_url_missing_project_number(monkeypatch):
+    log = Mock()
+    c = Config()
+    monkeypatch.setattr(
+        "dataproc_jupyter_plugin.handlers.gcp_region", lambda: "us-central1"
+    )
+    monkeypatch.setattr(
+        "dataproc_jupyter_plugin.handlers.gcp_project_number", lambda: ""
+    )
+
+    assert configure_gateway_client_url(c, log, "") is False
+    assert "GatewayClient" not in c
+    log.error.assert_called_once()
+
+
+def test_configure_gateway_client_url_success_from_gcloud(monkeypatch):
+    log = Mock()
+    c = Config()
+    monkeypatch.setattr(
+        "dataproc_jupyter_plugin.handlers.gcp_region", lambda: "us-central1"
+    )
+    monkeypatch.setattr(
+        "dataproc_jupyter_plugin.handlers.gcp_project_number", lambda: "123456"
+    )
+
+    assert configure_gateway_client_url(c, log, "") is True
+    assert (
+        c.GatewayClient.url
+        == "https://123456-dot-us-central1.kernels.googleusercontent.com"
+    )
+    log.info.assert_called_once()
+
+
+def test_configure_gateway_client_url_uses_explicit_project_number(monkeypatch):
+    log = Mock()
+    c = Config()
+    mock_project_number = Mock(return_value="should-not-be-used")
+    monkeypatch.setattr(
+        "dataproc_jupyter_plugin.handlers.gcp_region", lambda: "us-central1"
+    )
+    monkeypatch.setattr(
+        "dataproc_jupyter_plugin.handlers.gcp_project_number", mock_project_number
+    )
+
+    assert configure_gateway_client_url(c, log, "999999") is True
+    assert (
+        c.GatewayClient.url
+        == "https://999999-dot-us-central1.kernels.googleusercontent.com"
+    )
+    mock_project_number.assert_not_called()
+    log.info.assert_called_once()
+
+
+def test_configure_gateway_client_url_subprocess_error(monkeypatch):
+    log = Mock()
+    c = Config()
+
+    def raise_subproc():
+        raise subprocess.SubprocessError("gcloud failed")
+
+    monkeypatch.setattr("dataproc_jupyter_plugin.handlers.gcp_region", raise_subproc)
+
+    assert configure_gateway_client_url(c, log, "") is False
+    assert "GatewayClient" not in c
+    log.error.assert_called_once()
+
+
+async def test_credentials_handler_success(jp_fetch, monkeypatch):
+    mocks.patch_mocks(monkeypatch)
+    response = await jp_fetch("dataproc-plugin", "credentials")
+    assert response.code == 200
+    assert json.loads(response.body) == {
+        "project_id": "credentials-project",
+        "region_id": "mock-region",
+        "access_token": "mock-token",
+        "config_error": 0,
+        "login_error": 0,
+    }
+
+
+async def test_credentials_handler_config_error(jp_fetch, monkeypatch):
+    expected_creds = {
+        "project_id": "",
+        "region_id": "",
+        "access_token": "tok",
+        "config_error": 1,
+        "login_error": 0,
+    }
+
+    monkeypatch.setattr(
+        "dataproc_jupyter_plugin.credentials.get_cached",
+        AsyncMock(return_value=expected_creds),
+    )
+    response = await jp_fetch("dataproc-plugin", "credentials")
+    assert response.code == 200
+    assert json.loads(response.body) == expected_creds
+
+
+@pytest.mark.parametrize(
+    "returncode,expected_status",
+    [(0, "SUCCEEDED"), (1, "FAILED")],
+)
+async def test_login_handler(jp_fetch, monkeypatch, returncode, expected_status):
+    mock_proc = Mock()
+    mock_proc.communicate.return_value = (b"out", b"err")
+    mock_proc.returncode = returncode
+    mock_popen = Mock(return_value=mock_proc)
+    monkeypatch.setattr("dataproc_jupyter_plugin.handlers.subprocess.Popen", mock_popen)
+
+    response = await jp_fetch(
+        "dataproc-plugin", "login", method="POST", allow_nonstandard_methods=True
+    )
+    assert response.code == 200
+    assert json.loads(response.body) == {"login": expected_status}
+    mock_popen.assert_called_once_with(
+        "gcloud auth login",
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        shell=True,
+    )
+    mock_proc.communicate.assert_called_once_with()
+
+
+async def test_url_handler_defaults(jp_fetch, monkeypatch):
+    mocks.patch_mocks(monkeypatch)
+    url_resp = await jp_fetch("dataproc-plugin", "getGcpServiceUrls")
+    assert url_resp.code == 200
+    assert json.loads(url_resp.body) == {
+        "dataproc_url": "https://dataproc.googleapis.com/",
+        "compute_url": constants.COMPUTE_SERVICE_DEFAULT_URL,
+        "metastore_url": "https://metastore.googleapis.com/",
+        "cloudkms_url": "https://cloudkms.googleapis.com/",
+        "cloudresourcemanager_url": "https://cloudresourcemanager.googleapis.com/",
+        "storage_url": constants.STORAGE_SERVICE_DEFAULT_URL,
+        "dataplex_url": "https://dataplex.googleapis.com/",
+        "bigquery_url": "https://bigquery.googleapis.com/",
+    }
+
+
+async def test_url_handler_with_endpoint_override(jp_fetch, monkeypatch):
+    mocks.patch_mocks(monkeypatch)
+
+    async def mock_override_config(field_name):
+        if field_name == "configuration.properties.api_endpoint_overrides.dataproc":
+            return "https://staging-dataproc.sandbox.googleapis.com/"
+        return None
+
+    monkeypatch.setattr(jupyter_config, "async_get_gcloud_config", mock_override_config)
+
+    url_resp = await jp_fetch("dataproc-plugin", "getGcpServiceUrls")
+    assert url_resp.code == 200
+    url_payload = json.loads(url_resp.body)
+    assert (
+        url_payload["dataproc_url"]
+        == "https://staging-dataproc.sandbox.googleapis.com/"
+    )
+    assert url_payload["bigquery_url"] == "https://bigquery.googleapis.com/"
+
+
+async def test_log_handler(jp_fetch, jp_serverapp, monkeypatch):
+    child_logger = jp_serverapp.log.getChild("DataprocPluginClient")
+    mock_log = Mock()
+    monkeypatch.setattr(child_logger, "log", mock_log)
+
+    log_resp = await jp_fetch(
+        "dataproc-plugin",
+        "log",
+        method="POST",
+        body=json.dumps({"level": 20, "message": "test log message"}),
+    )
+    assert log_resp.code == 200
+    assert json.loads(log_resp.body) == {"status": "OK"}
+    mock_log.assert_called_once_with(20, "test log message")
+
+
+def test_jupyter_extension_metadata_helpers():
+    assert dataproc_jupyter_plugin._jupyter_labextension_paths() == [
+        {"src": "labextension", "dest": "dataproc_jupyter_plugin"}
+    ]
+    assert dataproc_jupyter_plugin._jupyter_server_extension_points() == [
+        {"module": "dataproc_jupyter_plugin"}
+    ]
+
+
+@pytest.mark.parametrize(
+    "config_val,min_val,expected",
+    [
+        ("not-an-int", 10, 10),
+        (5, 10, 10),
+        (25, 10, 25),
+    ],
+)
+def test_get_config_value_to_assign(config_val, min_val, expected):
+    assert (
+        dataproc_jupyter_plugin._get_config_value_to_assign(config_val, min_val)
+        == expected
+    )
+
+
+def test_link_jupyter_server_extension_gateway_error_and_log_file(
+    monkeypatch, tmp_path
+):
+    log_file = str(tmp_path / "plugin.log")
+    mock_server_app = Mock()
+    mock_server_app.config = Config()
+    mock_plugin_config = Mock()
+    mock_plugin_config.log_path = log_file
+    mock_plugin_config.kernel_gateway_project_number = ""
+
+    mock_handler = Mock()
+    mock_rotating_cls = Mock(return_value=mock_handler)
+
+    monkeypatch.setattr(
+        "dataproc_jupyter_plugin.DataprocPluginConfig.instance",
+        Mock(return_value=mock_plugin_config),
+    )
+    monkeypatch.setattr(
+        "dataproc_jupyter_plugin.configure_gateway_client_url",
+        lambda c, log, num: False,
+    )
+    monkeypatch.setattr(
+        "dataproc_jupyter_plugin.logging.handlers.RotatingFileHandler",
+        mock_rotating_cls,
+    )
+
+    dataproc_jupyter_plugin._link_jupyter_server_extension(mock_server_app)
+
+    mock_rotating_cls.assert_called_once_with(
+        log_file, maxBytes=2 * 1024 * 1024, backupCount=5
+    )
+    mock_handler.setFormatter.assert_called_once()
+    mock_server_app.log.addHandler.assert_called_once_with(mock_handler)
+    mock_server_app.log.warning.assert_called_once_with(
+        "Disabling remote kernel support due to a gateway config error."
+    )
+    assert "GatewayClient" not in mock_server_app.config
+
+
+def test_link_jupyter_server_extension_without_optional_gateway_classes_or_user_agent(
+    monkeypatch,
+):
+    mock_server_app = Mock()
+    mock_server_app.config = Config()
+    mock_plugin_config = Mock()
+    mock_plugin_config.log_path = ""
+    mock_plugin_config.kernel_gateway_project_number = ""
+    mock_plugin_config.custom_user_agent = ""
+
+    monkeypatch.setattr(
+        "dataproc_jupyter_plugin.DataprocPluginConfig.instance",
+        Mock(return_value=mock_plugin_config),
+    )
+    monkeypatch.setattr(
+        "dataproc_jupyter_plugin.configure_gateway_client_url",
+        lambda c, log, num: True,
+    )
+    monkeypatch.setattr(
+        dataproc_jupyter_plugin, "DataprocGatewayKernelSpecManager", None
+    )
+    monkeypatch.setattr(
+        dataproc_jupyter_plugin, "DataprocGatewayMappingKernelManager", None
+    )
+    monkeypatch.setattr(
+        dataproc_jupyter_plugin, "DataprocGatewayWebSocketConnection", None
+    )
+
+    dataproc_jupyter_plugin._link_jupyter_server_extension(mock_server_app)
+
+    headers = json.loads(mock_server_app.config.GatewayClient.headers)
+    assert "User-Agent" not in headers
+    assert "MixingKernelSpecManager" not in mock_server_app.config
+    assert "MixingMappingKernelManager" not in mock_server_app.config
+    assert (
+        "remote_websocket_connection_class"
+        not in mock_server_app.config.DelegatingWebsocketConnection
+    )
