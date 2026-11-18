@@ -130,6 +130,7 @@ describe('JobDetails Component', () => {
       root.unmount();
     });
     container.remove();
+    jest.restoreAllMocks();
   });
 
   const mockGetJobDetails = (job: any, labels: string[] = ['env:prod']) =>
@@ -241,7 +242,7 @@ describe('JobDetails Component', () => {
     await act(async () => {
       findBtn('STOP').click();
     });
-    expect(JobService.stopJobApi).toHaveBeenCalledTimes(1);
+    expect(JobService.stopJobApi).toHaveBeenCalledWith('job-pyspark-1');
 
     await act(async () => {
       findBtn('DELETE').click();

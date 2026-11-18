@@ -208,7 +208,7 @@ function JobDetails({
   };
   const handleStopJob = async (jobId: string) => {
     setSelectedJobId(jobId);
-    await JobService.stopJobApi(selectedJobId);
+    await JobService.stopJobApi(jobId);
   };
   const handleCancelDelete = () => {
     setDeletePopupOpen(false);
