@@ -69,7 +69,6 @@ import {
 describe('ClusterDetails Component', () => {
   let container: HTMLDivElement;
   let root: Root;
-  let consoleErrorSpy: jest.SpyInstance;
   const mockSetDetailedView = jest.fn();
   const mockSetDetailedClusterView = jest.fn();
   const mockSetDetailedJobView = jest.fn();
@@ -78,9 +77,6 @@ describe('ClusterDetails Component', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    consoleErrorSpy = jest
-      .spyOn(console, 'error')
-      .mockImplementation(() => undefined);
     container = document.createElement('div');
     document.body.appendChild(container);
     root = createRoot(container);
@@ -95,7 +91,6 @@ describe('ClusterDetails Component', () => {
       root.unmount();
     });
     container.remove();
-    consoleErrorSpy.mockRestore();
   });
 
   const renderDetails = async (
@@ -134,12 +129,7 @@ describe('ClusterDetails Component', () => {
     jest
       .spyOn(ClusterService, 'getClusterDetailsService')
       .mockImplementation(
-        async (
-          setProjectName,
-          clusterSelected,
-          setErrorView,
-          setIsLoading
-        ) => {
+        async (setProjectName, clusterSelected, setErrorView, setIsLoading) => {
           setErrorView(true);
           setIsLoading(false);
         }
@@ -209,7 +199,9 @@ describe('ClusterDetails Component', () => {
       container.querySelector('[data-testid="mock-jobs"]')?.textContent
     ).toBe('Jobs for cluster-alpha');
 
-    const actionSections = container.querySelectorAll('.action-cluster-section');
+    const actionSections = container.querySelectorAll(
+      '.action-cluster-section'
+    );
     const startAction = actionSections[0] as HTMLElement;
     const stopAction = actionSections[1] as HTMLElement;
 
@@ -268,7 +260,9 @@ describe('ClusterDetails Component', () => {
 
     await renderDetails();
 
-    const actionSections = container.querySelectorAll('.action-cluster-section');
+    const actionSections = container.querySelectorAll(
+      '.action-cluster-section'
+    );
     const startAction = actionSections[0] as HTMLElement;
     const stopAction = actionSections[1] as HTMLElement;
 

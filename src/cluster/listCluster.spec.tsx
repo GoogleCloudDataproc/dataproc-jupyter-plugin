@@ -52,16 +52,12 @@ import {
 describe('ListCluster Component', () => {
   let container: HTMLDivElement;
   let root: Root;
-  let consoleErrorSpy: jest.SpyInstance;
   const mockSetClusterSelected = jest.fn();
   const mockSetDetailedView = jest.fn();
   const mockSetLoggedIn = jest.fn();
 
   beforeEach(() => {
     jest.clearAllMocks();
-    consoleErrorSpy = jest
-      .spyOn(console, 'error')
-      .mockImplementation(() => undefined);
     container = document.createElement('div');
     document.body.appendChild(container);
     root = createRoot(container);
@@ -72,7 +68,6 @@ describe('ListCluster Component', () => {
       root.unmount();
     });
     container.remove();
-    consoleErrorSpy.mockRestore();
   });
 
   const buildClusterRow = (
@@ -291,7 +286,13 @@ describe('ListCluster Component', () => {
     const restartSpy = jest
       .spyOn(ClusterService, 'restartClusterApiService')
       .mockImplementation(
-        async (selectedCluster, setRestartEnabled, listClustersAPI, timer, statusApi) => {
+        async (
+          selectedCluster,
+          setRestartEnabled,
+          listClustersAPI,
+          timer,
+          statusApi
+        ) => {
           await statusApi(selectedCluster);
         }
       );
@@ -349,13 +350,21 @@ describe('ListCluster Component', () => {
 
     await renderComponent();
 
-    const rows = container.querySelectorAll('tbody tr.cluster-list-data-parent');
+    const rows = container.querySelectorAll(
+      'tbody tr.cluster-list-data-parent'
+    );
     expect(rows.length).toBe(5);
 
     // Row 0 is RUNNING: Stop and Restart should be enabled; Start should be disabled
-    const row0Start = rows[0].querySelector('[title="Start Cluster"]') as HTMLElement;
-    const row0Stop = rows[0].querySelector('[title="Stop Cluster"]') as HTMLElement;
-    const row0Restart = rows[0].querySelector('[title="Restart Cluster"]') as HTMLElement;
+    const row0Start = rows[0].querySelector(
+      '[title="Start Cluster"]'
+    ) as HTMLElement;
+    const row0Stop = rows[0].querySelector(
+      '[title="Stop Cluster"]'
+    ) as HTMLElement;
+    const row0Restart = rows[0].querySelector(
+      '[title="Restart Cluster"]'
+    ) as HTMLElement;
 
     expect(row0Start.getAttribute('aria-disabled')).toBe('true');
     expect(row0Stop.getAttribute('aria-disabled')).toBe('false');
@@ -377,9 +386,15 @@ describe('ListCluster Component', () => {
     );
 
     // Row 1 is STOPPED: Start should be enabled; Stop and Restart should be disabled
-    const row1Start = rows[1].querySelector('[title="Start Cluster"]') as HTMLElement;
-    const row1Stop = rows[1].querySelector('[title="Stop Cluster"]') as HTMLElement;
-    const row1Restart = rows[1].querySelector('[title="Restart Cluster"]') as HTMLElement;
+    const row1Start = rows[1].querySelector(
+      '[title="Start Cluster"]'
+    ) as HTMLElement;
+    const row1Stop = rows[1].querySelector(
+      '[title="Stop Cluster"]'
+    ) as HTMLElement;
+    const row1Restart = rows[1].querySelector(
+      '[title="Restart Cluster"]'
+    ) as HTMLElement;
 
     expect(row1Start.getAttribute('aria-disabled')).toBe('false');
     expect(row1Stop.getAttribute('aria-disabled')).toBe('true');
@@ -391,8 +406,12 @@ describe('ListCluster Component', () => {
     expect(startSpy).toHaveBeenCalledWith('cluster-stopped');
 
     // Clicking cluster name navigates to details for RUNNING cluster, but not DELETING cluster
-    const runningNameCell = rows[0].querySelector('.cluster-name') as HTMLElement;
-    const deletingNameCell = rows[4].querySelector('.cluster-name') as HTMLElement;
+    const runningNameCell = rows[0].querySelector(
+      '.cluster-name'
+    ) as HTMLElement;
+    const deletingNameCell = rows[4].querySelector(
+      '.cluster-name'
+    ) as HTMLElement;
 
     await act(async () => {
       deletingNameCell.click();
