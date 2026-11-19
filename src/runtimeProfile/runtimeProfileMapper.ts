@@ -292,6 +292,9 @@ export const parseDiskSpec = (
  * Returns '' when the input contains no letters or numbers.
  */
 export const sanitizeRuntimeProfileName = (value: string): string => {
+  if (!value || typeof value !== 'string') {
+    return '';
+  }
   const cleaned = value
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, '-')

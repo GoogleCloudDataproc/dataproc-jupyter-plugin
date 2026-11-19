@@ -236,6 +236,14 @@ describe('runtimeProfileMapper', () => {
         'a'.repeat(62)
       );
     });
+
+    it('returns empty string for null, undefined, or non-string inputs', () => {
+      expect(sanitizeRuntimeProfileName(null as unknown as string)).toBe('');
+      expect(sanitizeRuntimeProfileName(undefined as unknown as string)).toBe(
+        ''
+      );
+      expect(sanitizeRuntimeProfileName(123 as unknown as string)).toBe('');
+    });
   });
 
   describe('sanitizeSessionTemplateId', () => {
