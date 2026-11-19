@@ -49,7 +49,6 @@ import {
   STATUS_STOPPED
 } from '../utils/const';
 
-// Tests for the listing functionality 
 describe('ListCluster Component', () => {
   let container: HTMLDivElement;
   let root: Root;
