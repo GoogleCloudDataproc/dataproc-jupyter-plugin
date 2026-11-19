@@ -51,6 +51,7 @@ import {
   TimeUnit
 } from './runtimeProfileInterface';
 import {
+  getRuntimeProfileDisplayName,
   IRuntimeProfileTemplate,
   parseRuntimeProfileResourceName
 } from './runtimeProfileListMapper';
@@ -74,6 +75,7 @@ export const METASTORE_NONE = 'None';
  */
 export interface ISessionTemplateApiPayload {
   name: string;
+  displayName?: string;
   description?: string;
   jupyterSession: {
     kernel: string;
@@ -935,6 +937,7 @@ export function mapRuntimeProfileToSessionTemplate(
 
   const templatePayload: ISessionTemplateApiPayload = {
     name: `projects/${projectId}/locations/${targetRegion}/sessionTemplates/${templateId}`,
+    displayName: payload.displayName,
     description: payload.description,
     jupyterSession: {
       kernel: 'PYTHON',
@@ -2010,7 +2013,7 @@ export function mapSessionTemplateToFormValues(
   const sessionTtl = parseDuration(executionConfig?.ttl);
 
   return {
-    initialDisplayName: template.jupyterSession?.displayName || profileId,
+    initialDisplayName: getRuntimeProfileDisplayName(template) || profileId,
     initialRegion: region,
     initialDescription: template.description ?? '',
     initialTier: tier,
@@ -2229,15 +2232,16 @@ export function mapRuntimeProfileToSessionTemplateUpdate(
   if (initialControls.description !== editedControls.description) {
     setOrDelete(result, 'description', editedControls.description);
   }
+  // Dataproc SessionTemplate exposes displayName both at the top level
+  // (authoritative on PATCH) and under jupyterSession.displayName.
   // session_config is a oneof: `result` already carries the saved template's
-  // kind, and a Spark Connect template has no display name or kernel, so
-  // jupyterSession is only ever written for a Jupyter template.
+  // kind, so jupyterSession is only ever written for a Jupyter template.
   const displayName = editedControls.jupyterSession.displayName;
-  if (
-    !result.sparkConnectSession &&
-    initialControls.jupyterSession.displayName !== displayName
-  ) {
-    result.jupyterSession = { ...result.jupyterSession, displayName };
+  if (initialControls.jupyterSession.displayName !== displayName) {
+    setOrDelete(result, 'displayName', displayName);
+    if (!result.sparkConnectSession) {
+      result.jupyterSession = { ...result.jupyterSession, displayName };
+    }
   }
 
   // Labels

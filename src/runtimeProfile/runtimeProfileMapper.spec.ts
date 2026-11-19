@@ -404,6 +404,7 @@ describe('runtimeProfileMapper', () => {
       expect(result.name).toBe(
         'projects/test-project/locations/us-central1/sessionTemplates/finance-profile-id'
       );
+      expect(result.displayName).toBe('Finance Analytics Profile');
       expect(result.description).toBe('Profile for finance team');
       expect(result.jupyterSession).toEqual({
         kernel: 'PYTHON',
@@ -1231,6 +1232,16 @@ describe('runtimeProfileMapper', () => {
       });
     });
 
+    it('prefers top-level template displayName over jupyterSession.displayName', () => {
+      const values = mapSessionTemplateToFormValues({
+        name: 'projects/p/locations/us-east1/sessionTemplates/profile-id',
+        displayName: 'Authoritative Top-Level Name',
+        jupyterSession: { displayName: 'Legacy Nested Name', kernel: 'PYTHON' }
+      });
+
+      expect(values.initialDisplayName).toBe('Authoritative Top-Level Name');
+    });
+
     it('keeps values that form controls cannot represent in spark properties and leaves absent values unset', () => {
       const values = mapSessionTemplateToFormValues({
         name: 'projects/p/locations/us-east1/sessionTemplates/legacy-profile',
@@ -1563,6 +1574,7 @@ describe('runtimeProfileMapper', () => {
       expect(body).toEqual({
         // The ID and region can't change
         name: savedProfile.name,
+        displayName: 'New name',
         jupyterSession: { displayName: 'New name', kernel: 'SCALA' },
         labels: { env: 'prod', team: 'data' },
         runtimeConfig: {
@@ -1901,13 +1913,36 @@ describe('runtimeProfileMapper', () => {
       expect(described.sparkConnectSession).toEqual({});
       expect(onlySessionKeys(described)).toEqual(['sparkConnectSession']);
 
-      // A Spark Connect template has no display name, so renaming is a no-op
+      // A Spark Connect template supports top-level displayName, but must never
+      // gain jupyterSession (session_config is a oneof).
       const renamed = saveEdits(sparkConnectProfile, payload => {
         payload.displayName = 'Renamed';
       });
+      expect(renamed.displayName).toBe('Renamed');
       expect(renamed.sparkConnectSession).toEqual({});
       expect(renamed).not.toHaveProperty('jupyterSession');
       expect(onlySessionKeys(renamed)).toEqual(['sparkConnectSession']);
+    });
+
+    it('updates both top-level displayName and jupyterSession.displayName when renaming a template that already has top-level displayName', () => {
+      const templateWithTopLevelDisplayName: IRuntimeProfileTemplate = {
+        ...savedProfile,
+        displayName: 'srg-test-nov17-01',
+        jupyterSession: { displayName: 'srg-test-nov17-01', kernel: 'PYTHON' }
+      };
+
+      const unchanged = saveEdits(templateWithTopLevelDisplayName);
+      expect(unchanged.displayName).toBe('srg-test-nov17-01');
+      expect(unchanged.jupyterSession?.displayName).toBe('srg-test-nov17-01');
+
+      const renamed = saveEdits(templateWithTopLevelDisplayName, payload => {
+        payload.displayName = 'srg-test-nov17-01-updated';
+      });
+      expect(renamed.displayName).toBe('srg-test-nov17-01-updated');
+      expect(renamed.jupyterSession).toEqual({
+        displayName: 'srg-test-nov17-01-updated',
+        kernel: 'PYTHON'
+      });
     });
 
     it('keeps changes saved since the form opened in settings the user did not edit', () => {

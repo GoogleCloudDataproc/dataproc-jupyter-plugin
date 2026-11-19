@@ -1896,4 +1896,23 @@ describe('RuntimeProfileDetails Component', () => {
     expect(getRowValue('Network URI')).toBe(customNetworkUri);
     expect(getRowValue('Subnetwork URI')).toBeUndefined();
   });
+
+  it('prefers top-level displayName over jupyterSession.displayName in Basic Information', async () => {
+    const profileWithTopLevelName: IRuntimeProfileTemplate = {
+      ...mockProfile,
+      displayName: 'Authoritative Profile Name',
+      jupyterSession: { displayName: 'Legacy Nested Name', kernel: 'PYTHON' }
+    };
+
+    await renderDetails(jest.fn(), undefined, profileWithTopLevelName);
+
+    const rows = Array.from(
+      container.querySelectorAll('.runtime-profile-details-row')
+    );
+    const displayNameValue = rows
+      .find(row => row.textContent?.startsWith('Display name'))
+      ?.querySelector('.runtime-profile-details-value')?.textContent;
+
+    expect(displayNameValue).toBe('Authoritative Profile Name');
+  });
 });
