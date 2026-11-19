@@ -201,7 +201,7 @@ export const buildRuntimeEnvironmentConfigFromTemplate = (
 ): IRuntimeEnvironmentConfig => {
   const properties = profile.runtimeConfig?.properties || {};
   return {
-    runtimeProfileId: shortName,
+    runtimeProfileName: shortName,
     runtimeVersion: profile.runtimeConfig?.version || '',
     customSparkImage: profile.runtimeConfig?.containerImage || '',
     stagingBucket:
@@ -1866,7 +1866,7 @@ export default function RuntimeProfileDetails({
       <RuntimeEnvironmentEditDrawer
         open={isRuntimeConfigDrawerOpen}
         config={runtimeEnvironmentDrawerConfig}
-        isProfileIdDisabled
+        isProfileNameDisabled
         onClose={() => setIsRuntimeConfigDrawerOpen(false)}
         onSave={updatedConfig => {
           const nextTemplate = applyRuntimeEnvironmentUpdateToTemplate(

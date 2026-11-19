@@ -66,7 +66,7 @@ export interface IExecutorConfig {
 }
 
 export interface IRuntimeEnvironmentConfig {
-  runtimeProfileId?: string;
+  runtimeProfileName?: string;
   runtimeVersion?: string;
   customSparkImage?: string;
   stagingBucket?: string;

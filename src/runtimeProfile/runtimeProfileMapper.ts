@@ -285,42 +285,44 @@ export const parseDiskSpec = (
 };
 
 /**
- * Lowercases and hyphenates a value into a session template ID.
- * Dataproc resource IDs must start with a letter, so IDs beginning with a
- * digit (e.g. "1st Finance Profile") are prefixed with 'runtime-'.
+ * Derives a Dataproc runtime profile name from arbitrary text:
+ * lowercases, replaces runs of non-alphanumeric characters with '-', trims
+ * leading/trailing hyphens, caps length at 63 chars, and prefixes 'runtime-'
+ * when the non-empty result is shorter than 4 characters.
+ * Returns '' when the input contains no letters or numbers.
  */
-const toSessionTemplateId = (value: string): string => {
-  const sanitized = value
+export const sanitizeRuntimeProfileName = (value: string): string => {
+  const cleaned = value
     .toLowerCase()
-    .replace(/[^a-z0-9-]/g, '-')
-    .replace(/-+/g, '-')
-    .replace(/^-|-$/g, '');
-  if (!sanitized) {
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+  if (!cleaned) {
     return '';
   }
-  return /^[a-z]/.test(sanitized) ? sanitized : `runtime-${sanitized}`;
+  const truncated = cleaned.slice(0, 63).replace(/-+$/, '');
+  return truncated.length < 4 ? `runtime-${truncated}` : truncated;
 };
 
 /**
- * Generates a clean session template ID from profile display name or ID
+ * Generates a clean session template ID from profile display name or runtime profile name
  */
 export const sanitizeSessionTemplateId = (
   displayName: string,
-  preferredId?: string
+  preferredName?: string
 ): string => {
   if (
-    preferredId &&
-    preferredId.trim() !== '' &&
-    preferredId !== 'Name of the runtime profile'
+    preferredName &&
+    preferredName.trim() !== '' &&
+    preferredName !== 'Name of the runtime profile'
   ) {
-    const sanitized = toSessionTemplateId(preferredId);
+    const sanitized = sanitizeRuntimeProfileName(preferredName);
     if (sanitized) {
       return sanitized;
     }
   }
 
   if (displayName && displayName.trim() !== '') {
-    const sanitized = toSessionTemplateId(displayName);
+    const sanitized = sanitizeRuntimeProfileName(displayName);
     if (sanitized) {
       return sanitized;
     }
@@ -707,7 +709,7 @@ export function mapRuntimeProfileToSessionTemplate(
 ): ISessionTemplateApiPayload {
   const templateId = sanitizeSessionTemplateId(
     payload.displayName,
-    payload.runtimeEnvironmentConfig?.runtimeProfileId
+    payload.runtimeEnvironmentConfig?.runtimeProfileName
   );
 
   const targetRegion = payload.region || region;
@@ -2013,7 +2015,7 @@ export function mapSessionTemplateToFormValues(
     initialExecutorCategory: executorCategory,
     initialExecutorType: executorMachine?.name,
     initialRuntimeEnvironmentConfig: {
-      runtimeProfileId: profileId,
+      runtimeProfileName: profileId,
       // Left undefined when unset, so saving doesn't pin a version.
       runtimeVersion: template.runtimeConfig?.version,
       customSparkImage: template.runtimeConfig?.containerImage ?? '',

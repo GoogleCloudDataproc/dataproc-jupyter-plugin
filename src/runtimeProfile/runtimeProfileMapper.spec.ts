@@ -29,6 +29,7 @@ jest.mock('../handler/handler', () => ({
 
 import {
   extractRuntimeVersion,
+  sanitizeRuntimeProfileName,
   sanitizeSessionTemplateId,
   parseMachineTypeSpec,
   parseDiskSpec,
@@ -202,6 +203,41 @@ describe('runtimeProfileMapper', () => {
     });
   });
 
+  describe('sanitizeRuntimeProfileName', () => {
+    it('normalizes case, punctuation runs, and leading/trailing hyphens', () => {
+      expect(sanitizeRuntimeProfileName('DiSPlay ----- Name @ 123')).toBe(
+        'display-name-123'
+      );
+      expect(sanitizeRuntimeProfileName('test')).toBe('test');
+      expect(sanitizeRuntimeProfileName('aaaa')).toBe('aaaa');
+      expect(sanitizeRuntimeProfileName('1234')).toBe('1234');
+      expect(sanitizeRuntimeProfileName('1st Finance Profile')).toBe(
+        '1st-finance-profile'
+      );
+    });
+
+    it('prefixes short alphanumeric results (< 4 chars) with runtime-', () => {
+      expect(sanitizeRuntimeProfileName('aaa')).toBe('runtime-aaa');
+      expect(sanitizeRuntimeProfileName('---a')).toBe('runtime-a');
+      expect(sanitizeRuntimeProfileName('s')).toBe('runtime-s');
+      expect(sanitizeRuntimeProfileName('123')).toBe('runtime-123');
+    });
+
+    it('returns empty string when no letters or numbers are present', () => {
+      expect(sanitizeRuntimeProfileName('')).toBe('');
+      expect(sanitizeRuntimeProfileName('   ')).toBe('');
+      expect(sanitizeRuntimeProfileName('---')).toBe('');
+      expect(sanitizeRuntimeProfileName('!@#$%^&*()')).toBe('');
+    });
+
+    it('truncates to 63 chars and strips trailing hyphens after truncation', () => {
+      expect(sanitizeRuntimeProfileName('a'.repeat(70))).toBe('a'.repeat(63));
+      expect(sanitizeRuntimeProfileName(`${'a'.repeat(62)}-bc`)).toBe(
+        'a'.repeat(62)
+      );
+    });
+  });
+
   describe('sanitizeSessionTemplateId', () => {
     it('should generate lower-case hyphenated ids', () => {
       expect(sanitizeSessionTemplateId('My Custom Profile!')).toBe(
@@ -212,13 +248,15 @@ describe('runtimeProfileMapper', () => {
       );
     });
 
-    it('should prefix ids that do not start with a letter', () => {
+    it('should preserve 4+ char ids starting with digits and prefix shorter ones', () => {
       expect(sanitizeSessionTemplateId('1st Finance Profile')).toBe(
-        'runtime-1st-finance-profile'
+        '1st-finance-profile'
       );
       expect(sanitizeSessionTemplateId('', '2024-profile')).toBe(
-        'runtime-2024-profile'
+        '2024-profile'
       );
+      expect(sanitizeSessionTemplateId('123')).toBe('runtime-123');
+      expect(sanitizeSessionTemplateId('1234')).toBe('1234');
     });
   });
 
@@ -322,7 +360,7 @@ describe('runtimeProfileMapper', () => {
         tier: 'Premium',
         lightningEngineEnabled: true,
         runtimeEnvironmentConfig: {
-          runtimeProfileId: 'finance-profile-id',
+          runtimeProfileName: 'finance-profile-id',
           runtimeVersion: '2.3 LTS (Spark 3.5.1, Python 3.12)',
           customSparkImage: 'gcr.io/my-project/spark-image:latest',
           pythonPackageRepository: 'https://pypi.org/simple'
@@ -1127,7 +1165,7 @@ describe('runtimeProfileMapper', () => {
         initialExecutorCategory: 'general',
         initialExecutorType: 'highmem-8',
         initialRuntimeEnvironmentConfig: {
-          runtimeProfileId: 'sample-profile',
+          runtimeProfileName: 'sample-profile',
           runtimeVersion: '2.2',
           customSparkImage: 'gcr.io/my-project/spark:latest',
           stagingBucket: 'my-staging-bucket',
@@ -1327,7 +1365,7 @@ describe('runtimeProfileMapper', () => {
           lightningEngineEnabled: true,
           executorConfig: { executorType: 'general', machineType: 'highmem-4' },
           runtimeEnvironmentConfig: {
-            runtimeProfileId: 'round-trip',
+            runtimeProfileName: 'round-trip',
             runtimeVersion: '2.3 LTS (Spark 3.5.1, Python 3.12)'
           },
           executorAndDriverConfig: {

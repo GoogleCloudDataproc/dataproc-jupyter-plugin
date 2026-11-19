@@ -427,7 +427,7 @@ describe('RuntimeProfileService', () => {
             executorDisk: 'Standard persistent disk (HDD), 200 GB'
           },
           runtimeEnvironmentConfig: {
-            runtimeProfileId: 'runtime-00001234abcd',
+            runtimeProfileName: 'runtime-00001234abcd',
             runtimeVersion: '2.3'
           },
           autoscalingConfig: {
@@ -449,7 +449,7 @@ describe('RuntimeProfileService', () => {
         executorType: 'highmem-4',
         executorDisk: 'Standard persistent disk (HDD), 200 GB'
       });
-      expect(profile.runtimeEnvironmentConfig?.runtimeProfileId).toBe(
+      expect(profile.runtimeEnvironmentConfig?.runtimeProfileName).toBe(
         'runtime-00001234abcd'
       );
       expect(profile.autoscalingConfig?.maxExecutors).toBe(10);
@@ -626,7 +626,7 @@ describe('RuntimeProfileService', () => {
       displayName: 'sample-profile',
       region: 'us-central1',
       description: 'old description',
-      runtimeEnvironmentConfig: { runtimeProfileId: 'sample-profile' }
+      runtimeEnvironmentConfig: { runtimeProfileName: 'sample-profile' }
     };
     const payload = {
       ...initialPayload,

@@ -122,7 +122,7 @@ export const RUNTIME_VERSION_OPTIONS: string[] = [
 
 const DEFAULT_RUNTIME_VERSION = '2.3 LTS (Spark 3.5, Java 17, Scala 2.13)';
 
-export const RUNTIME_PROFILE_ID_REGEX = /^[a-z0-9][a-z0-9-]{2,61}[a-z0-9]$/;
+export const RUNTIME_PROFILE_NAME_REGEX = /^[a-z0-9][a-z0-9-]{2,61}[a-z0-9]$/;
 export const VALID_BUCKET_NAME_REGEX = /^[a-z0-9][a-z0-9._-]{1,61}[a-z0-9]$/;
 export const RUNTIME_PROFILE_REQUIRED_ERROR =
   'Runtime profile name is required.';
@@ -178,7 +178,7 @@ const BucketErrorIcon: React.FC = () => (
   </svg>
 );
 
-const FieldErrorIcon: React.FC = () => (
+export const FieldErrorIcon: React.FC = () => (
   <svg
     width="16"
     height="16"
@@ -822,8 +822,8 @@ export interface IRuntimeEnvironmentEditDrawerProps {
   open: boolean;
   config: IRuntimeEnvironmentConfig;
   service?: IRuntimeProfileService;
-  /** Shows the Runtime Profile ID read-only, e.g. when editing an existing profile. */
-  isProfileIdDisabled?: boolean;
+  /** Shows the Runtime profile name read-only, e.g. when editing an existing profile. */
+  isProfileNameDisabled?: boolean;
   onClose: () => void;
   onSave: (updatedConfig: IRuntimeEnvironmentConfig) => void;
 }
@@ -834,7 +834,7 @@ export const RuntimeEnvironmentEditDrawer: React.FC<
   open,
   config,
   service = runtimeProfileService,
-  isProfileIdDisabled = false,
+  isProfileNameDisabled = false,
   onClose,
   onSave
 }) => {
@@ -909,12 +909,12 @@ export const RuntimeEnvironmentEditDrawer: React.FC<
     }));
   };
 
-  const trimmedProfileId = (draftConfig.runtimeProfileId ?? '').trim();
-  const runtimeProfileIdError = isProfileIdDisabled
+  const trimmedProfileName = (draftConfig.runtimeProfileName ?? '').trim();
+  const runtimeProfileNameError = isProfileNameDisabled
     ? ''
-    : !trimmedProfileId
+    : !trimmedProfileName
     ? RUNTIME_PROFILE_REQUIRED_ERROR
-    : !RUNTIME_PROFILE_ID_REGEX.test(trimmedProfileId)
+    : !RUNTIME_PROFILE_NAME_REGEX.test(trimmedProfileName)
     ? RUNTIME_PROFILE_FORMAT_ERROR
     : '';
 
@@ -953,35 +953,50 @@ export const RuntimeEnvironmentEditDrawer: React.FC<
         open={open}
         title="Runtime configuration"
         isSaveDisabled={
-          Boolean(runtimeProfileIdError) || Boolean(stagingBucketError)
+          Boolean(runtimeProfileNameError) || Boolean(stagingBucketError)
         }
         onClose={onClose}
-        onSave={() => onSave(draftConfig)}
+        onSave={() =>
+          onSave(
+            isProfileNameDisabled
+              ? draftConfig
+              : {
+                  ...draftConfig,
+                  runtimeProfileName: trimmedProfileName
+                }
+          )
+        }
       >
         <div className="edit-drawer-field-group">
           <TextField
-            id="edit-runtime-profile-id"
-            label="Runtime profile ID *"
-            value={draftConfig.runtimeProfileId ?? ''}
-            disabled={isProfileIdDisabled}
+            id="edit-runtime-profile-name"
+            label="Runtime profile name *"
+            value={draftConfig.runtimeProfileName ?? ''}
+            disabled={isProfileNameDisabled}
             onChange={e =>
-              handleFieldChange('runtimeProfileId', e.target.value)
+              handleFieldChange('runtimeProfileName', e.target.value)
             }
             variant="outlined"
             size="small"
             fullWidth
-            error={Boolean(runtimeProfileIdError)}
+            error={Boolean(runtimeProfileNameError)}
+            inputProps={{
+              'aria-describedby': runtimeProfileNameError
+                ? 'runtime-profile-name-error-text'
+                : undefined
+            }}
             InputLabelProps={{ shrink: true }}
           />
-          {runtimeProfileIdError && (
+          {runtimeProfileNameError && (
             <div
               className="edit-drawer-error-text"
-              id="runtime-profile-id-error-text"
+              id="runtime-profile-name-error-text"
+              role="alert"
             >
-              <span className="edit-drawer-error-icon">
+              <span className="edit-drawer-error-icon" aria-hidden="true">
                 <FieldErrorIcon />
               </span>
-              <span>{runtimeProfileIdError}</span>
+              <span>{runtimeProfileNameError}</span>
             </div>
           )}
         </div>
