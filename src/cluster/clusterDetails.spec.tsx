@@ -91,6 +91,7 @@ describe('ClusterDetails Component', () => {
       root.unmount();
     });
     container.remove();
+    jest.restoreAllMocks();
   });
 
   const renderDetails = async (
@@ -225,9 +226,6 @@ describe('ClusterDetails Component', () => {
     expect(mockSetDetailedView).toHaveBeenCalledWith(false);
     expect(mockSetDetailedClusterView).not.toHaveBeenCalled();
     expect(mockSetDetailedJobView).not.toHaveBeenCalled();
-
-    startSpy.mockRestore();
-    stopSpy.mockRestore();
   });
 
   it('triggers START when cluster is STOPPED and disables STOP', async () => {
@@ -276,9 +274,6 @@ describe('ClusterDetails Component', () => {
 
     expect(startSpy).toHaveBeenCalledWith('cluster-stopped');
     expect(stopSpy).not.toHaveBeenCalled();
-
-    startSpy.mockRestore();
-    stopSpy.mockRestore();
   });
 
   it('renders provisioning status and spinner when cluster status is CREATING', async () => {
@@ -400,7 +395,6 @@ describe('ClusterDetails Component', () => {
 
     expect(deleteSpy).toHaveBeenCalledWith('cluster-alpha');
     expect(mockSetDetailedView).toHaveBeenCalledWith(false);
-    deleteSpy.mockRestore();
   });
 
   it('renders SubmitJob when submitJobView is true and detailedJobView is false', async () => {
