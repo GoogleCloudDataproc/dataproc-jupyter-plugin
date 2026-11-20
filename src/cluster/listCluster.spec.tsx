@@ -68,6 +68,7 @@ describe('ListCluster Component', () => {
       root.unmount();
     });
     container.remove();
+    jest.restoreAllMocks();
   });
 
   const buildClusterRow = (
@@ -185,8 +186,6 @@ describe('ListCluster Component', () => {
     expect(document.body.textContent).not.toContain(
       'The Cloud Dataproc API is not enabled for this project.'
     );
-
-    windowOpenSpy.mockRestore();
   });
 
   it('renders ApiEnableDialog when apiDialogOpen is true and closes on Cancel', async () => {
@@ -232,8 +231,6 @@ describe('ListCluster Component', () => {
     expect(document.body.textContent).not.toContain(
       'The Cloud Dataproc API is not enabled for this project.'
     );
-
-    windowOpenSpy.mockRestore();
   });
 
   it('opens Create Cluster URL in a new tab with projectId when Create cluster button is clicked', async () => {
@@ -273,7 +270,6 @@ describe('ListCluster Component', () => {
       `${CREATE_CLUSTER_URL}?project=my-gcp-project`,
       '_blank'
     );
-    windowOpenSpy.mockRestore();
   });
 
   it('renders cluster rows with status icons and triggers start, stop, and restart actions appropriately', async () => {
@@ -423,11 +419,6 @@ describe('ListCluster Component', () => {
     });
     expect(mockSetClusterSelected).toHaveBeenCalledWith('cluster-running');
     expect(mockSetDetailedView).toHaveBeenCalledWith(true);
-
-    startSpy.mockRestore();
-    stopSpy.mockRestore();
-    restartSpy.mockRestore();
-    statusSpy.mockRestore();
   });
 
   it('renders PaginationView when clustersList has more than 50 clusters', async () => {
