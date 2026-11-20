@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { JupyterLab } from '@jupyterlab/application';
 import { IThemeManager, Notification } from '@jupyterlab/apputils';
@@ -49,12 +49,14 @@ import {
   isL4MachineType,
   normalizeMachineTypeName,
   parseDiskTierAndSize,
-  resolveExecutorDiskForShape
+  resolveExecutorDiskForShape,
+  sanitizeRuntimeProfileName
 } from './runtimeProfileMapper';
 import '../../style/runtimeProfile.css';
 import {
   AutoscalingEditDrawer,
   ExecutorAndDriverEditDrawer,
+  FieldErrorIcon,
   NetworkSecurityEditDrawer,
   OtherCustomizationEditDrawer,
   RuntimeEnvironmentEditDrawer,
@@ -203,6 +205,10 @@ export const generateRandomHex = (): string => {
   return `runtime-${paddedHex}`;
 };
 
+const DISPLAY_NAME_REQUIRED_ERROR = 'Display name is required.';
+const DISPLAY_NAME_ALPHANUMERIC_ERROR =
+  'Display name must contain at least one letter or number.';
+
 /**
  * Initial default Serverless Spark runtime configuration for a new Runtime Profile.
  * Unset optional fields default to empty strings ('') so UI display placeholders
@@ -212,7 +218,7 @@ export const generateRandomHex = (): string => {
  * edit-drawer and API-integration PRs.
  */
 export const DEFAULT_RUNTIME_ENVIRONMENT_CONFIG: IRuntimeEnvironmentConfig = {
-  runtimeProfileId: '',
+  runtimeProfileName: '',
   runtimeVersion: '2.3 LTS (Spark 3.5, Java 17, Scala 2.13)',
   customSparkImage: '',
   stagingBucket: '',
@@ -275,8 +281,8 @@ export const formatRuntimeEnvironmentProperties = (
     '';
   return [
     {
-      label: 'Runtime profile ID',
-      value: config.runtimeProfileId || '-'
+      label: 'Runtime profile name',
+      value: config.runtimeProfileName || '-'
     },
     {
       label: 'Spark runtime version',
@@ -730,23 +736,29 @@ export const CreateRuntimeProfileComponent: React.FC<
       : DATAPROC_STANDARD_MACHINE_TYPES;
   }, [executorCategory, tier]);
 
-  const defaultRuntimeId = useMemo<string>(
-    () =>
-      initialRuntimeEnvironmentConfig?.runtimeProfileId || generateRandomHex(),
-    [initialRuntimeEnvironmentConfig?.runtimeProfileId]
-  );
+  const defaultRuntimeProfileName = useMemo<string>(() => {
+    const initialName = initialRuntimeEnvironmentConfig?.runtimeProfileName;
+    return initialName && initialName !== '-'
+      ? initialName
+      : generateRandomHex();
+  }, [initialRuntimeEnvironmentConfig?.runtimeProfileName]);
+
+  // Permanently detaches Runtime profile name from Display name once edited
+  // in the Runtime configuration drawer (and is always detached in edit mode).
+  const isRuntimeProfileNameCustomizedRef = useRef<boolean>(isEditMode);
 
   // React Hook Form initialization
   const {
     control,
     handleSubmit,
     setValue,
+    trigger,
     watch,
     formState: { errors, isSubmitting }
   } = useForm<IRuntimeProfileFormData>({
     mode: 'onChange',
     defaultValues: {
-      displayName: initialDisplayName ?? defaultRuntimeId,
+      displayName: initialDisplayName ?? defaultRuntimeProfileName,
       region: initialRegion ?? '',
       description: initialDescription ?? ''
     }
@@ -756,19 +768,23 @@ export const CreateRuntimeProfileComponent: React.FC<
   const hasFormErrors = Object.keys(errors).length > 0;
 
   // Configuration values derived from initial props or defaults.
-  // TODO: Validation on runtimeProfileId / displayName field will be handled in upcoming PRs.
   const [runtimeEnvironmentConfig, setRuntimeEnvironmentConfig] =
     useState<IRuntimeEnvironmentConfig>(() => {
       const baseConfig = {
         ...DEFAULT_RUNTIME_ENVIRONMENT_CONFIG,
         ...initialRuntimeEnvironmentConfig
       };
+      const explicitProfileName =
+        baseConfig.runtimeProfileName && baseConfig.runtimeProfileName !== '-'
+          ? baseConfig.runtimeProfileName
+          : undefined;
       return {
         ...baseConfig,
-        runtimeProfileId:
-          baseConfig.runtimeProfileId && baseConfig.runtimeProfileId !== '-'
-            ? baseConfig.runtimeProfileId
-            : defaultRuntimeId
+        runtimeProfileName:
+          explicitProfileName ??
+          (!isEditMode && initialDisplayName !== undefined
+            ? sanitizeRuntimeProfileName(initialDisplayName)
+            : defaultRuntimeProfileName)
       };
     });
 
@@ -938,7 +954,7 @@ export const CreateRuntimeProfileComponent: React.FC<
     () =>
       isEditMode
         ? buildPayload({
-            displayName: initialDisplayName ?? defaultRuntimeId,
+            displayName: initialDisplayName ?? defaultRuntimeProfileName,
             region: initialRegion ?? '',
             description: initialDescription ?? ''
           })
@@ -1497,29 +1513,94 @@ export const CreateRuntimeProfileComponent: React.FC<
             {/* Row 1: Display name & Region */}
             <div className="runtime-profile-row">
               <div className="runtime-profile-col">
-                {/* TODO: Full validation on runtime-id / displayName field will be added in upcoming PRs */}
                 <Controller
                   name="displayName"
                   control={control}
                   rules={{
-                    required: 'Display name is required',
-                    validate: value =>
-                      value.trim().length > 0 || 'Display name is required'
+                    required: DISPLAY_NAME_REQUIRED_ERROR,
+                    validate: (value: string) => {
+                      if (value.trim().length === 0) {
+                        return DISPLAY_NAME_REQUIRED_ERROR;
+                      }
+                      if (
+                        !isEditMode &&
+                        !isRuntimeProfileNameCustomizedRef.current &&
+                        !sanitizeRuntimeProfileName(value)
+                      ) {
+                        return DISPLAY_NAME_ALPHANUMERIC_ERROR;
+                      }
+                      return true;
+                    }
                   }}
-                  render={({ field }) => (
-                    <TextField
-                      {...field}
-                      id="runtime-profile-display-name"
-                      label="Display name *"
-                      placeholder="e.g. my-runtime-profile"
-                      variant="outlined"
-                      size="small"
-                      fullWidth
-                      error={Boolean(errors.displayName)}
-                      helperText={errors.displayName?.message}
-                      InputLabelProps={{ shrink: true }}
-                    />
-                  )}
+                  render={({ field, fieldState }) => {
+                    const displayNameError = fieldState.error?.message;
+                    const runtimeProfileName =
+                      activeRuntimeEnvironmentConfig.runtimeProfileName;
+                    const describedById = displayNameError
+                      ? 'runtime-profile-display-name-error'
+                      : runtimeProfileName
+                      ? 'runtime-profile-name-helper'
+                      : undefined;
+                    return (
+                      <>
+                        <TextField
+                          {...field}
+                          onChange={event => {
+                            field.onChange(event);
+                            if (
+                              !isEditMode &&
+                              !isRuntimeProfileNameCustomizedRef.current
+                            ) {
+                              const derivedName = sanitizeRuntimeProfileName(
+                                event.target.value
+                              );
+                              setRuntimeEnvironmentConfig(prev =>
+                                prev.runtimeProfileName === derivedName
+                                  ? prev
+                                  : {
+                                      ...prev,
+                                      runtimeProfileName: derivedName
+                                    }
+                              );
+                            }
+                          }}
+                          id="runtime-profile-display-name"
+                          label="Display name *"
+                          placeholder="e.g. my-runtime-profile"
+                          variant="outlined"
+                          size="small"
+                          fullWidth
+                          error={Boolean(displayNameError)}
+                          inputProps={{
+                            'aria-describedby': describedById
+                          }}
+                          InputLabelProps={{ shrink: true }}
+                        />
+                        {displayNameError ? (
+                          <div
+                            id="runtime-profile-display-name-error"
+                            className="runtime-profile-field-error"
+                            role="alert"
+                          >
+                            <span
+                              className="runtime-profile-field-error-icon"
+                              aria-hidden="true"
+                            >
+                              <FieldErrorIcon />
+                            </span>
+                            <span>{displayNameError}</span>
+                          </div>
+                        ) : runtimeProfileName ? (
+                          <div
+                            id="runtime-profile-name-helper"
+                            className="runtime-profile-name-helper"
+                          >
+                            {`Runtime profile name: ${runtimeProfileName}`}
+                          </div>
+                        ) : null}
+                      </>
+                    );
+                  }}
                 />
               </div>
               <div className="runtime-profile-col">
@@ -1823,25 +1904,24 @@ export const CreateRuntimeProfileComponent: React.FC<
                 className={`additional-config-header-container${
                   expandAdditionalConfig ? ' expanded' : ''
                 }`}
-                onClick={() =>
-                  setExpandAdditionalConfig(!expandAdditionalConfig)
-                }
+                onClick={() => setExpandAdditionalConfig(prev => !prev)}
                 onKeyDown={event => {
                   if (event.key === 'Enter' || event.key === ' ') {
                     event.preventDefault();
-                    setExpandAdditionalConfig(!expandAdditionalConfig);
+                    setExpandAdditionalConfig(prev => !prev);
                   }
                 }}
                 role="button"
                 tabIndex={0}
                 aria-expanded={expandAdditionalConfig}
+                aria-controls="additional-config-content"
               >
                 <div className="additional-config-header">
                   {isDefaultNetworkUnavailable
                     ? 'Additional configuration (Configuration required)'
                     : 'Additional configuration'}
                 </div>
-                <div className="expand-icon">
+                <div className="expand-icon" aria-hidden="true">
                   <ExpandIconComponent
                     tag="div"
                     className="logo-alignment-style"
@@ -1850,7 +1930,10 @@ export const CreateRuntimeProfileComponent: React.FC<
               </div>
 
               {expandAdditionalConfig && (
-                <div className="additional-config-content">
+                <div
+                  id="additional-config-content"
+                  className="additional-config-content"
+                >
                   {isDefaultNetworkUnavailable && (
                     <div
                       className="additional-config-warning-banner"
@@ -1954,11 +2037,24 @@ export const CreateRuntimeProfileComponent: React.FC<
         open={isRuntimeConfigDrawerOpen}
         config={activeRuntimeEnvironmentConfig}
         service={service}
-        isProfileIdDisabled={isEditMode}
+        isProfileNameDisabled={isEditMode}
         onClose={() => setIsRuntimeConfigDrawerOpen(false)}
         onSave={(updatedConfig: IRuntimeEnvironmentConfig) => {
+          const prevName = (
+            activeRuntimeEnvironmentConfig.runtimeProfileName ?? ''
+          ).trim();
+          const nextName = (updatedConfig.runtimeProfileName ?? '').trim();
+          const didCustomizeName = !isEditMode && nextName !== prevName;
+          if (didCustomizeName) {
+            isRuntimeProfileNameCustomizedRef.current = true;
+          }
           setRuntimeEnvironmentConfig(updatedConfig);
           setIsRuntimeConfigDrawerOpen(false);
+          if (didCustomizeName) {
+            void trigger('displayName').catch(error => {
+              console.error('Failed to validate display name:', error);
+            });
+          }
         }}
       />
       <MetastoreEditDrawer

@@ -29,6 +29,7 @@ jest.mock('../handler/handler', () => ({
 
 import {
   extractRuntimeVersion,
+  sanitizeRuntimeProfileName,
   sanitizeSessionTemplateId,
   parseMachineTypeSpec,
   parseDiskSpec,
@@ -202,6 +203,49 @@ describe('runtimeProfileMapper', () => {
     });
   });
 
+  describe('sanitizeRuntimeProfileName', () => {
+    it('normalizes case, punctuation runs, and leading/trailing hyphens', () => {
+      expect(sanitizeRuntimeProfileName('DiSPlay ----- Name @ 123')).toBe(
+        'display-name-123'
+      );
+      expect(sanitizeRuntimeProfileName('test')).toBe('test');
+      expect(sanitizeRuntimeProfileName('aaaa')).toBe('aaaa');
+      expect(sanitizeRuntimeProfileName('1234')).toBe('1234');
+      expect(sanitizeRuntimeProfileName('1st Finance Profile')).toBe(
+        '1st-finance-profile'
+      );
+    });
+
+    it('prefixes short alphanumeric results (< 4 chars) with runtime-', () => {
+      expect(sanitizeRuntimeProfileName('aaa')).toBe('runtime-aaa');
+      expect(sanitizeRuntimeProfileName('---a')).toBe('runtime-a');
+      expect(sanitizeRuntimeProfileName('s')).toBe('runtime-s');
+      expect(sanitizeRuntimeProfileName('123')).toBe('runtime-123');
+    });
+
+    it('returns empty string when no letters or numbers are present', () => {
+      expect(sanitizeRuntimeProfileName('')).toBe('');
+      expect(sanitizeRuntimeProfileName('   ')).toBe('');
+      expect(sanitizeRuntimeProfileName('---')).toBe('');
+      expect(sanitizeRuntimeProfileName('!@#$%^&*()')).toBe('');
+    });
+
+    it('truncates to 63 chars and strips trailing hyphens after truncation', () => {
+      expect(sanitizeRuntimeProfileName('a'.repeat(70))).toBe('a'.repeat(63));
+      expect(sanitizeRuntimeProfileName(`${'a'.repeat(62)}-bc`)).toBe(
+        'a'.repeat(62)
+      );
+    });
+
+    it('returns empty string for null, undefined, or non-string inputs', () => {
+      expect(sanitizeRuntimeProfileName(null as unknown as string)).toBe('');
+      expect(sanitizeRuntimeProfileName(undefined as unknown as string)).toBe(
+        ''
+      );
+      expect(sanitizeRuntimeProfileName(123 as unknown as string)).toBe('');
+    });
+  });
+
   describe('sanitizeSessionTemplateId', () => {
     it('should generate lower-case hyphenated ids', () => {
       expect(sanitizeSessionTemplateId('My Custom Profile!')).toBe(
@@ -212,13 +256,15 @@ describe('runtimeProfileMapper', () => {
       );
     });
 
-    it('should prefix ids that do not start with a letter', () => {
+    it('should preserve 4+ char ids starting with digits and prefix shorter ones', () => {
       expect(sanitizeSessionTemplateId('1st Finance Profile')).toBe(
-        'runtime-1st-finance-profile'
+        '1st-finance-profile'
       );
       expect(sanitizeSessionTemplateId('', '2024-profile')).toBe(
-        'runtime-2024-profile'
+        '2024-profile'
       );
+      expect(sanitizeSessionTemplateId('123')).toBe('runtime-123');
+      expect(sanitizeSessionTemplateId('1234')).toBe('1234');
     });
   });
 
@@ -322,7 +368,7 @@ describe('runtimeProfileMapper', () => {
         tier: 'Premium',
         lightningEngineEnabled: true,
         runtimeEnvironmentConfig: {
-          runtimeProfileId: 'finance-profile-id',
+          runtimeProfileName: 'finance-profile-id',
           runtimeVersion: '2.3 LTS (Spark 3.5.1, Python 3.12)',
           customSparkImage: 'gcr.io/my-project/spark-image:latest',
           pythonPackageRepository: 'https://pypi.org/simple'
@@ -358,6 +404,7 @@ describe('runtimeProfileMapper', () => {
       expect(result.name).toBe(
         'projects/test-project/locations/us-central1/sessionTemplates/finance-profile-id'
       );
+      expect(result.displayName).toBe('Finance Analytics Profile');
       expect(result.description).toBe('Profile for finance team');
       expect(result.jupyterSession).toEqual({
         kernel: 'PYTHON',
@@ -1127,7 +1174,7 @@ describe('runtimeProfileMapper', () => {
         initialExecutorCategory: 'general',
         initialExecutorType: 'highmem-8',
         initialRuntimeEnvironmentConfig: {
-          runtimeProfileId: 'sample-profile',
+          runtimeProfileName: 'sample-profile',
           runtimeVersion: '2.2',
           customSparkImage: 'gcr.io/my-project/spark:latest',
           stagingBucket: 'my-staging-bucket',
@@ -1183,6 +1230,16 @@ describe('runtimeProfileMapper', () => {
         },
         initialLabels: { env: 'dev' }
       });
+    });
+
+    it('prefers top-level template displayName over jupyterSession.displayName', () => {
+      const values = mapSessionTemplateToFormValues({
+        name: 'projects/p/locations/us-east1/sessionTemplates/profile-id',
+        displayName: 'Authoritative Top-Level Name',
+        jupyterSession: { displayName: 'Legacy Nested Name', kernel: 'PYTHON' }
+      });
+
+      expect(values.initialDisplayName).toBe('Authoritative Top-Level Name');
     });
 
     it('keeps values that form controls cannot represent in spark properties and leaves absent values unset', () => {
@@ -1327,7 +1384,7 @@ describe('runtimeProfileMapper', () => {
           lightningEngineEnabled: true,
           executorConfig: { executorType: 'general', machineType: 'highmem-4' },
           runtimeEnvironmentConfig: {
-            runtimeProfileId: 'round-trip',
+            runtimeProfileName: 'round-trip',
             runtimeVersion: '2.3 LTS (Spark 3.5.1, Python 3.12)'
           },
           executorAndDriverConfig: {
@@ -1517,6 +1574,7 @@ describe('runtimeProfileMapper', () => {
       expect(body).toEqual({
         // The ID and region can't change
         name: savedProfile.name,
+        displayName: 'New name',
         jupyterSession: { displayName: 'New name', kernel: 'SCALA' },
         labels: { env: 'prod', team: 'data' },
         runtimeConfig: {
@@ -1855,13 +1913,36 @@ describe('runtimeProfileMapper', () => {
       expect(described.sparkConnectSession).toEqual({});
       expect(onlySessionKeys(described)).toEqual(['sparkConnectSession']);
 
-      // A Spark Connect template has no display name, so renaming is a no-op
+      // A Spark Connect template supports top-level displayName, but must never
+      // gain jupyterSession (session_config is a oneof).
       const renamed = saveEdits(sparkConnectProfile, payload => {
         payload.displayName = 'Renamed';
       });
+      expect(renamed.displayName).toBe('Renamed');
       expect(renamed.sparkConnectSession).toEqual({});
       expect(renamed).not.toHaveProperty('jupyterSession');
       expect(onlySessionKeys(renamed)).toEqual(['sparkConnectSession']);
+    });
+
+    it('updates both top-level displayName and jupyterSession.displayName when renaming a template that already has top-level displayName', () => {
+      const templateWithTopLevelDisplayName: IRuntimeProfileTemplate = {
+        ...savedProfile,
+        displayName: 'srg-test-nov17-01',
+        jupyterSession: { displayName: 'srg-test-nov17-01', kernel: 'PYTHON' }
+      };
+
+      const unchanged = saveEdits(templateWithTopLevelDisplayName);
+      expect(unchanged.displayName).toBe('srg-test-nov17-01');
+      expect(unchanged.jupyterSession?.displayName).toBe('srg-test-nov17-01');
+
+      const renamed = saveEdits(templateWithTopLevelDisplayName, payload => {
+        payload.displayName = 'srg-test-nov17-01-updated';
+      });
+      expect(renamed.displayName).toBe('srg-test-nov17-01-updated');
+      expect(renamed.jupyterSession).toEqual({
+        displayName: 'srg-test-nov17-01-updated',
+        kernel: 'PYTHON'
+      });
     });
 
     it('keeps changes saved since the form opened in settings the user did not edit', () => {

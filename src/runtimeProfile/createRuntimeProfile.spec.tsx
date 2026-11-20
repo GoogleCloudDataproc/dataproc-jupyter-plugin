@@ -208,7 +208,7 @@ describe('CreateRuntimeProfileComponent UI & Service', () => {
       '#runtime-profile-display-name'
     ) as HTMLInputElement;
     expect(displayNameInput?.value).toMatch(/^runtime-[0-9a-f]{12}$/);
-    expect(getFieldValue('Runtime profile ID')).toBe(displayNameInput?.value);
+    expect(getFieldValue('Runtime profile name')).toBe(displayNameInput?.value);
     expect(getFieldValue('Spark runtime version')).toBe(
       '2.3 LTS (Spark 3.5, Java 17, Scala 2.13)'
     );
@@ -240,24 +240,40 @@ describe('CreateRuntimeProfileComponent UI & Service', () => {
     const header = container.querySelector(
       '.additional-config-header-container'
     ) as HTMLDivElement;
+    const headerTitle = container.querySelector(
+      '.additional-config-header'
+    ) as HTMLDivElement;
     expect(header.getAttribute('aria-expanded')).toBe('false');
-    expect(container.querySelector('.additional-config-content')).toBeNull();
+    expect(header.getAttribute('aria-controls')).toBe(
+      'additional-config-content'
+    );
+    expect(container.querySelector('#additional-config-content')).toBeNull();
 
-    // Click to expand
+    // Click directly on the header title text to expand
+    await act(async () => {
+      headerTitle.click();
+    });
+    expect(header.getAttribute('aria-expanded')).toBe('true');
+    expect(
+      container.querySelector('#additional-config-content')
+    ).not.toBeNull();
+
+    // Click directly on the header title text to collapse
+    await act(async () => {
+      headerTitle.click();
+    });
+    expect(header.getAttribute('aria-expanded')).toBe('false');
+    expect(container.querySelector('#additional-config-content')).toBeNull();
+
+    // Click container to expand and collapse
     await act(async () => {
       header.click();
     });
     expect(header.getAttribute('aria-expanded')).toBe('true');
-    expect(
-      container.querySelector('.additional-config-content')
-    ).not.toBeNull();
-
-    // Click to collapse
     await act(async () => {
       header.click();
     });
     expect(header.getAttribute('aria-expanded')).toBe('false');
-    expect(container.querySelector('.additional-config-content')).toBeNull();
 
     // Press Enter to expand.
     await act(async () => {
@@ -267,7 +283,7 @@ describe('CreateRuntimeProfileComponent UI & Service', () => {
     });
     expect(header.getAttribute('aria-expanded')).toBe('true');
     expect(
-      container.querySelector('.additional-config-content')
+      container.querySelector('#additional-config-content')
     ).not.toBeNull();
 
     // Press Space to collapse.
@@ -277,7 +293,7 @@ describe('CreateRuntimeProfileComponent UI & Service', () => {
       );
     });
     expect(header.getAttribute('aria-expanded')).toBe('false');
-    expect(container.querySelector('.additional-config-content')).toBeNull();
+    expect(container.querySelector('#additional-config-content')).toBeNull();
   });
 
   it('renders custom initial configuration values and mapped display labels in the UI', async () => {
@@ -286,7 +302,7 @@ describe('CreateRuntimeProfileComponent UI & Service', () => {
         <CreateRuntimeProfileComponent
           service={mockService}
           initialRuntimeEnvironmentConfig={{
-            runtimeProfileId: 'custom-runtime-id',
+            runtimeProfileName: 'custom-runtime-id',
             runtimeVersion: '2.2 LTS',
             customSparkImage: 'gcr.io/my-project/spark:latest',
             stagingBucket: 'gs://my-staging-bucket',
@@ -331,7 +347,7 @@ describe('CreateRuntimeProfileComponent UI & Service', () => {
     });
     await expandAdditionalConfig();
 
-    expect(getFieldValue('Runtime profile ID')).toBe('custom-runtime-id');
+    expect(getFieldValue('Runtime profile name')).toBe('custom-runtime-id');
     expect(getFieldValue('Spark runtime version')).toBe('2.2 LTS');
     expect(getFieldValue('Custom spark image')).toBe(
       'gcr.io/my-project/spark:latest'
@@ -421,7 +437,7 @@ describe('CreateRuntimeProfileComponent UI & Service', () => {
           executorDisk: 'Standard persistent disk (HDD), 200 GB'
         },
         runtimeEnvironmentConfig: {
-          runtimeProfileId: 'configured-profile',
+          runtimeProfileName: 'configured-profile',
           runtimeVersion: '2.3 LTS (Spark 3.5.1, Python 3.12)'
         },
         autoscalingConfig: {
@@ -957,7 +973,11 @@ describe('CreateRuntimeProfileComponent UI & Service', () => {
       setValue?.call(displayNameInput, '');
       displayNameInput.dispatchEvent(new Event('input', { bubbles: true }));
     });
-    expect(container.textContent).toContain('Display name is required');
+    expect(
+      container.querySelector('#runtime-profile-display-name-error')
+        ?.textContent
+    ).toBe('Display name is required.');
+    expect(container.querySelector('#runtime-profile-name-helper')).toBeNull();
     expect(submitButton.disabled).toBe(true);
     expect(submitButton.classList.contains('submit-button-disable-style')).toBe(
       true
@@ -967,6 +987,12 @@ describe('CreateRuntimeProfileComponent UI & Service', () => {
       setValue?.call(displayNameInput, 'valid-name');
       displayNameInput.dispatchEvent(new Event('input', { bubbles: true }));
     });
+    expect(
+      container.querySelector('#runtime-profile-display-name-error')
+    ).toBeNull();
+    expect(
+      container.querySelector('#runtime-profile-name-helper')?.textContent
+    ).toBe('Runtime profile name: valid-name');
     expect(submitButton.disabled).toBe(false);
     expect(submitButton.classList.contains('submit-button-style')).toBe(true);
   });
@@ -1260,13 +1286,14 @@ describe('CreateRuntimeProfileComponent UI & Service', () => {
       (editButtons[0] as HTMLButtonElement).click();
     });
 
-    const profileIdInput = document.body.querySelector(
-      '#edit-runtime-profile-id'
+    const profileNameInput = document.body.querySelector(
+      '#edit-runtime-profile-name'
     ) as HTMLInputElement;
-    expect(profileIdInput).not.toBeNull();
+    expect(profileNameInput).not.toBeNull();
     expect(
-      document.body.querySelector('#edit-runtime-profile-id-label')?.textContent
-    ).toBe('Runtime profile ID *');
+      document.body.querySelector('#edit-runtime-profile-name-label')
+        ?.textContent
+    ).toBe('Runtime profile name *');
     expect(
       document.body.querySelector('#edit-dataproc-runtime-version-label')
         ?.textContent
@@ -1608,7 +1635,7 @@ describe('CreateRuntimeProfileComponent UI & Service', () => {
     ).not.toBeNull();
   });
 
-  it('validates Runtime Profile ID and Cloud Storage Staging bucket in RuntimeEnvironmentEditDrawer', async () => {
+  it('validates Runtime profile name and Cloud Storage Staging bucket in RuntimeEnvironmentEditDrawer', async () => {
     jest
       .spyOn(mockService, 'getStorageBuckets')
       .mockResolvedValue(['test_bucket']);
@@ -1625,8 +1652,8 @@ describe('CreateRuntimeProfileComponent UI & Service', () => {
       (editButtons[0] as HTMLButtonElement).click();
     });
 
-    const profileIdInput = document.body.querySelector(
-      '#edit-runtime-profile-id'
+    const profileNameInput = document.body.querySelector(
+      '#edit-runtime-profile-name'
     ) as HTMLInputElement;
     const stagingBucketInput = document.body.querySelector(
       '#edit-cloud-storage-staging-bucket'
@@ -1641,35 +1668,37 @@ describe('CreateRuntimeProfileComponent UI & Service', () => {
       'value'
     )?.set;
 
-    // 1. Empty Runtime Profile ID -> required error & Save disabled
+    // 1. Empty Runtime profile name -> required error & Save disabled
     await act(async () => {
-      nativeInputValueSetter?.call(profileIdInput, '');
-      profileIdInput.dispatchEvent(new Event('input', { bubbles: true }));
+      nativeInputValueSetter?.call(profileNameInput, '');
+      profileNameInput.dispatchEvent(new Event('input', { bubbles: true }));
     });
     expect(
-      document.body.querySelector('#runtime-profile-id-error-text')?.textContent
+      document.body.querySelector('#runtime-profile-name-error-text')
+        ?.textContent
     ).toBe('Runtime profile name is required.');
     expect(getSaveBtn()?.disabled).toBe(true);
 
-    // 2. Invalid format Runtime Profile ID -> format error & Save disabled
+    // 2. Invalid format Runtime profile name -> format error & Save disabled
     await act(async () => {
-      nativeInputValueSetter?.call(profileIdInput, 'ytywteywqe***');
-      profileIdInput.dispatchEvent(new Event('input', { bubbles: true }));
+      nativeInputValueSetter?.call(profileNameInput, 'ytywteywqe***');
+      profileNameInput.dispatchEvent(new Event('input', { bubbles: true }));
     });
     expect(
-      document.body.querySelector('#runtime-profile-id-error-text')?.textContent
+      document.body.querySelector('#runtime-profile-name-error-text')
+        ?.textContent
     ).toBe(
       'A runtime profile name must start and end in a letter or a number, be between 4 and 63 characters long, and contain only lowercase letters, numbers, and hyphens.'
     );
     expect(getSaveBtn()?.disabled).toBe(true);
 
-    // 3. Valid Runtime Profile ID -> clears error & Save enabled
+    // 3. Valid Runtime profile name -> clears error & Save enabled
     await act(async () => {
-      nativeInputValueSetter?.call(profileIdInput, 'runtime-4d92');
-      profileIdInput.dispatchEvent(new Event('input', { bubbles: true }));
+      nativeInputValueSetter?.call(profileNameInput, 'runtime-4d92');
+      profileNameInput.dispatchEvent(new Event('input', { bubbles: true }));
     });
     expect(
-      document.body.querySelector('#runtime-profile-id-error-text')
+      document.body.querySelector('#runtime-profile-name-error-text')
     ).toBeNull();
     expect(getSaveBtn()?.disabled).toBe(false);
 
@@ -2351,7 +2380,7 @@ describe('CreateRuntimeProfileComponent UI & Service', () => {
         ).checked
       ).toBe(true);
 
-      expect(getFieldValue('Runtime profile ID')).toBe('sample_profile');
+      expect(getFieldValue('Runtime profile name')).toBe('sample_profile');
       expect(getFieldValue('Spark runtime version')).toBe('2.2');
       expect(getFieldValue('Custom spark image')).toBe(
         'gcr.io/my-project/spark:latest'
@@ -2447,7 +2476,7 @@ describe('CreateRuntimeProfileComponent UI & Service', () => {
       expect(onSuccess).not.toHaveBeenCalled();
     });
 
-    it('keeps the Runtime Profile ID read-only in the runtime configuration drawer', async () => {
+    it('keeps the Runtime profile name read-only in the runtime configuration drawer', async () => {
       await renderEditForm();
       await expandAdditionalConfig();
 
@@ -2459,19 +2488,79 @@ describe('CreateRuntimeProfileComponent UI & Service', () => {
         ).click();
       });
 
-      const profileIdInput = document.body.querySelector(
-        '#edit-runtime-profile-id'
+      const profileNameInput = document.body.querySelector(
+        '#edit-runtime-profile-name'
       ) as HTMLInputElement;
-      expect(profileIdInput.disabled).toBe(true);
-      expect(profileIdInput.value).toBe('sample_profile');
-      // The existing ID isn't re-validated against the create-time format
+      expect(profileNameInput.disabled).toBe(true);
+      expect(profileNameInput.value).toBe('sample_profile');
+      // The existing name isn't re-validated against the create-time format
       expect(
-        document.body.querySelector('#runtime-profile-id-error-text')
+        document.body.querySelector('#runtime-profile-name-error-text')
       ).toBeNull();
       const saveBtn = Array.from(
         document.body.querySelectorAll('.edit-drawer-footer button')
       ).find(b => b.textContent?.trim() === 'Save') as HTMLButtonElement;
       expect(saveBtn.disabled).toBe(false);
+    });
+
+    it('shows the Runtime profile name helper text and never updates it when editing Display name in edit mode', async () => {
+      await renderEditForm();
+      await expandAdditionalConfig();
+
+      const displayNameInput = container.querySelector(
+        '#runtime-profile-display-name'
+      ) as HTMLInputElement;
+      const setValue = Object.getOwnPropertyDescriptor(
+        window.HTMLInputElement.prototype,
+        'value'
+      )?.set;
+
+      expect(
+        container.querySelector('#runtime-profile-name-helper')?.textContent
+      ).toBe('Runtime profile name: sample_profile');
+
+      // Modifying display name never changes the runtime profile name
+      await act(async () => {
+        setValue?.call(displayNameInput, 'Updated Display Name');
+        displayNameInput.dispatchEvent(new Event('input', { bubbles: true }));
+      });
+      expect(
+        container.querySelector('#runtime-profile-name-helper')?.textContent
+      ).toBe('Runtime profile name: sample_profile');
+      expect(getFieldValue('Runtime profile name')).toBe('sample_profile');
+
+      // Non-alphanumeric display name is valid in edit mode (already detached)
+      await act(async () => {
+        setValue?.call(displayNameInput, '---');
+        displayNameInput.dispatchEvent(new Event('input', { bubbles: true }));
+      });
+      expect(
+        container.querySelector('#runtime-profile-display-name-error')
+      ).toBeNull();
+      expect(
+        container.querySelector('#runtime-profile-name-helper')?.textContent
+      ).toBe('Runtime profile name: sample_profile');
+      expect(
+        (container.querySelector('button[type="submit"]') as HTMLButtonElement)
+          .disabled
+      ).toBe(false);
+
+      // Clearing display name hides helper text and shows required error
+      await act(async () => {
+        setValue?.call(displayNameInput, '   ');
+        displayNameInput.dispatchEvent(new Event('input', { bubbles: true }));
+      });
+      expect(
+        container.querySelector('#runtime-profile-display-name-error')
+          ?.textContent
+      ).toBe('Display name is required.');
+      expect(
+        container.querySelector('#runtime-profile-name-helper')
+      ).toBeNull();
+      expect(
+        (container.querySelector('button[type="submit"]') as HTMLButtonElement)
+          .disabled
+      ).toBe(true);
     });
 
     it('opens the Executor and driver drawer with the saved disks and keeps them on Save', async () => {
@@ -3698,5 +3787,267 @@ describe('CreateRuntimeProfileComponent UI & Service', () => {
     } finally {
       errorSpy.mockRestore();
     }
+  });
+
+  it('syncs Display name to Runtime profile name in create mode and validates alphanumeric requirement', async () => {
+    await act(async () => {
+      root.render(<CreateRuntimeProfileComponent service={mockService} />);
+    });
+    await expandAdditionalConfig();
+
+    const displayNameInput = container.querySelector(
+      '#runtime-profile-display-name'
+    ) as HTMLInputElement;
+    const submitButton = container.querySelector(
+      'button[type="submit"]'
+    ) as HTMLButtonElement;
+    const setValue = Object.getOwnPropertyDescriptor(
+      window.HTMLInputElement.prototype,
+      'value'
+    )?.set;
+
+    const setDisplayName = async (next: string) => {
+      await act(async () => {
+        setValue?.call(displayNameInput, next);
+        displayNameInput.dispatchEvent(new Event('input', { bubbles: true }));
+      });
+    };
+
+    // Initial helper text matches generated display name
+    expect(
+      container.querySelector('#runtime-profile-name-helper')?.textContent
+    ).toBe(`Runtime profile name: ${displayNameInput.value}`);
+    expect(displayNameInput.getAttribute('aria-describedby')).toBe(
+      'runtime-profile-name-helper'
+    );
+
+    // Syncs all sanitization cases
+    const cases: Array<[string, string]> = [
+      ['test', 'test'],
+      ['DiSPlay ----- Name @ 123', 'display-name-123'],
+      ['aaa', 'runtime-aaa'],
+      ['aaaa', 'aaaa'],
+      ['---a', 'runtime-a'],
+      ['s', 'runtime-s'],
+      ['123', 'runtime-123'],
+      ['1234', '1234']
+    ];
+    for (const [input, expectedName] of cases) {
+      await setDisplayName(input);
+      expect(
+        container.querySelector('#runtime-profile-display-name-error')
+      ).toBeNull();
+      expect(
+        container.querySelector('#runtime-profile-name-helper')?.textContent
+      ).toBe(`Runtime profile name: ${expectedName}`);
+      expect(getFieldValue('Runtime profile name')).toBe(expectedName);
+      expect(submitButton.disabled).toBe(false);
+    }
+
+    // Non-alphanumeric display name shows error, hides helper text, shows '-' in Additional config
+    await setDisplayName('---');
+    const errorEl = container.querySelector(
+      '#runtime-profile-display-name-error'
+    );
+    expect(errorEl?.getAttribute('role')).toBe('alert');
+    expect(errorEl?.textContent).toBe(
+      'Display name must contain at least one letter or number.'
+    );
+    expect(displayNameInput.getAttribute('aria-describedby')).toBe(
+      'runtime-profile-display-name-error'
+    );
+    expect(container.querySelector('#runtime-profile-name-helper')).toBeNull();
+    expect(getFieldValue('Runtime profile name')).toBe('-');
+    expect(submitButton.disabled).toBe(true);
+
+    // Empty display name shows required error, hides helper text, shows '-' in Additional config
+    await setDisplayName('');
+    expect(
+      container.querySelector('#runtime-profile-display-name-error')
+        ?.textContent
+    ).toBe('Display name is required.');
+    expect(container.querySelector('#runtime-profile-name-helper')).toBeNull();
+    expect(getFieldValue('Runtime profile name')).toBe('-');
+    expect(submitButton.disabled).toBe(true);
+  });
+
+  it('permanently detaches Runtime profile name after editing it in Runtime configuration drawer, while keeping sync when unchanged', async () => {
+    await act(async () => {
+      root.render(<CreateRuntimeProfileComponent service={mockService} />);
+    });
+    await expandAdditionalConfig();
+
+    const displayNameInput = container.querySelector(
+      '#runtime-profile-display-name'
+    ) as HTMLInputElement;
+    const submitButton = container.querySelector(
+      'button[type="submit"]'
+    ) as HTMLButtonElement;
+    const nativeSetter = Object.getOwnPropertyDescriptor(
+      window.HTMLInputElement.prototype,
+      'value'
+    )?.set;
+
+    const setInputValue = async (input: HTMLInputElement, next: string) => {
+      await act(async () => {
+        nativeSetter?.call(input, next);
+        input.dispatchEvent(new Event('input', { bubbles: true }));
+      });
+    };
+
+    const openRuntimeDrawer = async () => {
+      const editButtons = container.querySelectorAll(
+        '.section-detail-edit-button'
+      );
+      await act(async () => {
+        (editButtons[0] as HTMLButtonElement).click();
+      });
+    };
+
+    const clickDrawerButton = async (label: 'Save' | 'Cancel') => {
+      const btn = Array.from(
+        document.body.querySelectorAll('.edit-drawer-footer button')
+      ).find(b => b.textContent?.trim() === label) as HTMLButtonElement;
+      await act(async () => {
+        btn.click();
+      });
+    };
+
+    await setInputValue(displayNameInput, 'test');
+    expect(getFieldValue('Runtime profile name')).toBe('test');
+
+    // 1. Editing name in drawer and clicking Cancel does NOT detach sync
+    await openRuntimeDrawer();
+    const drawerNameInput1 = document.body.querySelector(
+      '#edit-runtime-profile-name'
+    ) as HTMLInputElement;
+    await setInputValue(drawerNameInput1, 'cancelled-name');
+    await clickDrawerButton('Cancel');
+    await setInputValue(displayNameInput, 'still-synced');
+    expect(getFieldValue('Runtime profile name')).toBe('still-synced');
+
+    // 2. Saving another field in drawer without changing Runtime profile name does NOT detach sync
+    await openRuntimeDrawer();
+    const customImageInput = document.body.querySelector(
+      '#edit-custom-spark-image'
+    ) as HTMLInputElement;
+    await setInputValue(customImageInput, 'gcr.io/my-proj/img:1');
+    await clickDrawerButton('Save');
+    await setInputValue(displayNameInput, 'test');
+    expect(getFieldValue('Runtime profile name')).toBe('test');
+    expect(
+      container.querySelector('#runtime-profile-name-helper')?.textContent
+    ).toBe('Runtime profile name: test');
+
+    // 3. Modifying Runtime profile name in drawer detaches permanently and keeps Display name intact
+    await openRuntimeDrawer();
+    const drawerNameInput2 = document.body.querySelector(
+      '#edit-runtime-profile-name'
+    ) as HTMLInputElement;
+    await setInputValue(drawerNameInput2, '  test-123  ');
+    await clickDrawerButton('Save');
+
+    expect(displayNameInput.value).toBe('test');
+    expect(getFieldValue('Runtime profile name')).toBe('test-123');
+    expect(
+      container.querySelector('#runtime-profile-name-helper')?.textContent
+    ).toBe('Runtime profile name: test-123');
+
+    // Subsequent edits to Display name (including '---') do not modify Runtime profile name
+    await setInputValue(displayNameInput, 'another-display-name');
+    expect(getFieldValue('Runtime profile name')).toBe('test-123');
+    expect(
+      container.querySelector('#runtime-profile-name-helper')?.textContent
+    ).toBe('Runtime profile name: test-123');
+
+    await setInputValue(displayNameInput, '---');
+    expect(
+      container.querySelector('#runtime-profile-display-name-error')
+    ).toBeNull();
+    expect(
+      container.querySelector('#runtime-profile-name-helper')?.textContent
+    ).toBe('Runtime profile name: test-123');
+    expect(submitButton.disabled).toBe(false);
+
+    // Clearing Display name still triggers required error and hides helper text
+    await setInputValue(displayNameInput, '');
+    expect(
+      container.querySelector('#runtime-profile-display-name-error')
+        ?.textContent
+    ).toBe('Display name is required.');
+    expect(container.querySelector('#runtime-profile-name-helper')).toBeNull();
+    expect(submitButton.disabled).toBe(true);
+
+    // Restoring Display name brings back helper text with the detached name,
+    // and remains permanently detached even after matching the detached name
+    await setInputValue(displayNameInput, 'test-123');
+    expect(
+      container.querySelector('#runtime-profile-name-helper')?.textContent
+    ).toBe('Runtime profile name: test-123');
+    expect(submitButton.disabled).toBe(false);
+
+    await setInputValue(displayNameInput, 'after-match');
+    expect(getFieldValue('Runtime profile name')).toBe('test-123');
+    expect(
+      container.querySelector('#runtime-profile-name-helper')?.textContent
+    ).toBe('Runtime profile name: test-123');
+  });
+
+  it('clears the alphanumeric Display name error immediately after saving a custom Runtime profile name in the drawer', async () => {
+    await act(async () => {
+      root.render(<CreateRuntimeProfileComponent service={mockService} />);
+    });
+    await expandAdditionalConfig();
+
+    const displayNameInput = container.querySelector(
+      '#runtime-profile-display-name'
+    ) as HTMLInputElement;
+    const submitButton = container.querySelector(
+      'button[type="submit"]'
+    ) as HTMLButtonElement;
+    const nativeSetter = Object.getOwnPropertyDescriptor(
+      window.HTMLInputElement.prototype,
+      'value'
+    )?.set;
+
+    await act(async () => {
+      nativeSetter?.call(displayNameInput, '---');
+      displayNameInput.dispatchEvent(new Event('input', { bubbles: true }));
+    });
+    expect(
+      container.querySelector('#runtime-profile-display-name-error')
+        ?.textContent
+    ).toBe('Display name must contain at least one letter or number.');
+    expect(submitButton.disabled).toBe(true);
+
+    // Open Runtime configuration drawer and set custom Runtime profile name '12345'
+    const editButtons = container.querySelectorAll(
+      '.section-detail-edit-button'
+    );
+    await act(async () => {
+      (editButtons[0] as HTMLButtonElement).click();
+    });
+    const drawerNameInput = document.body.querySelector(
+      '#edit-runtime-profile-name'
+    ) as HTMLInputElement;
+    await act(async () => {
+      nativeSetter?.call(drawerNameInput, '12345');
+      drawerNameInput.dispatchEvent(new Event('input', { bubbles: true }));
+    });
+    const saveBtn = Array.from(
+      document.body.querySelectorAll('.edit-drawer-footer button')
+    ).find(b => b.textContent?.trim() === 'Save') as HTMLButtonElement;
+    await act(async () => {
+      saveBtn.click();
+    });
+
+    expect(
+      container.querySelector('#runtime-profile-display-name-error')
+    ).toBeNull();
+    expect(
+      container.querySelector('#runtime-profile-name-helper')?.textContent
+    ).toBe('Runtime profile name: 12345');
+    expect(getFieldValue('Runtime profile name')).toBe('12345');
+    expect(submitButton.disabled).toBe(false);
   });
 });

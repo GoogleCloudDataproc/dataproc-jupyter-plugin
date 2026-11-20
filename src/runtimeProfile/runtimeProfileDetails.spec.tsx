@@ -482,12 +482,12 @@ describe('RuntimeProfileDetails Component', () => {
       editRuntimeBtn.click();
     });
 
-    const profileIdInput = document.body.querySelector(
-      '#edit-runtime-profile-id'
+    const profileNameInput = document.body.querySelector(
+      '#edit-runtime-profile-name'
     ) as HTMLInputElement;
-    expect(profileIdInput).not.toBeNull();
-    expect(profileIdInput.value).toBe('sample-profile');
-    expect(profileIdInput.disabled).toBe(true);
+    expect(profileNameInput).not.toBeNull();
+    expect(profileNameInput.value).toBe('sample-profile');
+    expect(profileNameInput.disabled).toBe(true);
 
     // Click Save in active EditDrawer matching the section title
     const getDrawerSaveBtn = (title: string) => {
@@ -995,14 +995,14 @@ describe('RuntimeProfileDetails Component', () => {
       mockProfile,
       'sample-profile'
     );
-    expect(envCfg.runtimeProfileId).toBe('sample-profile');
+    expect(envCfg.runtimeProfileName).toBe('sample-profile');
     expect(envCfg.runtimeVersion).toBe('2.3');
     expect(envCfg.lightningEngineEnabled).toBe(true);
 
     const updatedEnvTemplate = applyRuntimeEnvironmentUpdateToTemplate(
       mockProfile,
       {
-        runtimeProfileId: 'sample-profile',
+        runtimeProfileName: 'sample-profile',
         runtimeVersion: '2.2 LTS (Spark 3.5, Java 17, Scala 2.13)',
         customSparkImage: 'gcr.io/proj/img:v1',
         stagingBucket: 'gs://custom-bucket',
@@ -1024,7 +1024,7 @@ describe('RuntimeProfileDetails Component', () => {
     const clearedEnvTemplate = applyRuntimeEnvironmentUpdateToTemplate(
       updatedEnvTemplate,
       {
-        runtimeProfileId: 'sample-profile',
+        runtimeProfileName: 'sample-profile',
         runtimeVersion: '',
         customSparkImage: 'None',
         stagingBucket: 'Auto',
@@ -1895,5 +1895,24 @@ describe('RuntimeProfileDetails Component', () => {
     expect(getRowValue('Execution identity')).toBe(customSaEmail);
     expect(getRowValue('Network URI')).toBe(customNetworkUri);
     expect(getRowValue('Subnetwork URI')).toBeUndefined();
+  });
+
+  it('prefers top-level displayName over jupyterSession.displayName in Basic Information', async () => {
+    const profileWithTopLevelName: IRuntimeProfileTemplate = {
+      ...mockProfile,
+      displayName: 'Authoritative Profile Name',
+      jupyterSession: { displayName: 'Legacy Nested Name', kernel: 'PYTHON' }
+    };
+
+    await renderDetails(jest.fn(), undefined, profileWithTopLevelName);
+
+    const rows = Array.from(
+      container.querySelectorAll('.runtime-profile-details-row')
+    );
+    const displayNameValue = rows
+      .find(row => row.textContent?.startsWith('Display name'))
+      ?.querySelector('.runtime-profile-details-value')?.textContent;
+
+    expect(displayNameValue).toBe('Authoritative Profile Name');
   });
 });

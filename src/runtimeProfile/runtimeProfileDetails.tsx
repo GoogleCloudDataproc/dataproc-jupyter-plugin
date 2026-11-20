@@ -28,6 +28,7 @@ import ExpandMoreIcon from '../../style/icons/expand_more.svg';
 import {
   formatLastUsed,
   getDefaultTierForVersion,
+  getRuntimeProfileDisplayName,
   IRuntimeProfileTemplate,
   parseRuntimeProfileResourceName
 } from './runtimeProfileListMapper';
@@ -201,7 +202,7 @@ export const buildRuntimeEnvironmentConfigFromTemplate = (
 ): IRuntimeEnvironmentConfig => {
   const properties = profile.runtimeConfig?.properties || {};
   return {
-    runtimeProfileId: shortName,
+    runtimeProfileName: shortName,
     runtimeVersion: profile.runtimeConfig?.version || '',
     customSparkImage: profile.runtimeConfig?.containerImage || '',
     stagingBucket:
@@ -1345,7 +1346,8 @@ export default function RuntimeProfileDetails({
     region,
     profileId: shortName
   } = parseRuntimeProfileResourceName(currentProfile.name);
-  const displayName = currentProfile.jupyterSession?.displayName || shortName;
+  const displayName =
+    getRuntimeProfileDisplayName(currentProfile) || shortName;
   const properties = currentProfile.runtimeConfig?.properties || {};
   const executionConfig = currentProfile.environmentConfig?.executionConfig;
   const getProp = (key: string) => getPropertyValue(properties, key);
@@ -1533,7 +1535,7 @@ export default function RuntimeProfileDetails({
   const basicInfoRows = [
     {
       label: 'Display name',
-      value: currentProfile.jupyterSession?.displayName || ''
+      value: getRuntimeProfileDisplayName(currentProfile)
     },
     { label: 'Name', value: shortName },
     { label: 'Region', value: region },
@@ -1866,7 +1868,7 @@ export default function RuntimeProfileDetails({
       <RuntimeEnvironmentEditDrawer
         open={isRuntimeConfigDrawerOpen}
         config={runtimeEnvironmentDrawerConfig}
-        isProfileIdDisabled
+        isProfileNameDisabled
         onClose={() => setIsRuntimeConfigDrawerOpen(false)}
         onSave={updatedConfig => {
           const nextTemplate = applyRuntimeEnvironmentUpdateToTemplate(

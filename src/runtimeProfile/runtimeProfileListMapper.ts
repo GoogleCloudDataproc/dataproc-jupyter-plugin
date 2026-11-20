@@ -92,6 +92,7 @@ export const formatLastUsed = (
 
 export interface IRuntimeProfileTemplate {
   name: string;
+  displayName?: string;
   description?: string;
   // session_config is a oneof in the Dataproc API: a template has either
   // jupyterSession or sparkConnectSession, never both.
@@ -178,6 +179,17 @@ export const getDefaultTierForVersion = (
   return major > 3 || (major === 3 && minor >= 1) ? 'Premium' : 'Standard';
 };
 
+/**
+ * Resolves the user-facing display name for a session template.
+ * Dataproc v1 treats top-level `displayName` as authoritative over
+ * `jupyterSession.displayName`, falling back to the nested value for legacy
+ * templates that only populate `jupyterSession.displayName`.
+ */
+export const getRuntimeProfileDisplayName = (
+  template?: Pick<IRuntimeProfileTemplate, 'displayName' | 'jupyterSession'>
+): string =>
+  template?.displayName || template?.jupyterSession?.displayName || '';
+
 export const runtimeProfileListMapper = (
   templates: IRuntimeProfileTemplate[]
 ): IRuntimeProfileRow[] => {
@@ -206,7 +218,7 @@ export const runtimeProfileListMapper = (
 
     return {
       name: profileId || t.name,
-      displayName: t.jupyterSession?.displayName || '',
+      displayName: getRuntimeProfileDisplayName(t),
       region: region,
       runtimeVersion: t.runtimeConfig?.version || '',
       tier,

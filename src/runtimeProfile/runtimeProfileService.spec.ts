@@ -427,7 +427,7 @@ describe('RuntimeProfileService', () => {
             executorDisk: 'Standard persistent disk (HDD), 200 GB'
           },
           runtimeEnvironmentConfig: {
-            runtimeProfileId: 'runtime-00001234abcd',
+            runtimeProfileName: 'runtime-00001234abcd',
             runtimeVersion: '2.3'
           },
           autoscalingConfig: {
@@ -449,7 +449,7 @@ describe('RuntimeProfileService', () => {
         executorType: 'highmem-4',
         executorDisk: 'Standard persistent disk (HDD), 200 GB'
       });
-      expect(profile.runtimeEnvironmentConfig?.runtimeProfileId).toBe(
+      expect(profile.runtimeEnvironmentConfig?.runtimeProfileName).toBe(
         'runtime-00001234abcd'
       );
       expect(profile.autoscalingConfig?.maxExecutors).toBe(10);
@@ -626,7 +626,7 @@ describe('RuntimeProfileService', () => {
       displayName: 'sample-profile',
       region: 'us-central1',
       description: 'old description',
-      runtimeEnvironmentConfig: { runtimeProfileId: 'sample-profile' }
+      runtimeEnvironmentConfig: { runtimeProfileName: 'sample-profile' }
     };
     const payload = {
       ...initialPayload,
@@ -652,8 +652,13 @@ describe('RuntimeProfileService', () => {
 
     it('reloads the profile and PATCHes only the edits onto the latest copy in live mode', async () => {
       const service = new RuntimeProfileService(false);
-      // Saved since the form opened: a label the user didn't touch
-      const latestProfile = { ...existingProfile, labels: { owner: 'data' } };
+      // Saved since the form opened: a label the user didn't touch, plus
+      // Dataproc's authoritative top-level displayName
+      const latestProfile = {
+        ...existingProfile,
+        displayName: 'sample-profile',
+        labels: { owner: 'data' }
+      };
       const savedProfile = { ...latestProfile, description: 'saved' };
       (authApi as jest.Mock).mockResolvedValue({ access_token: 'live-token' });
       (loggedFetch as jest.Mock)
@@ -682,6 +687,7 @@ describe('RuntimeProfileService', () => {
         latestProfile
       );
       expect(body.labels).toEqual({ owner: 'data' });
+      expect(body.displayName).toBe('Renamed profile');
       expect(body.description).toBe('new description');
       expect(body.jupyterSession?.displayName).toBe('Renamed profile');
       // Settings the user didn't edit come from the fresh copy, unchanged

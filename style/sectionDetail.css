@@ -183,7 +183,6 @@ body[data-jp-theme-name='JupyterLab Dark']
   max-width: 100%;
   width: 100%;
   margin-top: 24px;
-  padding-top: 16px;
   border-top: 1px solid var(--jp-border-color2, #e0e0e0);
   box-sizing: border-box;
 }
@@ -193,14 +192,25 @@ body[data-jp-theme-name='JupyterLab Dark']
   justify-content: space-between;
   align-items: center;
   width: 100%;
-  padding: 0 4px;
+  padding: 14px 4px;
+  border-radius: 4px;
   cursor: pointer;
   user-select: none;
   box-sizing: border-box;
+  transition: background-color 0.15s ease-in-out;
+}
+
+.additional-config-header-container:hover {
+  background-color: var(--jp-layout-color2, #f1f3f4);
+}
+
+.additional-config-header-container:focus-visible {
+  outline: 2px solid var(--jp-brand-color1, #1a73e8);
+  outline-offset: -2px;
 }
 
 .additional-config-header-container.expanded {
-  margin-bottom: 16px;
+  margin-bottom: 4px;
 }
 
 .additional-config-header {
