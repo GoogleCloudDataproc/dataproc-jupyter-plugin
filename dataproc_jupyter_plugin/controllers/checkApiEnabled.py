@@ -13,6 +13,8 @@
 # limitations under the License.
 
 
+from urllib.parse import urlparse
+
 from jupyter_server.base.handlers import APIHandler
 import tornado
 from google.cloud.jupyter_config.config import async_run_gcloud_subcommand
@@ -27,8 +29,11 @@ class CheckApiController(APIHandler):
         """
         service_name = self.get_argument("service_name")
         service_url = await urls.gcp_service_url(service_name)
-        # if service_url is https://service_name.googleapis.com/ , we should retrive only service_name.googleapis.com
-        service_domain_name = service_url.split('//')[-1].split('/')[0]
+        # if service_url is https://service_name.googleapis.com/ , we should retrieve only service_name.googleapis.com
+        service_url_str = (service_url or "").strip()
+        if service_url_str and "://" not in service_url_str:
+            service_url_str = f"https://{service_url_str}"
+        service_domain_name = urlparse(service_url_str).hostname or ""
         if not service_domain_name:
             self.log.error(f"Service URL for {service_name} not found.")
             self.finish(
