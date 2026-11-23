@@ -15,19 +15,12 @@
  * limitations under the License.
  */
 
-(globalThis as any).IS_REACT_ACT_ENVIRONMENT = true;
+import React, { act } from 'react';
+import { createRoot, Root } from 'react-dom/client';
+import { Cluster } from './cluster';
+import { checkConfig } from '../utils/utils';
 
-jest.mock('../handler/handler', () => ({
-  requestAPI: jest.fn().mockResolvedValue({
-    dataproc_url: 'https://dataproc.googleapis.com/',
-    compute_url: 'https://compute.googleapis.com/compute',
-    metastore_url: 'https://metastore.googleapis.com/',
-    cloudkms_url: 'https://cloudkms.googleapis.com/',
-    cloudresourcemanager_url: 'https://cloudresourcemanager.googleapis.com/',
-    datacatalog_url: 'https://datacatalog.googleapis.com/',
-    storage_url: 'https://storage.googleapis.com/'
-  })
-}));
+(globalThis as any).IS_REACT_ACT_ENVIRONMENT = true;
 
 jest.mock('../utils/utils', () => ({
   checkConfig: jest.fn()
@@ -89,11 +82,6 @@ jest.mock('../utils/loginErrorComponent', () => ({
   )
 }));
 
-import React, { act } from 'react';
-import { createRoot, Root } from 'react-dom/client';
-import { Cluster } from './cluster';
-import { checkConfig } from '../utils/utils';
-
 describe('Cluster Widget and ClusterComponent', () => {
   let container: HTMLDivElement;
   let root: Root;
@@ -141,7 +129,7 @@ describe('Cluster Widget and ClusterComponent', () => {
     expect(container.textContent).toContain('Loading Clusters');
   });
 
-  it('renders LoginErrorComponent when checkConfig sets loginError or configError', async () => {
+  it('renders LoginErrorComponent when checkConfig sets loginError', async () => {
     (checkConfig as jest.Mock).mockImplementation(
       async (setLoggedIn, setConfigError, setLoginError) => {
         setLoginError(true);
@@ -153,7 +141,26 @@ describe('Cluster Widget and ClusterComponent', () => {
 
     const errorEl = container.querySelector('[data-testid="mock-login-error"]');
     expect(errorEl).not.toBeNull();
-    expect(errorEl?.textContent).toContain('LoginError: true');
+    expect(errorEl?.textContent).toContain(
+      'LoginError: true, ConfigError: false'
+    );
+  });
+
+  it('renders LoginErrorComponent when checkConfig sets configError', async () => {
+    (checkConfig as jest.Mock).mockImplementation(
+      async (setLoggedIn, setConfigError, setLoginError) => {
+        setLoginError(false);
+        setConfigError(true);
+      }
+    );
+
+    await renderWidget();
+
+    const errorEl = container.querySelector('[data-testid="mock-login-error"]');
+    expect(errorEl).not.toBeNull();
+    expect(errorEl?.textContent).toContain(
+      'LoginError: false, ConfigError: true'
+    );
   });
 
   it('renders Clusters and Jobs tabs and defaults to ListCluster when authenticated', async () => {
