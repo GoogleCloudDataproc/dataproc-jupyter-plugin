@@ -27,7 +27,10 @@ jest.mock('../handler/handler', () => ({
   })
 }));
 
-import { runtimeProfileListMapper } from './runtimeProfileListMapper';
+import {
+  getRuntimeProfileDisplayName,
+  runtimeProfileListMapper
+} from './runtimeProfileListMapper';
 
 describe('runtimeProfileListMapper', () => {
 
@@ -104,6 +107,25 @@ describe('runtimeProfileListMapper', () => {
       creator: '',
       description: ''
     });
+  });
+
+  it('prefers top-level template displayName over jupyterSession.displayName', () => {
+    const result = runtimeProfileListMapper([
+      {
+        name: 'projects/test-proj/locations/us-central1/sessionTemplates/top-level',
+        displayName: 'Top Level Name',
+        jupyterSession: { displayName: 'Nested Name', kernel: 'PYTHON' }
+      },
+      {
+        name: 'projects/test-proj/locations/us-central1/sessionTemplates/top-only',
+        displayName: 'Only Top Level',
+        jupyterSession: { kernel: 'PYTHON' }
+      }
+    ]);
+
+    expect(result[0].displayName).toBe('Top Level Name');
+    expect(result[1].displayName).toBe('Only Top Level');
+    expect(getRuntimeProfileDisplayName(undefined)).toBe('');
   });
 
   describe('formatLastUsed date formatting branches', () => {

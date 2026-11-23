@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { JupyterLab } from '@jupyterlab/application';
 import { IThemeManager, Notification } from '@jupyterlab/apputils';
@@ -43,19 +43,27 @@ import { SectionDetail, ISectionProperty } from '../controls/SectionDetail';
 import {
   LAKEHOUSE_RUNTIME_CATALOG,
   METASTORE_NONE,
+  getDefaultSsdDiskSize,
+  getMachineTypeDisplayName,
   isAcceleratedMachine,
-  normalizeMachineTypeName
+  isL4MachineType,
+  normalizeMachineTypeName,
+  parseDiskTierAndSize,
+  resolveExecutorDiskForShape,
+  sanitizeRuntimeProfileName
 } from './runtimeProfileMapper';
 import '../../style/runtimeProfile.css';
 import {
   AutoscalingEditDrawer,
   ExecutorAndDriverEditDrawer,
+  FieldErrorIcon,
   NetworkSecurityEditDrawer,
   OtherCustomizationEditDrawer,
   RuntimeEnvironmentEditDrawer,
   RUNTIME_VERSION_OPTIONS,
   SelectBucketEditDrawer,
-  SessionLifecycleEditDrawer
+  SessionLifecycleEditDrawer,
+  extractSubnetShortName
 } from './runtimeProfileEditDrawers';
 import { MetastoreEditDrawer } from './metastoreEditDrawer';
 import {
@@ -197,6 +205,10 @@ export const generateRandomHex = (): string => {
   return `runtime-${paddedHex}`;
 };
 
+const DISPLAY_NAME_REQUIRED_ERROR = 'Display name is required.';
+const DISPLAY_NAME_ALPHANUMERIC_ERROR =
+  'Display name must contain at least one letter or number.';
+
 /**
  * Initial default Serverless Spark runtime configuration for a new Runtime Profile.
  * Unset optional fields default to empty strings ('') so UI display placeholders
@@ -206,7 +218,7 @@ export const generateRandomHex = (): string => {
  * edit-drawer and API-integration PRs.
  */
 export const DEFAULT_RUNTIME_ENVIRONMENT_CONFIG: IRuntimeEnvironmentConfig = {
-  runtimeProfileId: '',
+  runtimeProfileName: '',
   runtimeVersion: '2.3 LTS (Spark 3.5, Java 17, Scala 2.13)',
   customSparkImage: '',
   stagingBucket: '',
@@ -269,8 +281,8 @@ export const formatRuntimeEnvironmentProperties = (
     '';
   return [
     {
-      label: 'Runtime profile ID',
-      value: config.runtimeProfileId || '-'
+      label: 'Runtime profile name',
+      value: config.runtimeProfileName || '-'
     },
     {
       label: 'Spark runtime version',
@@ -309,6 +321,9 @@ export const formatExecutorAndDriverProperties = (
       : MSG_EXECUTOR_TIER_PREMIUM
     : resolvedTier || MSG_EXECUTOR_TIER_STANDARD;
 
+  const executorDisk =
+    config.executorDisk || DEFAULT_EXECUTOR_AND_DRIVER_CONFIG.executorDisk;
+
   return [
     {
       label: 'Tier',
@@ -316,7 +331,7 @@ export const formatExecutorAndDriverProperties = (
     },
     {
       label: 'Driver machine type',
-      value: getMachineTypeLabel(
+      value: getMachineTypeDisplayName(
         config.driverMachineType ||
           DEFAULT_EXECUTOR_AND_DRIVER_CONFIG.driverMachineType
       )
@@ -327,14 +342,16 @@ export const formatExecutorAndDriverProperties = (
     },
     {
       label: 'Executor type',
-      value: getMachineTypeLabel(
+      value: getMachineTypeDisplayName(
         config.executorType || DEFAULT_EXECUTOR_AND_DRIVER_CONFIG.executorType
       )
     },
     {
       label: 'Executor disk',
-      value:
-        config.executorDisk || DEFAULT_EXECUTOR_AND_DRIVER_CONFIG.executorDisk
+      // An L4 executor's local SSD has a fixed size, so only its tier is shown.
+      value: isL4MachineType(config.executorMachineType || config.executorType)
+        ? formatCompactDiskLabel(executorDisk, false)
+        : executorDisk
     }
   ];
 };
@@ -427,8 +444,24 @@ export const formatMetastoreProperties = (
   return properties;
 };
 
-export const formatNetworkSecurityProperties = (
+const MSG_DEFAULT_NETWORK_UNAVAILABLE =
+  'Default network is not available. Please configure a network.';
+const MSG_SELECTED_NETWORK_UNAVAILABLE =
+  'Selected network is not available in this region. Please configure a network.';
+
+const getUnavailableNetworkMessage = (
   config?: INetworkAndSecurityConfig
+): string => {
+  const activeNetwork =
+    config?.primaryNetwork || config?.networkInThisProject || 'default';
+  return activeNetwork === 'default'
+    ? MSG_DEFAULT_NETWORK_UNAVAILABLE
+    : MSG_SELECTED_NETWORK_UNAVAILABLE;
+};
+
+export const formatNetworkSecurityProperties = (
+  config?: INetworkAndSecurityConfig,
+  isDefaultNetworkUnavailable = false
 ): ISectionProperty[] => {
   if (!config) {
     return [];
@@ -451,6 +484,8 @@ export const formatNetworkSecurityProperties = (
         : 'Network in this project',
       value: isSharedNetwork
         ? config.sharedSubnetwork || 'default'
+        : isDefaultNetworkUnavailable
+        ? getUnavailableNetworkMessage(config)
         : config.primaryNetwork ||
           config.networkInThisProject ||
           DEFAULT_NETWORK_SECURITY_CONFIG.networkInThisProject
@@ -638,6 +673,10 @@ export const CreateRuntimeProfileComponent: React.FC<
   // Collapsed by default; the summary panel already shows these settings.
   const [expandAdditionalConfig, setExpandAdditionalConfig] =
     useState<boolean>(false);
+  const [isDefaultNetworkUnavailable, setIsDefaultNetworkUnavailable] =
+    useState<boolean>(false);
+  const [isCheckingNetworkAvailability, setIsCheckingNetworkAvailability] =
+    useState<boolean>(false);
   const [isRuntimeConfigDrawerOpen, setIsRuntimeConfigDrawerOpen] =
     useState<boolean>(false);
   const [isMetastoreDrawerOpen, setIsMetastoreDrawerOpen] =
@@ -697,23 +736,29 @@ export const CreateRuntimeProfileComponent: React.FC<
       : DATAPROC_STANDARD_MACHINE_TYPES;
   }, [executorCategory, tier]);
 
-  const defaultRuntimeId = useMemo<string>(
-    () =>
-      initialRuntimeEnvironmentConfig?.runtimeProfileId || generateRandomHex(),
-    [initialRuntimeEnvironmentConfig?.runtimeProfileId]
-  );
+  const defaultRuntimeProfileName = useMemo<string>(() => {
+    const initialName = initialRuntimeEnvironmentConfig?.runtimeProfileName;
+    return initialName && initialName !== '-'
+      ? initialName
+      : generateRandomHex();
+  }, [initialRuntimeEnvironmentConfig?.runtimeProfileName]);
+
+  // Permanently detaches Runtime profile name from Display name once edited
+  // in the Runtime configuration drawer (and is always detached in edit mode).
+  const isRuntimeProfileNameCustomizedRef = useRef<boolean>(isEditMode);
 
   // React Hook Form initialization
   const {
     control,
     handleSubmit,
     setValue,
+    trigger,
     watch,
     formState: { errors, isSubmitting }
   } = useForm<IRuntimeProfileFormData>({
     mode: 'onChange',
     defaultValues: {
-      displayName: initialDisplayName ?? defaultRuntimeId,
+      displayName: initialDisplayName ?? defaultRuntimeProfileName,
       region: initialRegion ?? '',
       description: initialDescription ?? ''
     }
@@ -723,19 +768,23 @@ export const CreateRuntimeProfileComponent: React.FC<
   const hasFormErrors = Object.keys(errors).length > 0;
 
   // Configuration values derived from initial props or defaults.
-  // TODO: Validation on runtimeProfileId / displayName field will be handled in upcoming PRs.
   const [runtimeEnvironmentConfig, setRuntimeEnvironmentConfig] =
     useState<IRuntimeEnvironmentConfig>(() => {
       const baseConfig = {
         ...DEFAULT_RUNTIME_ENVIRONMENT_CONFIG,
         ...initialRuntimeEnvironmentConfig
       };
+      const explicitProfileName =
+        baseConfig.runtimeProfileName && baseConfig.runtimeProfileName !== '-'
+          ? baseConfig.runtimeProfileName
+          : undefined;
       return {
         ...baseConfig,
-        runtimeProfileId:
-          baseConfig.runtimeProfileId && baseConfig.runtimeProfileId !== '-'
-            ? baseConfig.runtimeProfileId
-            : defaultRuntimeId
+        runtimeProfileName:
+          explicitProfileName ??
+          (!isEditMode && initialDisplayName !== undefined
+            ? sanitizeRuntimeProfileName(initialDisplayName)
+            : defaultRuntimeProfileName)
       };
     });
 
@@ -747,7 +796,7 @@ export const CreateRuntimeProfileComponent: React.FC<
           : DISK_TIER_HDD;
       const defaultDiskSize =
         resolvedInitialCategory === 'accelerated'
-          ? DEFAULT_SSD_DISK_SIZE
+          ? getDefaultSsdDiskSize(executorType)
           : DEFAULT_HDD_DISK_SIZE;
       const defaultDisk = `${defaultDiskTier}, ${defaultDiskSize}`;
 
@@ -767,6 +816,10 @@ export const CreateRuntimeProfileComponent: React.FC<
         initialExecutorAndDriverConfig.executorDisk ?? defaultDisk;
       const resolvedDrvDisk =
         initialExecutorAndDriverConfig.driverDisk ?? resolvedExecDisk;
+      // An opened profile only has disk labels; read the tier and size from
+      // them, or the drawer shows the defaults instead of the saved disk.
+      const execDisk = parseDiskTierAndSize(resolvedExecDisk, defaultDiskTier);
+      const drvDisk = parseDiskTierAndSize(resolvedDrvDisk, defaultDiskTier);
       const hasCustomDriver =
         initialExecutorAndDriverConfig.useDifferentDriverConfig ??
         Boolean(
@@ -794,14 +847,14 @@ export const CreateRuntimeProfileComponent: React.FC<
         executorType:
           initialExecutorAndDriverConfig.executorType ?? executorType,
         executorDiskTier:
-          initialExecutorAndDriverConfig.executorDiskTier ?? defaultDiskTier,
+          initialExecutorAndDriverConfig.executorDiskTier ?? execDisk.tier,
         executorDiskSize:
-          initialExecutorAndDriverConfig.executorDiskSize ?? defaultDiskSize,
+          initialExecutorAndDriverConfig.executorDiskSize ?? execDisk.size,
         executorDisk: resolvedExecDisk,
         driverDiskTier:
-          initialExecutorAndDriverConfig.driverDiskTier ?? defaultDiskTier,
+          initialExecutorAndDriverConfig.driverDiskTier ?? drvDisk.tier,
         driverDiskSize:
-          initialExecutorAndDriverConfig.driverDiskSize ?? defaultDiskSize,
+          initialExecutorAndDriverConfig.driverDiskSize ?? drvDisk.size,
         driverDisk: resolvedDrvDisk
       };
     });
@@ -901,7 +954,7 @@ export const CreateRuntimeProfileComponent: React.FC<
     () =>
       isEditMode
         ? buildPayload({
-            displayName: initialDisplayName ?? defaultRuntimeId,
+            displayName: initialDisplayName ?? defaultRuntimeProfileName,
             region: initialRegion ?? '',
             description: initialDescription ?? ''
           })
@@ -962,7 +1015,10 @@ export const CreateRuntimeProfileComponent: React.FC<
       },
       {
         title: 'Network and security',
-        properties: formatNetworkSecurityProperties(networkAndSecurityConfig),
+        properties: formatNetworkSecurityProperties(
+          networkAndSecurityConfig,
+          isDefaultNetworkUnavailable
+        ),
         isEditDisabled: false,
         onEdit: () => setIsNetworkSecurityDrawerOpen(true)
       },
@@ -986,6 +1042,7 @@ export const CreateRuntimeProfileComponent: React.FC<
       metastoreConfig,
       projectId,
       networkAndSecurityConfig,
+      isDefaultNetworkUnavailable,
       sessionLifecycleConfig,
       sparkProperties,
       labels
@@ -1190,6 +1247,77 @@ export const CreateRuntimeProfileComponent: React.FC<
     };
   }, [service, setValue, isEditMode]);
 
+  // Verify default/selected project subnetwork availability in the chosen region
+  useEffect(() => {
+    if (
+      isEditMode ||
+      !selectedRegion ||
+      (networkAndSecurityConfig.networkSource ?? 'project') !== 'project' ||
+      !service.getSubnetworks
+    ) {
+      setIsDefaultNetworkUnavailable(false);
+      setIsCheckingNetworkAvailability(false);
+      return;
+    }
+
+    const activeNetwork =
+      networkAndSecurityConfig.primaryNetwork ||
+      networkAndSecurityConfig.networkInThisProject ||
+      'default';
+    const activeSubnetwork = extractSubnetShortName(
+      networkAndSecurityConfig.subnetwork || 'default'
+    );
+
+    let isMounted = true;
+    const checkDefaultSubnetwork = async () => {
+      setIsCheckingNetworkAvailability(true);
+      try {
+        const subnetworks = await service.getSubnetworks?.(
+          activeNetwork,
+          projectId,
+          selectedRegion
+        );
+        if (!isMounted) {
+          return;
+        }
+        const isAvailable =
+          Array.isArray(subnetworks) &&
+          subnetworks.some(
+            opt =>
+              (typeof opt === 'string' ? opt : opt.name) === activeSubnetwork
+          );
+        setIsDefaultNetworkUnavailable(!isAvailable);
+        if (!isAvailable) {
+          setExpandAdditionalConfig(true);
+        }
+      } catch (error) {
+        console.error('Failed to verify subnetwork availability:', error);
+        if (isMounted) {
+          setIsDefaultNetworkUnavailable(false);
+        }
+      } finally {
+        if (isMounted) {
+          setIsCheckingNetworkAvailability(false);
+        }
+      }
+    };
+
+    void checkDefaultSubnetwork();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [
+    isEditMode,
+    selectedRegion,
+    projectId,
+    service,
+    networkAndSecurityConfig.networkSource,
+    networkAndSecurityConfig.primaryNetwork,
+    networkAndSecurityConfig.networkInThisProject,
+    networkAndSecurityConfig.subnetwork
+  ]);
+
   const handleBack = () => {
     if (onBack) {
       onBack();
@@ -1214,8 +1342,8 @@ export const CreateRuntimeProfileComponent: React.FC<
       return;
     }
     const formWidgetTitle = isEditMode
-      ? 'Edit Runtime Profile'
-      : 'Create Runtime Profile';
+      ? 'Edit runtime profile'
+      : 'Create a runtime profile';
     const formWidgetsToClose = new Set<{ close: () => void }>();
     const targetWidget =
       submittingWidget ?? shell.activeWidget ?? shell.currentWidget;
@@ -1368,7 +1496,7 @@ export const CreateRuntimeProfileComponent: React.FC<
           />
         </div>
         <div className="cluster-details-title">
-          {isEditMode ? 'Edit Runtime Profile' : 'Create a runtime profile'}
+          {isEditMode ? 'Edit runtime profile' : 'Create a runtime profile'}
         </div>
       </div>
 
@@ -1385,29 +1513,94 @@ export const CreateRuntimeProfileComponent: React.FC<
             {/* Row 1: Display name & Region */}
             <div className="runtime-profile-row">
               <div className="runtime-profile-col">
-                {/* TODO: Full validation on runtime-id / displayName field will be added in upcoming PRs */}
                 <Controller
                   name="displayName"
                   control={control}
                   rules={{
-                    required: 'Display name is required',
-                    validate: value =>
-                      value.trim().length > 0 || 'Display name is required'
+                    required: DISPLAY_NAME_REQUIRED_ERROR,
+                    validate: (value: string) => {
+                      if (value.trim().length === 0) {
+                        return DISPLAY_NAME_REQUIRED_ERROR;
+                      }
+                      if (
+                        !isEditMode &&
+                        !isRuntimeProfileNameCustomizedRef.current &&
+                        !sanitizeRuntimeProfileName(value)
+                      ) {
+                        return DISPLAY_NAME_ALPHANUMERIC_ERROR;
+                      }
+                      return true;
+                    }
                   }}
-                  render={({ field }) => (
-                    <TextField
-                      {...field}
-                      id="runtime-profile-display-name"
-                      label="Display name *"
-                      placeholder="e.g. my-runtime-profile"
-                      variant="outlined"
-                      size="small"
-                      fullWidth
-                      error={Boolean(errors.displayName)}
-                      helperText={errors.displayName?.message}
-                      InputLabelProps={{ shrink: true }}
-                    />
-                  )}
+                  render={({ field, fieldState }) => {
+                    const displayNameError = fieldState.error?.message;
+                    const runtimeProfileName =
+                      activeRuntimeEnvironmentConfig.runtimeProfileName;
+                    const describedById = displayNameError
+                      ? 'runtime-profile-display-name-error'
+                      : runtimeProfileName
+                      ? 'runtime-profile-name-helper'
+                      : undefined;
+                    return (
+                      <>
+                        <TextField
+                          {...field}
+                          onChange={event => {
+                            field.onChange(event);
+                            if (
+                              !isEditMode &&
+                              !isRuntimeProfileNameCustomizedRef.current
+                            ) {
+                              const derivedName = sanitizeRuntimeProfileName(
+                                event.target.value
+                              );
+                              setRuntimeEnvironmentConfig(prev =>
+                                prev.runtimeProfileName === derivedName
+                                  ? prev
+                                  : {
+                                      ...prev,
+                                      runtimeProfileName: derivedName
+                                    }
+                              );
+                            }
+                          }}
+                          id="runtime-profile-display-name"
+                          label="Display name *"
+                          placeholder="e.g. my-runtime-profile"
+                          variant="outlined"
+                          size="small"
+                          fullWidth
+                          error={Boolean(displayNameError)}
+                          inputProps={{
+                            'aria-describedby': describedById
+                          }}
+                          InputLabelProps={{ shrink: true }}
+                        />
+                        {displayNameError ? (
+                          <div
+                            id="runtime-profile-display-name-error"
+                            className="runtime-profile-field-error"
+                            role="alert"
+                          >
+                            <span
+                              className="runtime-profile-field-error-icon"
+                              aria-hidden="true"
+                            >
+                              <FieldErrorIcon />
+                            </span>
+                            <span>{displayNameError}</span>
+                          </div>
+                        ) : runtimeProfileName ? (
+                          <div
+                            id="runtime-profile-name-helper"
+                            className="runtime-profile-name-helper"
+                          >
+                            {`Runtime profile name: ${runtimeProfileName}`}
+                          </div>
+                        ) : null}
+                      </>
+                    );
+                  }}
                 />
               </div>
               <div className="runtime-profile-col">
@@ -1667,27 +1860,29 @@ export const CreateRuntimeProfileComponent: React.FC<
                     onChange={(e: SelectChangeEvent) => {
                       const newType = e.target.value as string;
                       setExecutorType(newType);
-                      const match = ALL_MACHINE_TYPES.find(
-                        m => m.name === newType
-                      );
-                      const isAcc =
-                        match?.category === 'accelerated' ||
-                        Boolean(match?.acceleratorType);
                       setExecutorAndDriverConfigState(prev => {
-                        const nextDiskTier = isAcc
-                          ? DISK_TIER_SSD
-                          : prev.executorDiskTier || DISK_TIER_HDD;
-                        const nextDiskSize = isAcc
-                          ? DEFAULT_SSD_DISK_SIZE
-                          : prev.executorDiskSize || DEFAULT_HDD_DISK_SIZE;
+                        // The disk label is what gets saved, so read the
+                        // current disk from it.
+                        const currentDisk = parseDiskTierAndSize(
+                          prev.executorDisk,
+                          prev.executorDiskTier || DISK_TIER_HDD
+                        );
+                        const nextDisk = resolveExecutorDiskForShape(
+                          currentDisk,
+                          newType,
+                          ALL_MACHINE_TYPES
+                        );
+                        const isDiskChanged =
+                          nextDisk.tier !== currentDisk.tier ||
+                          nextDisk.size !== currentDisk.size;
                         return {
                           ...prev,
                           executorType: newType,
                           executorMachineType: newType,
-                          ...(isAcc && {
-                            executorDiskTier: nextDiskTier,
-                            executorDiskSize: nextDiskSize,
-                            executorDisk: `${nextDiskTier}, ${nextDiskSize}`
+                          ...(isDiskChanged && {
+                            executorDiskTier: nextDisk.tier,
+                            executorDiskSize: nextDisk.size,
+                            executorDisk: `${nextDisk.tier}, ${nextDisk.size}`
                           })
                         };
                       });
@@ -1709,23 +1904,24 @@ export const CreateRuntimeProfileComponent: React.FC<
                 className={`additional-config-header-container${
                   expandAdditionalConfig ? ' expanded' : ''
                 }`}
-                onClick={() =>
-                  setExpandAdditionalConfig(!expandAdditionalConfig)
-                }
+                onClick={() => setExpandAdditionalConfig(prev => !prev)}
                 onKeyDown={event => {
                   if (event.key === 'Enter' || event.key === ' ') {
                     event.preventDefault();
-                    setExpandAdditionalConfig(!expandAdditionalConfig);
+                    setExpandAdditionalConfig(prev => !prev);
                   }
                 }}
                 role="button"
                 tabIndex={0}
                 aria-expanded={expandAdditionalConfig}
+                aria-controls="additional-config-content"
               >
                 <div className="additional-config-header">
-                  Additional configuration
+                  {isDefaultNetworkUnavailable
+                    ? 'Additional configuration (Configuration required)'
+                    : 'Additional configuration'}
                 </div>
-                <div className="expand-icon">
+                <div className="expand-icon" aria-hidden="true">
                   <ExpandIconComponent
                     tag="div"
                     className="logo-alignment-style"
@@ -1734,7 +1930,44 @@ export const CreateRuntimeProfileComponent: React.FC<
               </div>
 
               {expandAdditionalConfig && (
-                <div className="additional-config-content">
+                <div
+                  id="additional-config-content"
+                  className="additional-config-content"
+                >
+                  {isDefaultNetworkUnavailable && (
+                    <div
+                      className="additional-config-warning-banner"
+                      data-testid="default-network-warning-banner"
+                    >
+                      <div
+                        className="additional-config-warning-content"
+                        role="alert"
+                      >
+                        <svg
+                          className="additional-config-warning-icon"
+                          width="18"
+                          height="18"
+                          viewBox="0 0 24 24"
+                          fill="currentColor"
+                          aria-hidden="true"
+                        >
+                          <path d="M12 5.99L19.53 19H4.47L12 5.99M12 2L1 21h22L12 2zm1 14h-2v2h2v-2zm0-6h-2v4h2v-4z" />
+                        </svg>
+                        <span className="additional-config-warning-text">
+                          {getUnavailableNetworkMessage(
+                            networkAndSecurityConfig
+                          )}
+                        </span>
+                      </div>
+                      <button
+                        type="button"
+                        className="additional-config-warning-btn"
+                        onClick={() => setIsNetworkSecurityDrawerOpen(true)}
+                      >
+                        Configure network
+                      </button>
+                    </div>
+                  )}
                   {/* TODO: Wire up onEdit handlers for each section in upcoming edit drawer tasks */}
                   {additionalConfigSections.map(section => (
                     <SectionDetail
@@ -1753,9 +1986,17 @@ export const CreateRuntimeProfileComponent: React.FC<
             <div className="runtime-profile-buttons">
               <button
                 type="submit"
-                disabled={isSubmitting || hasFormErrors}
+                disabled={
+                  isSubmitting ||
+                  hasFormErrors ||
+                  isDefaultNetworkUnavailable ||
+                  isCheckingNetworkAvailability
+                }
                 className={`runtime-profile-submit-btn ${
-                  isSubmitting || hasFormErrors
+                  isSubmitting ||
+                  hasFormErrors ||
+                  isDefaultNetworkUnavailable ||
+                  isCheckingNetworkAvailability
                     ? 'submit-button-disable-style'
                     : 'submit-button-style'
                 }`}
@@ -1765,7 +2006,7 @@ export const CreateRuntimeProfileComponent: React.FC<
                 ) : isEditMode ? (
                   'Save'
                 ) : (
-                  'Create a runtime profile'
+                  'Create runtime profile'
                 )}
               </button>
               <button
@@ -1796,11 +2037,24 @@ export const CreateRuntimeProfileComponent: React.FC<
         open={isRuntimeConfigDrawerOpen}
         config={activeRuntimeEnvironmentConfig}
         service={service}
-        isProfileIdDisabled={isEditMode}
+        isProfileNameDisabled={isEditMode}
         onClose={() => setIsRuntimeConfigDrawerOpen(false)}
         onSave={(updatedConfig: IRuntimeEnvironmentConfig) => {
+          const prevName = (
+            activeRuntimeEnvironmentConfig.runtimeProfileName ?? ''
+          ).trim();
+          const nextName = (updatedConfig.runtimeProfileName ?? '').trim();
+          const didCustomizeName = !isEditMode && nextName !== prevName;
+          if (didCustomizeName) {
+            isRuntimeProfileNameCustomizedRef.current = true;
+          }
           setRuntimeEnvironmentConfig(updatedConfig);
           setIsRuntimeConfigDrawerOpen(false);
+          if (didCustomizeName) {
+            void trigger('displayName').catch(error => {
+              console.error('Failed to validate display name:', error);
+            });
+          }
         }}
       />
       <MetastoreEditDrawer

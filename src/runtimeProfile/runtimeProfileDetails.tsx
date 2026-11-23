@@ -28,6 +28,7 @@ import ExpandMoreIcon from '../../style/icons/expand_more.svg';
 import {
   formatLastUsed,
   getDefaultTierForVersion,
+  getRuntimeProfileDisplayName,
   IRuntimeProfileTemplate,
   parseRuntimeProfileResourceName
 } from './runtimeProfileListMapper';
@@ -62,6 +63,7 @@ import {
   getDefaultLakehouseCatalogName,
   getLakehouseCatalogResource,
   isAcceleratedMachine,
+  isL4MachineType,
   LAKEHOUSE_CATALOG_PROPERTY_PREFIX,
   LAKEHOUSE_DEFAULT_CATALOG_PROPERTY,
   LAKEHOUSE_PROJECT_PROPERTY,
@@ -71,6 +73,8 @@ import {
   parseDiskTierAndSize,
   parseMachineTypeSpec,
   parseTtlToQuantityAndUnit,
+  resolveStandardDriverMachineName,
+  resolveStandardDriverMachineSpec,
   toTtlDurationString
 } from './runtimeProfileMapper';
 import { RuntimeProfileService } from './runtimeProfileService';
@@ -198,7 +202,7 @@ export const buildRuntimeEnvironmentConfigFromTemplate = (
 ): IRuntimeEnvironmentConfig => {
   const properties = profile.runtimeConfig?.properties || {};
   return {
-    runtimeProfileId: shortName,
+    runtimeProfileName: shortName,
     runtimeVersion: profile.runtimeConfig?.version || '',
     customSparkImage: profile.runtimeConfig?.containerImage || '',
     stagingBucket:
@@ -379,10 +383,15 @@ export const buildExecutorAndDriverConfigFromTemplate = (
         )
       : executorMachineType;
 
-  const execDiskStr = [
-    getPropertyValue(properties, 'spark.dataproc.executor.disk.tier').trim(),
-    getPropertyValue(properties, 'spark.dataproc.executor.disk.size').trim()
-  ]
+  const rawExecDiskTier = getPropertyValue(
+    properties,
+    'spark.dataproc.executor.disk.tier'
+  ).trim();
+  const rawExecDiskSize = getPropertyValue(
+    properties,
+    'spark.dataproc.executor.disk.size'
+  ).trim();
+  const execDiskStr = [rawExecDiskTier, rawExecDiskSize]
     .filter(Boolean)
     .join(' ');
   const parsedExecDisk = parseDiskTierAndSize(
@@ -390,12 +399,15 @@ export const buildExecutorAndDriverConfigFromTemplate = (
     isAcceleratedMachine(executorMachineType) ? DISK_TIER_SSD : DISK_TIER_HDD
   );
 
-  const drvDiskStr = [
-    getPropertyValue(properties, 'spark.dataproc.driver.disk.tier').trim(),
-    getPropertyValue(properties, 'spark.dataproc.driver.disk.size').trim()
-  ]
-    .filter(Boolean)
-    .join(' ');
+  const rawDrvDiskTier = getPropertyValue(
+    properties,
+    'spark.dataproc.driver.disk.tier'
+  ).trim();
+  const rawDrvDiskSize = getPropertyValue(
+    properties,
+    'spark.dataproc.driver.disk.size'
+  ).trim();
+  const drvDiskStr = [rawDrvDiskTier, rawDrvDiskSize].filter(Boolean).join(' ');
   const parsedDrvDisk = drvDiskStr
     ? parseDiskTierAndSize(
         drvDiskStr,
@@ -403,15 +415,27 @@ export const buildExecutorAndDriverConfigFromTemplate = (
       )
     : parsedExecDisk;
 
+  // L4 executors omit spark.dataproc.executor.disk.size on save because their
+  // local SSD has a fixed size; don't treat that omission as a driver mismatch.
+  const isL4ExecutorWithOmittedDiskSize =
+    isL4MachineType(executorMachineType) && !rawExecDiskSize;
+  const hasDifferentDiskConfig = isL4ExecutorWithOmittedDiskSize
+    ? parsedDrvDisk.tier !== parsedExecDisk.tier
+    : parsedDrvDisk.tier !== parsedExecDisk.tier ||
+      parsedDrvDisk.size !== parsedExecDisk.size ||
+      Boolean(
+        drvDiskStr &&
+          execDiskStr &&
+          drvDiskStr.toLowerCase() !== execDiskStr.toLowerCase()
+      );
+
   const useDifferentDriverConfig =
-    driverMachineType !== executorMachineType ||
-    parsedDrvDisk.tier !== parsedExecDisk.tier ||
-    parsedDrvDisk.size !== parsedExecDisk.size ||
-    Boolean(
-      drvDiskStr &&
-        execDiskStr &&
-        drvDiskStr.toLowerCase() !== execDiskStr.toLowerCase()
-    );
+    driverMachineType !== executorMachineType || hasDifferentDiskConfig;
+
+  const effectiveExecDiskSize =
+    isL4ExecutorWithOmittedDiskSize && !useDifferentDriverConfig
+      ? parsedDrvDisk.size
+      : parsedExecDisk.size;
 
   return {
     tier,
@@ -419,8 +443,8 @@ export const buildExecutorAndDriverConfigFromTemplate = (
     executorType: executorMachineType,
     executorMachineType,
     executorDiskTier: parsedExecDisk.tier,
-    executorDiskSize: parsedExecDisk.size,
-    executorDisk: `${parsedExecDisk.tier}, ${parsedExecDisk.size}`,
+    executorDiskSize: effectiveExecDiskSize,
+    executorDisk: `${parsedExecDisk.tier}, ${effectiveExecDiskSize}`,
     useDifferentDriverConfig,
     driverMachineType,
     driverDiskTier: parsedDrvDisk.tier,
@@ -459,22 +483,18 @@ export const applyExecutorAndDriverUpdateToTemplate = (
     nextProps[DATAPROC_LIGHTNING_ENGINE_PROPERTY] = 'lightningEngine';
   }
 
+  // Drivers always run on standard CPU shapes rather than GPU accelerator shapes.
   const driverMachineName = updated.driverMachineType;
-  const driverMachine = parseMachineTypeSpec(driverMachineName);
+  const driverMachine = resolveStandardDriverMachineSpec(driverMachineName);
   if (driverMachine) {
     nextProps['spark.driver.cores'] = String(driverMachine.cores);
-    if (!driverMachine.acceleratorType) {
-      nextProps['spark.driver.memory'] = driverMachine.memory;
-    }
+    nextProps['spark.driver.memory'] = driverMachine.memory;
     if (
-      driverMachineName?.toLowerCase().includes('highmem') ||
-      driverMachine.acceleratorType
+      resolveStandardDriverMachineName(driverMachineName)
+        .toLowerCase()
+        .includes('highmem')
     ) {
       nextProps['spark.dataproc.driver.compute.tier'] = 'premium';
-    }
-    if (driverMachine.acceleratorType) {
-      nextProps['spark.dataproc.driver.resource.accelerator.type'] =
-        driverMachine.acceleratorType;
     }
   }
 
@@ -509,11 +529,19 @@ export const applyExecutorAndDriverUpdateToTemplate = (
     }
   }
 
+  // L4 shapes have a fixed-size local SSD and the service ignores a requested
+  // size, so only the 'premium' tier is saved for them.
+  const isExecutorL4 =
+    isL4MachineType(executorMachineName) ||
+    executorMachine?.acceleratorType?.toLowerCase() === 'l4';
   const executorDisk = parseDiskSpec(updated.executorDisk, DEFAULT_DISK_SIZE);
-  if (executorDisk.tier) {
+  if (isExecutorL4) {
+    nextProps['spark.dataproc.executor.disk.tier'] = 'premium';
+    nextProps['spark.dataproc.executor.compute.tier'] = 'premium';
+  } else if (executorDisk.tier) {
     nextProps['spark.dataproc.executor.disk.tier'] = executorDisk.tier;
   }
-  if (executorDisk.size) {
+  if (!isExecutorL4 && executorDisk.size) {
     nextProps['spark.dataproc.executor.disk.size'] = executorDisk.size;
   }
 
@@ -1318,7 +1346,8 @@ export default function RuntimeProfileDetails({
     region,
     profileId: shortName
   } = parseRuntimeProfileResourceName(currentProfile.name);
-  const displayName = currentProfile.jupyterSession?.displayName || shortName;
+  const displayName =
+    getRuntimeProfileDisplayName(currentProfile) || shortName;
   const properties = currentProfile.runtimeConfig?.properties || {};
   const executionConfig = currentProfile.environmentConfig?.executionConfig;
   const getProp = (key: string) => getPropertyValue(properties, key);
@@ -1337,19 +1366,6 @@ export default function RuntimeProfileDetails({
     getProp(DATAPROC_LIGHTNING_ENGINE_PROPERTY).trim() === 'lightningEngine'
       ? 'Enabled'
       : 'Disabled';
-  const driverDisk = formatDiskConfig(
-    getProp('spark.dataproc.driver.disk.tier'),
-    getProp('spark.dataproc.driver.disk.size')
-  );
-  const executorDisk = formatDiskConfig(
-    getProp('spark.dataproc.executor.disk.tier'),
-    getProp('spark.dataproc.executor.disk.size')
-  );
-  const autoscalingStatus =
-    getProp('spark.dynamicAllocation.enabled').trim().toLowerCase() === 'false'
-      ? 'Off'
-      : 'On';
-
   const runtimeEnvironmentDrawerConfig = useMemo(
     () => buildRuntimeEnvironmentConfigFromTemplate(currentProfile, shortName),
     [currentProfile, shortName]
@@ -1358,6 +1374,21 @@ export default function RuntimeProfileDetails({
     () => buildExecutorAndDriverConfigFromTemplate(currentProfile),
     [currentProfile]
   );
+  const driverDisk = formatDiskConfig(
+    getProp('spark.dataproc.driver.disk.tier'),
+    getProp('spark.dataproc.driver.disk.size')
+  );
+  // L4 executors have a fixed-size local SSD, so omit any GiB size in Details view.
+  const executorDisk = formatDiskConfig(
+    getProp('spark.dataproc.executor.disk.tier'),
+    isL4MachineType(executorAndDriverDrawerConfig.executorMachineType)
+      ? ''
+      : getProp('spark.dataproc.executor.disk.size')
+  );
+  const autoscalingStatus =
+    getProp('spark.dynamicAllocation.enabled').trim().toLowerCase() === 'false'
+      ? 'Off'
+      : 'On';
   const autoscalingDrawerConfig = useMemo(
     () => buildAutoscalingConfigFromTemplate(currentProfile),
     [currentProfile]
@@ -1504,7 +1535,7 @@ export default function RuntimeProfileDetails({
   const basicInfoRows = [
     {
       label: 'Display name',
-      value: currentProfile.jupyterSession?.displayName || ''
+      value: getRuntimeProfileDisplayName(currentProfile)
     },
     { label: 'Name', value: shortName },
     { label: 'Region', value: region },
@@ -1837,7 +1868,7 @@ export default function RuntimeProfileDetails({
       <RuntimeEnvironmentEditDrawer
         open={isRuntimeConfigDrawerOpen}
         config={runtimeEnvironmentDrawerConfig}
-        isProfileIdDisabled
+        isProfileNameDisabled
         onClose={() => setIsRuntimeConfigDrawerOpen(false)}
         onSave={updatedConfig => {
           const nextTemplate = applyRuntimeEnvironmentUpdateToTemplate(

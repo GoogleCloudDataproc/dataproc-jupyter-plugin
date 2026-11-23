@@ -482,12 +482,12 @@ describe('RuntimeProfileDetails Component', () => {
       editRuntimeBtn.click();
     });
 
-    const profileIdInput = document.body.querySelector(
-      '#edit-runtime-profile-id'
+    const profileNameInput = document.body.querySelector(
+      '#edit-runtime-profile-name'
     ) as HTMLInputElement;
-    expect(profileIdInput).not.toBeNull();
-    expect(profileIdInput.value).toBe('sample-profile');
-    expect(profileIdInput.disabled).toBe(true);
+    expect(profileNameInput).not.toBeNull();
+    expect(profileNameInput.value).toBe('sample-profile');
+    expect(profileNameInput.disabled).toBe(true);
 
     // Click Save in active EditDrawer matching the section title
     const getDrawerSaveBtn = (title: string) => {
@@ -995,14 +995,14 @@ describe('RuntimeProfileDetails Component', () => {
       mockProfile,
       'sample-profile'
     );
-    expect(envCfg.runtimeProfileId).toBe('sample-profile');
+    expect(envCfg.runtimeProfileName).toBe('sample-profile');
     expect(envCfg.runtimeVersion).toBe('2.3');
     expect(envCfg.lightningEngineEnabled).toBe(true);
 
     const updatedEnvTemplate = applyRuntimeEnvironmentUpdateToTemplate(
       mockProfile,
       {
-        runtimeProfileId: 'sample-profile',
+        runtimeProfileName: 'sample-profile',
         runtimeVersion: '2.2 LTS (Spark 3.5, Java 17, Scala 2.13)',
         customSparkImage: 'gcr.io/proj/img:v1',
         stagingBucket: 'gs://custom-bucket',
@@ -1024,7 +1024,7 @@ describe('RuntimeProfileDetails Component', () => {
     const clearedEnvTemplate = applyRuntimeEnvironmentUpdateToTemplate(
       updatedEnvTemplate,
       {
-        runtimeProfileId: 'sample-profile',
+        runtimeProfileName: 'sample-profile',
         runtimeVersion: '',
         customSparkImage: 'None',
         stagingBucket: 'Auto',
@@ -1063,9 +1063,79 @@ describe('RuntimeProfileDetails Component', () => {
     expect(
       updatedProps['spark.dataproc.executor.resource.accelerator.type']
     ).toBe('l4');
+    // L4 shapes have a fixed-size local SSD: the tier is saved, and the
+    // previously saved executor disk size is removed.
+    expect(updatedProps['spark.dataproc.executor.disk.tier']).toBe('premium');
+    expect(updatedProps['spark.dataproc.executor.compute.tier']).toBe(
+      'premium'
+    );
+    expect(updatedProps['spark.dataproc.executor.disk.size']).toBeUndefined();
+    expect(
+      updatedProps['spark:spark.dataproc.executor.disk.size']
+    ).toBeUndefined();
+    expect(updatedProps['spark.dataproc.driver.disk.size']).toBe('375g');
     expect(updatedProps['spark.driver.cores']).toBe('4');
     expect(updatedProps['spark.driver.memory']).toBe('16g');
     expect(updatedProps['spark.dataproc.driver.compute.tier']).toBe('premium');
+    expect(
+      updatedProps['spark.dataproc.driver.resource.accelerator.type']
+    ).toBeUndefined();
+
+    // Shared accelerated shape keeps the driver CPU-only (highmem-4) and omits
+    // spark.executor.memory on GPU executors.
+    const updatedSharedGpuTemplate = applyExecutorAndDriverUpdateToTemplate(
+      mockProfile,
+      {
+        tier: 'Premium',
+        lightningEngineEnabled: true,
+        executorType: 'a100-40',
+        executorMachineType: 'a100-40',
+        executorDisk: 'SSD (premium), 750 GiB',
+        driverMachineType: 'a100-40',
+        driverDisk: 'SSD (premium), 750 GiB'
+      }
+    );
+    const sharedGpuProps =
+      updatedSharedGpuTemplate.runtimeConfig?.properties || {};
+    expect(sharedGpuProps['spark.executor.cores']).toBe('12');
+    expect(sharedGpuProps['spark.executor.memory']).toBeUndefined();
+    expect(
+      sharedGpuProps['spark.dataproc.executor.resource.accelerator.type']
+    ).toBe('a100-40');
+    expect(sharedGpuProps['spark.dataproc.executor.disk.size']).toBe('750g');
+    expect(sharedGpuProps['spark.driver.cores']).toBe('4');
+    expect(sharedGpuProps['spark.driver.memory']).toBe('32g');
+    expect(sharedGpuProps['spark.dataproc.driver.compute.tier']).toBe(
+      'premium'
+    );
+    expect(
+      sharedGpuProps['spark.dataproc.driver.resource.accelerator.type']
+    ).toBeUndefined();
+
+    // Saved L4 profile with omitted executor.disk.size keeps shared driver config
+    // and preserves the driver's saved SSD size.
+    const savedL4SharedTemplate: IRuntimeProfileTemplate = {
+      name: 'projects/test-project/locations/us-central1/sessionTemplates/l4-shared',
+      runtimeConfig: {
+        version: '2.3',
+        properties: {
+          'dataproc.tier': 'premium',
+          'spark.executor.cores': '4',
+          'spark.dataproc.executor.resource.accelerator.type': 'l4',
+          'spark.dataproc.executor.disk.tier': 'premium',
+          'spark.driver.cores': '4',
+          'spark.dataproc.driver.resource.accelerator.type': 'l4',
+          'spark.dataproc.driver.disk.tier': 'premium',
+          'spark.dataproc.driver.disk.size': '750g'
+        }
+      }
+    };
+    const l4SharedCfg = buildExecutorAndDriverConfigFromTemplate(
+      savedL4SharedTemplate
+    );
+    expect(l4SharedCfg.useDifferentDriverConfig).toBe(false);
+    expect(l4SharedCfg.executorDiskSize).toBe('750 GiB');
+    expect(l4SharedCfg.driverDiskSize).toBe('750 GiB');
 
     // 2.x template without dataproc.tier defaults to Standard and leaves dataproc.tier unset if unchanged
     const template2xNoTier: IRuntimeProfileTemplate = {
@@ -1825,5 +1895,24 @@ describe('RuntimeProfileDetails Component', () => {
     expect(getRowValue('Execution identity')).toBe(customSaEmail);
     expect(getRowValue('Network URI')).toBe(customNetworkUri);
     expect(getRowValue('Subnetwork URI')).toBeUndefined();
+  });
+
+  it('prefers top-level displayName over jupyterSession.displayName in Basic Information', async () => {
+    const profileWithTopLevelName: IRuntimeProfileTemplate = {
+      ...mockProfile,
+      displayName: 'Authoritative Profile Name',
+      jupyterSession: { displayName: 'Legacy Nested Name', kernel: 'PYTHON' }
+    };
+
+    await renderDetails(jest.fn(), undefined, profileWithTopLevelName);
+
+    const rows = Array.from(
+      container.querySelectorAll('.runtime-profile-details-row')
+    );
+    const displayNameValue = rows
+      .find(row => row.textContent?.startsWith('Display name'))
+      ?.querySelector('.runtime-profile-details-value')?.textContent;
+
+    expect(displayNameValue).toBe('Authoritative Profile Name');
   });
 });

@@ -208,7 +208,7 @@ describe('CreateRuntimeProfileComponent UI & Service', () => {
       '#runtime-profile-display-name'
     ) as HTMLInputElement;
     expect(displayNameInput?.value).toMatch(/^runtime-[0-9a-f]{12}$/);
-    expect(getFieldValue('Runtime profile ID')).toBe(displayNameInput?.value);
+    expect(getFieldValue('Runtime profile name')).toBe(displayNameInput?.value);
     expect(getFieldValue('Spark runtime version')).toBe(
       '2.3 LTS (Spark 3.5, Java 17, Scala 2.13)'
     );
@@ -240,24 +240,40 @@ describe('CreateRuntimeProfileComponent UI & Service', () => {
     const header = container.querySelector(
       '.additional-config-header-container'
     ) as HTMLDivElement;
+    const headerTitle = container.querySelector(
+      '.additional-config-header'
+    ) as HTMLDivElement;
     expect(header.getAttribute('aria-expanded')).toBe('false');
-    expect(container.querySelector('.additional-config-content')).toBeNull();
+    expect(header.getAttribute('aria-controls')).toBe(
+      'additional-config-content'
+    );
+    expect(container.querySelector('#additional-config-content')).toBeNull();
 
-    // Click to expand
+    // Click directly on the header title text to expand
+    await act(async () => {
+      headerTitle.click();
+    });
+    expect(header.getAttribute('aria-expanded')).toBe('true');
+    expect(
+      container.querySelector('#additional-config-content')
+    ).not.toBeNull();
+
+    // Click directly on the header title text to collapse
+    await act(async () => {
+      headerTitle.click();
+    });
+    expect(header.getAttribute('aria-expanded')).toBe('false');
+    expect(container.querySelector('#additional-config-content')).toBeNull();
+
+    // Click container to expand and collapse
     await act(async () => {
       header.click();
     });
     expect(header.getAttribute('aria-expanded')).toBe('true');
-    expect(
-      container.querySelector('.additional-config-content')
-    ).not.toBeNull();
-
-    // Click to collapse
     await act(async () => {
       header.click();
     });
     expect(header.getAttribute('aria-expanded')).toBe('false');
-    expect(container.querySelector('.additional-config-content')).toBeNull();
 
     // Press Enter to expand.
     await act(async () => {
@@ -267,7 +283,7 @@ describe('CreateRuntimeProfileComponent UI & Service', () => {
     });
     expect(header.getAttribute('aria-expanded')).toBe('true');
     expect(
-      container.querySelector('.additional-config-content')
+      container.querySelector('#additional-config-content')
     ).not.toBeNull();
 
     // Press Space to collapse.
@@ -277,7 +293,7 @@ describe('CreateRuntimeProfileComponent UI & Service', () => {
       );
     });
     expect(header.getAttribute('aria-expanded')).toBe('false');
-    expect(container.querySelector('.additional-config-content')).toBeNull();
+    expect(container.querySelector('#additional-config-content')).toBeNull();
   });
 
   it('renders custom initial configuration values and mapped display labels in the UI', async () => {
@@ -286,7 +302,7 @@ describe('CreateRuntimeProfileComponent UI & Service', () => {
         <CreateRuntimeProfileComponent
           service={mockService}
           initialRuntimeEnvironmentConfig={{
-            runtimeProfileId: 'custom-runtime-id',
+            runtimeProfileName: 'custom-runtime-id',
             runtimeVersion: '2.2 LTS',
             customSparkImage: 'gcr.io/my-project/spark:latest',
             stagingBucket: 'gs://my-staging-bucket',
@@ -331,7 +347,7 @@ describe('CreateRuntimeProfileComponent UI & Service', () => {
     });
     await expandAdditionalConfig();
 
-    expect(getFieldValue('Runtime profile ID')).toBe('custom-runtime-id');
+    expect(getFieldValue('Runtime profile name')).toBe('custom-runtime-id');
     expect(getFieldValue('Spark runtime version')).toBe('2.2 LTS');
     expect(getFieldValue('Custom spark image')).toBe(
       'gcr.io/my-project/spark:latest'
@@ -421,7 +437,7 @@ describe('CreateRuntimeProfileComponent UI & Service', () => {
           executorDisk: 'Standard persistent disk (HDD), 200 GB'
         },
         runtimeEnvironmentConfig: {
-          runtimeProfileId: 'configured-profile',
+          runtimeProfileName: 'configured-profile',
           runtimeVersion: '2.3 LTS (Spark 3.5.1, Python 3.12)'
         },
         autoscalingConfig: {
@@ -957,7 +973,11 @@ describe('CreateRuntimeProfileComponent UI & Service', () => {
       setValue?.call(displayNameInput, '');
       displayNameInput.dispatchEvent(new Event('input', { bubbles: true }));
     });
-    expect(container.textContent).toContain('Display name is required');
+    expect(
+      container.querySelector('#runtime-profile-display-name-error')
+        ?.textContent
+    ).toBe('Display name is required.');
+    expect(container.querySelector('#runtime-profile-name-helper')).toBeNull();
     expect(submitButton.disabled).toBe(true);
     expect(submitButton.classList.contains('submit-button-disable-style')).toBe(
       true
@@ -967,6 +987,12 @@ describe('CreateRuntimeProfileComponent UI & Service', () => {
       setValue?.call(displayNameInput, 'valid-name');
       displayNameInput.dispatchEvent(new Event('input', { bubbles: true }));
     });
+    expect(
+      container.querySelector('#runtime-profile-display-name-error')
+    ).toBeNull();
+    expect(
+      container.querySelector('#runtime-profile-name-helper')?.textContent
+    ).toBe('Runtime profile name: valid-name');
     expect(submitButton.disabled).toBe(false);
     expect(submitButton.classList.contains('submit-button-style')).toBe(true);
   });
@@ -1033,10 +1059,10 @@ describe('CreateRuntimeProfileComponent UI & Service', () => {
     expect(consumeRuntimeProfileListTabRequest()).toBe(true);
 
     // Even when shell.activeWidget is null (e.g. submit button disabled blurred focus),
-    // the 'Create Runtime Profile' tab in main widgets is closed
+    // the 'Create a runtime profile' tab in main widgets is closed
     const createTabWidget = {
       id: 'create-tab',
-      title: { label: 'Create Runtime Profile' },
+      title: { label: 'Create a runtime profile' },
       close: jest.fn()
     };
     mockApp.shell.activeWidget = null;
@@ -1218,7 +1244,7 @@ describe('CreateRuntimeProfileComponent UI & Service', () => {
       (executorCards[1] as HTMLDivElement).click();
     });
 
-    expect(getFieldValue('Executor type')).toBe('L4 (4 vCPU)');
+    expect(getFieldValue('Executor type')).toBe('l4-4 (4 vCPU, 16 GB, 1 GPU)');
   });
 
   it('initializes executor category and type from a valid initial config machine id', async () => {
@@ -1236,7 +1262,11 @@ describe('CreateRuntimeProfileComponent UI & Service', () => {
       .querySelectorAll('.node-config-cards-container')[1]
       .querySelectorAll('.node-config-card');
     expect(executorCards[1].classList.contains('selected')).toBe(true);
-    expect(getFieldValue('Executor type')).toBe('L4 (8 vCPU)');
+    // The dropdown shows the label; the section shows the display name.
+    expect(
+      container.querySelector('#runtime-profile-executor-type')?.textContent
+    ).toBe('L4 (8 vCPU)');
+    expect(getFieldValue('Executor type')).toBe('l4-8 (8 vCPU, 32 GB, 1 GPU)');
   });
 
   it('opens RuntimeEnvironmentEditDrawer and updates runtime configuration on save', async () => {
@@ -1256,13 +1286,14 @@ describe('CreateRuntimeProfileComponent UI & Service', () => {
       (editButtons[0] as HTMLButtonElement).click();
     });
 
-    const profileIdInput = document.body.querySelector(
-      '#edit-runtime-profile-id'
+    const profileNameInput = document.body.querySelector(
+      '#edit-runtime-profile-name'
     ) as HTMLInputElement;
-    expect(profileIdInput).not.toBeNull();
+    expect(profileNameInput).not.toBeNull();
     expect(
-      document.body.querySelector('#edit-runtime-profile-id-label')?.textContent
-    ).toBe('Runtime profile ID *');
+      document.body.querySelector('#edit-runtime-profile-name-label')
+        ?.textContent
+    ).toBe('Runtime profile name *');
     expect(
       document.body.querySelector('#edit-dataproc-runtime-version-label')
         ?.textContent
@@ -1604,7 +1635,7 @@ describe('CreateRuntimeProfileComponent UI & Service', () => {
     ).not.toBeNull();
   });
 
-  it('validates Runtime Profile ID and Cloud Storage Staging bucket in RuntimeEnvironmentEditDrawer', async () => {
+  it('validates Runtime profile name and Cloud Storage Staging bucket in RuntimeEnvironmentEditDrawer', async () => {
     jest
       .spyOn(mockService, 'getStorageBuckets')
       .mockResolvedValue(['test_bucket']);
@@ -1621,8 +1652,8 @@ describe('CreateRuntimeProfileComponent UI & Service', () => {
       (editButtons[0] as HTMLButtonElement).click();
     });
 
-    const profileIdInput = document.body.querySelector(
-      '#edit-runtime-profile-id'
+    const profileNameInput = document.body.querySelector(
+      '#edit-runtime-profile-name'
     ) as HTMLInputElement;
     const stagingBucketInput = document.body.querySelector(
       '#edit-cloud-storage-staging-bucket'
@@ -1637,35 +1668,37 @@ describe('CreateRuntimeProfileComponent UI & Service', () => {
       'value'
     )?.set;
 
-    // 1. Empty Runtime Profile ID -> required error & Save disabled
+    // 1. Empty Runtime profile name -> required error & Save disabled
     await act(async () => {
-      nativeInputValueSetter?.call(profileIdInput, '');
-      profileIdInput.dispatchEvent(new Event('input', { bubbles: true }));
+      nativeInputValueSetter?.call(profileNameInput, '');
+      profileNameInput.dispatchEvent(new Event('input', { bubbles: true }));
     });
     expect(
-      document.body.querySelector('#runtime-profile-id-error-text')?.textContent
+      document.body.querySelector('#runtime-profile-name-error-text')
+        ?.textContent
     ).toBe('Runtime profile name is required.');
     expect(getSaveBtn()?.disabled).toBe(true);
 
-    // 2. Invalid format Runtime Profile ID -> format error & Save disabled
+    // 2. Invalid format Runtime profile name -> format error & Save disabled
     await act(async () => {
-      nativeInputValueSetter?.call(profileIdInput, 'ytywteywqe***');
-      profileIdInput.dispatchEvent(new Event('input', { bubbles: true }));
+      nativeInputValueSetter?.call(profileNameInput, 'ytywteywqe***');
+      profileNameInput.dispatchEvent(new Event('input', { bubbles: true }));
     });
     expect(
-      document.body.querySelector('#runtime-profile-id-error-text')?.textContent
+      document.body.querySelector('#runtime-profile-name-error-text')
+        ?.textContent
     ).toBe(
       'A runtime profile name must start and end in a letter or a number, be between 4 and 63 characters long, and contain only lowercase letters, numbers, and hyphens.'
     );
     expect(getSaveBtn()?.disabled).toBe(true);
 
-    // 3. Valid Runtime Profile ID -> clears error & Save enabled
+    // 3. Valid Runtime profile name -> clears error & Save enabled
     await act(async () => {
-      nativeInputValueSetter?.call(profileIdInput, 'runtime-4d92');
-      profileIdInput.dispatchEvent(new Event('input', { bubbles: true }));
+      nativeInputValueSetter?.call(profileNameInput, 'runtime-4d92');
+      profileNameInput.dispatchEvent(new Event('input', { bubbles: true }));
     });
     expect(
-      document.body.querySelector('#runtime-profile-id-error-text')
+      document.body.querySelector('#runtime-profile-name-error-text')
     ).toBeNull();
     expect(getSaveBtn()?.disabled).toBe(false);
 
@@ -1749,6 +1782,26 @@ describe('CreateRuntimeProfileComponent UI & Service', () => {
     expect(normalizeMachineTypeName('highmem-4')).toBe('highmem-4');
     expect(normalizeMachineTypeName('')).toBe('highmem-4');
   });
+
+  it.each([
+    ['l4-4', 'L4 (4 vCPU)', 'l4-4 (4 vCPU, 16 GB, 1 GPU)'],
+    ['l4-8', 'L4 (8 vCPU)', 'l4-8 (8 vCPU, 32 GB, 1 GPU)'],
+    ['l4-12', 'L4 (12 vCPU)', 'l4-12 (12 vCPU, 48 GB, 1 GPU)'],
+    ['l4-16', 'L4 (16 vCPU)', 'l4-16 (16 vCPU, 64 GB, 1 GPU)'],
+    ['l4-24', 'L4 (24 vCPU)', 'l4-24 (24 vCPU, 96 GB, 2 GPUs)'],
+    ['l4-48', 'L4 (48 vCPU)', 'l4-48 (48 vCPU, 192 GB, 4 GPUs)'],
+    ['l4-96', 'L4 (96 vCPU)', 'l4-96 (96 vCPU, 384 GB, 8 GPUs)'],
+    ['a100-40', 'A100 40GB (12 vCPU)', 'a100-40 (12 vCPU, 78 GB, 1 GPU)'],
+    ['a100-80', 'A100 80GB (12 vCPU)', 'a100-80 (12 vCPU, 165 GB, 1 GPU)']
+  ])(
+    'labels %s as %s in the dropdowns and %s in the Summary and section',
+    (name, label, displayName) => {
+      expect(
+        DATAPROC_ACCELERATED_MACHINE_TYPES.find(m => m.name === name)
+      ).toMatchObject({ label, displayName });
+      expect(normalizeMachineTypeName(label)).toBe(name);
+    }
+  );
 
   it('should detect accelerated machine shapes with isAcceleratedMachine', () => {
     expect(
@@ -1866,6 +1919,117 @@ describe('CreateRuntimeProfileComponent UI & Service', () => {
     });
     // Unchecked state must be preserved
     expect(getDrawerCheckbox()?.checked).toBe(false);
+  });
+
+  it('shows the fixed L4 executor disk without a size and uses 750 GiB for A100', async () => {
+    await act(async () => {
+      root.render(<CreateRuntimeProfileComponent service={mockService} />);
+    });
+    await expandAdditionalConfig();
+
+    const acceleratedCard = container
+      .querySelectorAll('.node-config-cards-container')[1]
+      .querySelectorAll('.node-config-card')[1] as HTMLDivElement;
+    await act(async () => {
+      acceleratedCard.click();
+    });
+    expect(getFieldValue('Executor disk')).toBe('SSD (premium)');
+    expect(getFieldValue('Driver disk')).toBe('SSD (premium), 375 GiB');
+
+    await selectExecutorType('a100-40');
+    expect(getFieldValue('Executor disk')).toBe('SSD (premium), 750 GiB');
+    expect(getFieldValue('Driver disk')).toBe('SSD (premium), 750 GiB');
+  });
+
+  // Opens a disk size Select in the open drawer and returns the sizes it lists.
+  const openDiskSizeSelect = async (id: string) => {
+    const trigger = document.body.querySelector(`#${id}`) as HTMLElement;
+    expect(trigger).not.toBeNull();
+    await act(async () => {
+      trigger.dispatchEvent(
+        new MouseEvent('mousedown', { bubbles: true, button: 0 })
+      );
+    });
+    return Array.from(document.body.querySelectorAll('li[role="option"]'))
+      .map(option => option.getAttribute('data-value'))
+      .filter(value => value?.endsWith('GiB'));
+  };
+
+  it('offers only 750 and 1500 GiB SSDs for a 16 vCPU executor and saves 750 GiB', async () => {
+    const onSave = jest.fn();
+    await act(async () => {
+      root.render(
+        <ExecutorAndDriverEditDrawer
+          open
+          config={{
+            tier: 'Premium',
+            executorType: 'highmem-16',
+            executorMachineType: 'highmem-16',
+            executorDisk: 'SSD (premium), 375 GiB',
+            driverMachineType: 'highmem-16',
+            driverDisk: 'SSD (premium), 375 GiB'
+          }}
+          onClose={jest.fn()}
+          onSave={onSave}
+        />
+      );
+    });
+
+    expect(await openDiskSizeSelect('edit-executor-disk-size')).toEqual([
+      '750 GiB',
+      '1500 GiB'
+    ]);
+    await act(async () => {
+      (
+        document.body.querySelector(
+          'li[role="option"][data-value="750 GiB"]'
+        ) as HTMLElement
+      ).click();
+    });
+
+    const saveBtn = Array.from(
+      document.body.querySelectorAll('.edit-drawer-footer button')
+    ).find(b => b.textContent?.trim() === 'Save') as HTMLButtonElement;
+    await act(async () => {
+      saveBtn.click();
+    });
+    expect(onSave).toHaveBeenCalledWith(
+      expect.objectContaining({
+        executorDisk: 'SSD (premium), 750 GiB',
+        driverDisk: 'SSD (premium), 750 GiB'
+      })
+    );
+  });
+
+  it('hides the executor disk size for L4 but lets an L4 driver choose its size', async () => {
+    await act(async () => {
+      root.render(
+        <ExecutorAndDriverEditDrawer
+          open
+          config={{
+            tier: 'Premium',
+            executorType: 'l4-4',
+            executorMachineType: 'l4-4',
+            executorDisk: 'SSD (premium), 375 GiB',
+            useDifferentDriverConfig: true,
+            driverMachineType: 'l4-48',
+            driverDisk: 'SSD (premium), 375 GiB'
+          }}
+          onClose={jest.fn()}
+          onSave={jest.fn()}
+        />
+      );
+    });
+
+    expect(
+      document.body.querySelector('#edit-executor-disk-tier')
+    ).not.toBeNull();
+    expect(document.body.querySelector('#edit-executor-disk-size')).toBeNull();
+    expect(await openDiskSizeSelect('edit-driver-disk-size')).toEqual([
+      '375 GiB',
+      '750 GiB',
+      '1500 GiB'
+    ]);
   });
 
   it('should format default runtime profile summary rows', () => {
@@ -1989,8 +2153,25 @@ describe('CreateRuntimeProfileComponent UI & Service', () => {
       executorDisk: 'SSD (premium), 375 GiB',
       useDifferentDriverConfig: false
     });
+    // An L4 executor's local SSD has a fixed size, so no size is shown.
     expect(acceleratedRows.find(r => r.label === 'Executor node')?.value).toBe(
-      'L4 (4 vCPU), SSD (premium), 375 GiB'
+      'l4-4 (4 vCPU, 16 GB, 1 GPU), SSD (premium)'
+    );
+
+    // Dropdown labels, which the drawer saves for the driver, also show as
+    // display names.
+    const labelRows = formatRuntimeProfileSummaryProperties({
+      executorMachineType: 'L4 (48 vCPU)',
+      executorDisk: 'SSD (premium), 750 GiB',
+      driverMachineType: 'A100 40GB (12 vCPU)',
+      driverDisk: 'SSD (premium), 750 GiB',
+      useDifferentDriverConfig: true
+    });
+    expect(labelRows.find(r => r.label === 'Executor node')?.value).toBe(
+      'l4-48 (48 vCPU, 192 GB, 4 GPUs), SSD (premium)'
+    );
+    expect(labelRows.find(r => r.label === 'Driver node')?.value).toBe(
+      'a100-40 (12 vCPU, 78 GB, 1 GPU), SSD (premium), 750 GiB'
     );
 
     const emptyRows = formatRuntimeProfileSummaryProperties({
@@ -2167,7 +2348,7 @@ describe('CreateRuntimeProfileComponent UI & Service', () => {
 
       expect(
         container.querySelector('.cluster-details-title')?.textContent
-      ).toBe('Edit Runtime Profile');
+      ).toBe('Edit runtime profile');
       expect(
         (
           container.querySelector(
@@ -2199,7 +2380,7 @@ describe('CreateRuntimeProfileComponent UI & Service', () => {
         ).checked
       ).toBe(true);
 
-      expect(getFieldValue('Runtime profile ID')).toBe('sample_profile');
+      expect(getFieldValue('Runtime profile name')).toBe('sample_profile');
       expect(getFieldValue('Spark runtime version')).toBe('2.2');
       expect(getFieldValue('Custom spark image')).toBe(
         'gcr.io/my-project/spark:latest'
@@ -2295,7 +2476,7 @@ describe('CreateRuntimeProfileComponent UI & Service', () => {
       expect(onSuccess).not.toHaveBeenCalled();
     });
 
-    it('keeps the Runtime Profile ID read-only in the runtime configuration drawer', async () => {
+    it('keeps the Runtime profile name read-only in the runtime configuration drawer', async () => {
       await renderEditForm();
       await expandAdditionalConfig();
 
@@ -2307,19 +2488,122 @@ describe('CreateRuntimeProfileComponent UI & Service', () => {
         ).click();
       });
 
-      const profileIdInput = document.body.querySelector(
-        '#edit-runtime-profile-id'
+      const profileNameInput = document.body.querySelector(
+        '#edit-runtime-profile-name'
       ) as HTMLInputElement;
-      expect(profileIdInput.disabled).toBe(true);
-      expect(profileIdInput.value).toBe('sample_profile');
-      // The existing ID isn't re-validated against the create-time format
+      expect(profileNameInput.disabled).toBe(true);
+      expect(profileNameInput.value).toBe('sample_profile');
+      // The existing name isn't re-validated against the create-time format
       expect(
-        document.body.querySelector('#runtime-profile-id-error-text')
+        document.body.querySelector('#runtime-profile-name-error-text')
       ).toBeNull();
       const saveBtn = Array.from(
         document.body.querySelectorAll('.edit-drawer-footer button')
       ).find(b => b.textContent?.trim() === 'Save') as HTMLButtonElement;
       expect(saveBtn.disabled).toBe(false);
+    });
+
+    it('shows the Runtime profile name helper text and never updates it when editing Display name in edit mode', async () => {
+      await renderEditForm();
+      await expandAdditionalConfig();
+
+      const displayNameInput = container.querySelector(
+        '#runtime-profile-display-name'
+      ) as HTMLInputElement;
+      const setValue = Object.getOwnPropertyDescriptor(
+        window.HTMLInputElement.prototype,
+        'value'
+      )?.set;
+
+      expect(
+        container.querySelector('#runtime-profile-name-helper')?.textContent
+      ).toBe('Runtime profile name: sample_profile');
+
+      // Modifying display name never changes the runtime profile name
+      await act(async () => {
+        setValue?.call(displayNameInput, 'Updated Display Name');
+        displayNameInput.dispatchEvent(new Event('input', { bubbles: true }));
+      });
+      expect(
+        container.querySelector('#runtime-profile-name-helper')?.textContent
+      ).toBe('Runtime profile name: sample_profile');
+      expect(getFieldValue('Runtime profile name')).toBe('sample_profile');
+
+      // Non-alphanumeric display name is valid in edit mode (already detached)
+      await act(async () => {
+        setValue?.call(displayNameInput, '---');
+        displayNameInput.dispatchEvent(new Event('input', { bubbles: true }));
+      });
+      expect(
+        container.querySelector('#runtime-profile-display-name-error')
+      ).toBeNull();
+      expect(
+        container.querySelector('#runtime-profile-name-helper')?.textContent
+      ).toBe('Runtime profile name: sample_profile');
+      expect(
+        (container.querySelector('button[type="submit"]') as HTMLButtonElement)
+          .disabled
+      ).toBe(false);
+
+      // Clearing display name hides helper text and shows required error
+      await act(async () => {
+        setValue?.call(displayNameInput, '   ');
+        displayNameInput.dispatchEvent(new Event('input', { bubbles: true }));
+      });
+      expect(
+        container.querySelector('#runtime-profile-display-name-error')
+          ?.textContent
+      ).toBe('Display name is required.');
+      expect(
+        container.querySelector('#runtime-profile-name-helper')
+      ).toBeNull();
+      expect(
+        (container.querySelector('button[type="submit"]') as HTMLButtonElement)
+          .disabled
+      ).toBe(true);
+    });
+
+    it('opens the Executor and driver drawer with the saved disks and keeps them on Save', async () => {
+      await renderEditForm(undefined, {
+        ...profileToEdit,
+        runtimeConfig: {
+          ...profileToEdit.runtimeConfig,
+          properties: {
+            ...profileToEdit.runtimeConfig?.properties,
+            'spark:spark.dataproc.executor.disk.tier': 'premium',
+            'spark:spark.dataproc.executor.disk.size': '1500g',
+            'spark:spark.driver.cores': '4',
+            'spark:spark.driver.memory': '16g',
+            'spark:spark.dataproc.driver.disk.tier': 'standard',
+            'spark:spark.dataproc.driver.disk.size': '600g'
+          }
+        }
+      });
+      await expandAdditionalConfig();
+
+      const editButtons = container.querySelectorAll(
+        '.section-detail-edit-button'
+      );
+      await act(async () => {
+        (editButtons[1] as HTMLButtonElement).click();
+      });
+
+      const selectedValue = (id: string) =>
+        document.body.querySelector(`#${id}`)?.textContent;
+      expect(selectedValue('edit-executor-disk-tier')).toBe('SSD (premium)');
+      expect(selectedValue('edit-executor-disk-size')).toBe('1500 GiB');
+      expect(selectedValue('edit-driver-disk-tier')).toBe('HDD (standard)');
+      expect(selectedValue('edit-driver-disk-size')).toBe('600 GiB');
+
+      // Saving the drawer without changes keeps the saved disks.
+      const saveBtn = Array.from(
+        document.body.querySelectorAll('.edit-drawer-footer button')
+      ).find(b => b.textContent?.trim() === 'Save') as HTMLButtonElement;
+      await act(async () => {
+        saveBtn.click();
+      });
+      expect(getFieldValue('Executor disk')).toBe('SSD (premium), 1500 GiB');
+      expect(getFieldValue('Driver disk')).toBe('HDD (standard), 600 GiB');
     });
 
     it('lets every section be edited', async () => {
@@ -2840,9 +3124,9 @@ describe('CreateRuntimeProfileComponent UI & Service', () => {
     await act(async () => {
       (editButtons[6] as HTMLButtonElement).click();
     });
-    expect(
-      document.body.querySelectorAll('.edit-drawer-kv-list')
-    ).toHaveLength(0);
+    expect(document.body.querySelectorAll('.edit-drawer-kv-list')).toHaveLength(
+      0
+    );
     const addBtns = Array.from(
       document.body.querySelectorAll('.edit-drawer-add-btn')
     ) as HTMLButtonElement[];
@@ -2850,9 +3134,9 @@ describe('CreateRuntimeProfileComponent UI & Service', () => {
       addBtns[0].click();
       addBtns[1].click();
     });
-    expect(
-      document.body.querySelectorAll('.edit-drawer-kv-list')
-    ).toHaveLength(2);
+    expect(document.body.querySelectorAll('.edit-drawer-kv-list')).toHaveLength(
+      2
+    );
     expect(document.body.querySelector('#spark-key-error-0')?.textContent).toBe(
       'Key is required'
     );
@@ -3018,6 +3302,19 @@ describe('CreateRuntimeProfileComponent UI & Service', () => {
       '32 DCU hours / hour of usage'
     );
 
+    // 4b. Accelerated executor with shared driver uses CPU-only driver fallback (highmem-4 = 5.6 DCU)
+    const acceleratedSharedDriverEstimate = calculateRuntimePricingEstimate({
+      executorMachineType: 'a100-40',
+      useDifferentDriverConfig: false,
+      autoscalingEnabled: true,
+      initialExecutors: 2,
+      minExecutors: 2,
+      maxExecutors: 10
+    });
+    expect(acceleratedSharedDriverEstimate.executorDcu).toBe(15.7);
+    expect(acceleratedSharedDriverEstimate.driverDcu).toBe(5.6);
+    expect(acceleratedSharedDriverEstimate.baselineDcu).toBeCloseTo(37, 5);
+
     // 5. Autoscaling disabled -> hides Subject to autoscaling and autoscaling range row
     const noAutoscalingEstimate = calculateRuntimePricingEstimate({
       executorMachineType: 'highmem-4',
@@ -3146,5 +3443,611 @@ describe('CreateRuntimeProfileComponent UI & Service', () => {
         '[data-testid="pricing-autoscaling-row"]'
       )
     ).toBeNull();
+  });
+
+  it('displays IP Range in Subnetwork and Shared subnetwork dropdown options while keeping selected value as subnetwork name', async () => {
+    jest.spyOn(mockService, 'getNetworks').mockResolvedValue(['default-auto']);
+    jest.spyOn(mockService, 'getSubnetworks').mockResolvedValue([
+      { name: 'default-auto', ipCidrRange: '10.150.0.0/20' },
+      { name: 'subnet-iowa', ipCidrRange: '10.128.0.0/20' }
+    ]);
+    jest.spyOn(mockService, 'getSharedVpcSubnetworks').mockResolvedValue({
+      hostProjectId: 'hadoop-cloud-dev-devconsole',
+      subnetworks: [{ name: 'shared-sub', ipCidrRange: '10.200.0.0/24' }]
+    });
+
+    await act(async () => {
+      root.render(<CreateRuntimeProfileComponent service={mockService} />);
+    });
+    await expandAdditionalConfig();
+
+    const editButtons = container.querySelectorAll(
+      '.section-detail-edit-button'
+    );
+    await act(async () => {
+      (editButtons[4] as HTMLButtonElement).click();
+    });
+
+    const subnetLabel = document.body.querySelector('#edit-subnetwork-label');
+    expect(subnetLabel?.textContent).toBe('Subnetwork *');
+
+    const subnetTrigger = document.body.querySelector(
+      '#edit-subnetwork'
+    ) as HTMLElement;
+    expect(subnetTrigger.textContent).toBe('default-auto');
+
+    // Open project subnetwork dropdown and verify two-line options with IP Range
+    await act(async () => {
+      subnetTrigger.dispatchEvent(
+        new MouseEvent('mousedown', { bubbles: true, button: 0 })
+      );
+    });
+    const defaultAutoOption = document.body.querySelector(
+      'li[role="option"][data-value="default-auto"]'
+    );
+    const subnetIowaOption = document.body.querySelector(
+      'li[role="option"][data-value="subnet-iowa"]'
+    );
+    expect(
+      defaultAutoOption?.querySelector('.edit-drawer-subnetwork-option-name')
+        ?.textContent
+    ).toBe('default-auto');
+    expect(
+      defaultAutoOption?.querySelector('.edit-drawer-subnetwork-option-cidr')
+        ?.textContent
+    ).toBe('IP Range: 10.150.0.0/20');
+    expect(
+      subnetIowaOption?.querySelector('.edit-drawer-subnetwork-option-name')
+        ?.textContent
+    ).toBe('subnet-iowa');
+    expect(
+      subnetIowaOption?.querySelector('.edit-drawer-subnetwork-option-cidr')
+        ?.textContent
+    ).toBe('IP Range: 10.128.0.0/20');
+
+    // Select subnet-iowa and verify closed field shows only the subnetwork name
+    await act(async () => {
+      (subnetIowaOption as HTMLElement).click();
+    });
+    expect(subnetTrigger.textContent).toBe('subnet-iowa');
+
+    // Switch to Shared VPC and verify IP Range is rendered for shared subnetwork too
+    const sharedRadio = document.body.querySelector(
+      '#edit-network-source-shared'
+    ) as HTMLInputElement;
+    await act(async () => {
+      sharedRadio.click();
+    });
+
+    const sharedSubnetTrigger = document.body.querySelector(
+      '#edit-shared-subnetwork'
+    ) as HTMLElement;
+    expect(sharedSubnetTrigger.textContent).toBe('shared-sub');
+
+    await act(async () => {
+      sharedSubnetTrigger.dispatchEvent(
+        new MouseEvent('mousedown', { bubbles: true, button: 0 })
+      );
+    });
+    const sharedOption = document.body.querySelector(
+      'li[role="option"][data-value="shared-sub"]'
+    );
+    expect(
+      sharedOption?.querySelector('.edit-drawer-subnetwork-option-name')
+        ?.textContent
+    ).toBe('shared-sub');
+    expect(
+      sharedOption?.querySelector('.edit-drawer-subnetwork-option-cidr')
+        ?.textContent
+    ).toBe('IP Range: 10.200.0.0/24');
+  });
+
+  it('shows Additional configuration warning banner when default subnetwork is unavailable and handles empty/required Subnetwork states in drawer', async () => {
+    jest
+      .spyOn(mockService, 'getNetworks')
+      .mockResolvedValue(['network2', 'valid-vpc']);
+    jest
+      .spyOn(mockService, 'getSubnetworks')
+      .mockImplementation(async (network: string) =>
+        network === 'valid-vpc'
+          ? [{ name: 'valid-subnet', ipCidrRange: '10.142.0.0/20' }]
+          : []
+      );
+
+    await act(async () => {
+      root.render(<CreateRuntimeProfileComponent service={mockService} />);
+    });
+
+    // Additional configuration should auto-expand with "(Configuration required)" and banner
+    const header = container.querySelector(
+      '.additional-config-header-container'
+    );
+    expect(header?.getAttribute('aria-expanded')).toBe('true');
+    expect(
+      container.querySelector('.additional-config-header')?.textContent
+    ).toBe('Additional configuration (Configuration required)');
+
+    const banner = container.querySelector(
+      '[data-testid="default-network-warning-banner"]'
+    );
+    expect(banner).not.toBeNull();
+    const bannerAlert = banner?.querySelector('[role="alert"]');
+    expect(bannerAlert?.textContent).toBe(
+      'Default network is not available. Please configure a network.'
+    );
+
+    const getNetworkInProjectValue = () => {
+      const rows = Array.from(
+        container.querySelectorAll('.section-detail-row')
+      );
+      const netRow = rows.find(
+        row =>
+          row.querySelector('.section-detail-label')?.textContent?.trim() ===
+          'Network in this project'
+      );
+      return netRow
+        ?.querySelector('.section-detail-value')
+        ?.textContent?.trim();
+    };
+    expect(getNetworkInProjectValue()).toBe(
+      'Default network is not available. Please configure a network.'
+    );
+
+    const submitBtn = container.querySelector(
+      '.runtime-profile-submit-btn'
+    ) as HTMLButtonElement;
+    expect(submitBtn?.disabled).toBe(true);
+
+    // Clicking "Configure network" opens Network and security drawer
+    const configureBtn = banner?.querySelector('button') as HTMLButtonElement;
+    expect(configureBtn?.textContent).toBe('Configure network');
+    await act(async () => {
+      configureBtn.click();
+    });
+
+    // network2 has no PGA subnetworks: shows unavailable notice below dropdown,
+    // no required error before closing the dropdown without a selection
+    expect(
+      document.body.querySelector('#edit-subnetwork-unavailable-note')
+        ?.textContent
+    ).toBe(
+      'Selected network has no subnetworks in this region with Private Google Access turned on.'
+    );
+    expect(
+      document.body.querySelector('#edit-subnetwork-error-text')
+    ).toBeNull();
+    expect(document.body.textContent).not.toContain(
+      'Please select a valid network and subnetwork.'
+    );
+
+    // Opening the Subnetwork dropdown displays the Private Google Access message
+    const subnetTrigger = document.body.querySelector(
+      '#edit-subnetwork'
+    ) as HTMLElement;
+    expect(subnetTrigger.getAttribute('aria-describedby')).toBe(
+      'edit-subnetwork-unavailable-note'
+    );
+    await act(async () => {
+      subnetTrigger.dispatchEvent(
+        new MouseEvent('mousedown', { bubbles: true, button: 0 })
+      );
+    });
+    expect(
+      document.body.querySelector('.edit-drawer-subnetwork-menu-paper')
+    ).not.toBeNull();
+    const emptyOption = document.body.querySelector(
+      'li[role="option"][data-value="__no_items__"]'
+    );
+    expect(emptyOption?.textContent).toBe(
+      'No subnetworks with Private Google Access enabled.'
+    );
+
+    // Closing the dropdown without selecting anything shows "! Subnetwork is required."
+    const menuBackdrop = document.body.querySelector(
+      '.MuiPopover-root .MuiBackdrop-root'
+    ) as HTMLElement;
+    await act(async () => {
+      menuBackdrop.click();
+    });
+    const requiredError = document.body.querySelector(
+      '#edit-subnetwork-error-text'
+    );
+    expect(requiredError).not.toBeNull();
+    expect(requiredError?.textContent).toBe('!Subnetwork is required.');
+    expect(subnetTrigger.getAttribute('aria-describedby')).toBe(
+      'edit-subnetwork-error-text edit-subnetwork-unavailable-note'
+    );
+
+    // Selecting a valid network and saving clears the warning banner
+    const networkTrigger = document.body.querySelector(
+      '#edit-primary-network'
+    ) as HTMLElement;
+    await act(async () => {
+      networkTrigger.dispatchEvent(
+        new MouseEvent('mousedown', { bubbles: true, button: 0 })
+      );
+    });
+    const validVpcOption = document.body.querySelector(
+      'li[role="option"][data-value="valid-vpc"]'
+    ) as HTMLElement;
+    await act(async () => {
+      validVpcOption.click();
+    });
+    expect(
+      document.body.querySelector('#edit-subnetwork-error-text')
+    ).toBeNull();
+    expect(
+      document.body.querySelector('#edit-subnetwork-unavailable-note')
+    ).toBeNull();
+
+    const saveBtn = Array.from(
+      document.body.querySelectorAll('.edit-drawer-footer button')
+    ).find(b => b.textContent?.trim() === 'Save') as HTMLButtonElement;
+    await act(async () => {
+      saveBtn.click();
+    });
+
+    expect(
+      container.querySelector('[data-testid="default-network-warning-banner"]')
+    ).toBeNull();
+    expect(
+      container.querySelector('.additional-config-header')?.textContent
+    ).toBe('Additional configuration');
+    expect(getNetworkInProjectValue()).toBe('valid-vpc');
+    expect(submitBtn?.disabled).toBe(false);
+  });
+
+  it('updates warning message for custom network when switching to a region without that subnetwork and recovers on check errors', async () => {
+    const errorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+    try {
+      jest.spyOn(mockService, 'getRegions').mockResolvedValue([
+        { name: 'us-central1', displayName: 'us-central1 (Iowa)' },
+        { name: 'us-east1', displayName: 'us-east1 (South Carolina)' },
+        { name: 'europe-west1', displayName: 'europe-west1 (Belgium)' }
+      ]);
+      jest
+        .spyOn(mockService, 'getSubnetworks')
+        .mockImplementation(async (_network: string, _proj, region) => {
+          if (region === 'us-east1') {
+            return [];
+          }
+          if (region === 'europe-west1') {
+            throw new Error('network timeout');
+          }
+          return [{ name: 'custom-subnet', ipCidrRange: '10.10.0.0/20' }];
+        });
+
+      await act(async () => {
+        root.render(
+          <CreateRuntimeProfileComponent
+            service={mockService}
+            initialNetworkAndSecurityConfig={{
+              executionIdentity: 'service_account',
+              networkSource: 'project',
+              primaryNetwork: 'custom-vpc',
+              networkInThisProject: 'custom-vpc',
+              subnetwork: 'custom-subnet',
+              encryption: 'google_managed'
+            }}
+          />
+        );
+      });
+
+      expect(
+        container.querySelector(
+          '[data-testid="default-network-warning-banner"]'
+        )
+      ).toBeNull();
+
+      // Switch region to us-east1 where custom-subnet is unavailable
+      const regionTrigger = container.querySelector(
+        '#runtime-profile-region'
+      ) as HTMLElement;
+      await act(async () => {
+        regionTrigger.dispatchEvent(
+          new MouseEvent('mousedown', { bubbles: true, button: 0 })
+        );
+      });
+      const eastOption = document.body.querySelector(
+        'li[role="option"][data-value="us-east1"]'
+      ) as HTMLElement;
+      await act(async () => {
+        eastOption.click();
+      });
+
+      const banner = container.querySelector(
+        '[data-testid="default-network-warning-banner"]'
+      );
+      expect(banner?.querySelector('[role="alert"]')?.textContent).toBe(
+        'Selected network is not available in this region. Please configure a network.'
+      );
+
+      // Switch region to europe-west1 where getSubnetworks rejects
+      await act(async () => {
+        regionTrigger.dispatchEvent(
+          new MouseEvent('mousedown', { bubbles: true, button: 0 })
+        );
+      });
+      const europeOption = document.body.querySelector(
+        'li[role="option"][data-value="europe-west1"]'
+      ) as HTMLElement;
+      await act(async () => {
+        europeOption.click();
+      });
+
+      expect(errorSpy).toHaveBeenCalledWith(
+        'Failed to verify subnetwork availability:',
+        expect.any(Error)
+      );
+      expect(
+        container.querySelector(
+          '[data-testid="default-network-warning-banner"]'
+        )
+      ).toBeNull();
+    } finally {
+      errorSpy.mockRestore();
+    }
+  });
+
+  it('syncs Display name to Runtime profile name in create mode and validates alphanumeric requirement', async () => {
+    await act(async () => {
+      root.render(<CreateRuntimeProfileComponent service={mockService} />);
+    });
+    await expandAdditionalConfig();
+
+    const displayNameInput = container.querySelector(
+      '#runtime-profile-display-name'
+    ) as HTMLInputElement;
+    const submitButton = container.querySelector(
+      'button[type="submit"]'
+    ) as HTMLButtonElement;
+    const setValue = Object.getOwnPropertyDescriptor(
+      window.HTMLInputElement.prototype,
+      'value'
+    )?.set;
+
+    const setDisplayName = async (next: string) => {
+      await act(async () => {
+        setValue?.call(displayNameInput, next);
+        displayNameInput.dispatchEvent(new Event('input', { bubbles: true }));
+      });
+    };
+
+    // Initial helper text matches generated display name
+    expect(
+      container.querySelector('#runtime-profile-name-helper')?.textContent
+    ).toBe(`Runtime profile name: ${displayNameInput.value}`);
+    expect(displayNameInput.getAttribute('aria-describedby')).toBe(
+      'runtime-profile-name-helper'
+    );
+
+    // Syncs all sanitization cases
+    const cases: Array<[string, string]> = [
+      ['test', 'test'],
+      ['DiSPlay ----- Name @ 123', 'display-name-123'],
+      ['aaa', 'runtime-aaa'],
+      ['aaaa', 'aaaa'],
+      ['---a', 'runtime-a'],
+      ['s', 'runtime-s'],
+      ['123', 'runtime-123'],
+      ['1234', '1234']
+    ];
+    for (const [input, expectedName] of cases) {
+      await setDisplayName(input);
+      expect(
+        container.querySelector('#runtime-profile-display-name-error')
+      ).toBeNull();
+      expect(
+        container.querySelector('#runtime-profile-name-helper')?.textContent
+      ).toBe(`Runtime profile name: ${expectedName}`);
+      expect(getFieldValue('Runtime profile name')).toBe(expectedName);
+      expect(submitButton.disabled).toBe(false);
+    }
+
+    // Non-alphanumeric display name shows error, hides helper text, shows '-' in Additional config
+    await setDisplayName('---');
+    const errorEl = container.querySelector(
+      '#runtime-profile-display-name-error'
+    );
+    expect(errorEl?.getAttribute('role')).toBe('alert');
+    expect(errorEl?.textContent).toBe(
+      'Display name must contain at least one letter or number.'
+    );
+    expect(displayNameInput.getAttribute('aria-describedby')).toBe(
+      'runtime-profile-display-name-error'
+    );
+    expect(container.querySelector('#runtime-profile-name-helper')).toBeNull();
+    expect(getFieldValue('Runtime profile name')).toBe('-');
+    expect(submitButton.disabled).toBe(true);
+
+    // Empty display name shows required error, hides helper text, shows '-' in Additional config
+    await setDisplayName('');
+    expect(
+      container.querySelector('#runtime-profile-display-name-error')
+        ?.textContent
+    ).toBe('Display name is required.');
+    expect(container.querySelector('#runtime-profile-name-helper')).toBeNull();
+    expect(getFieldValue('Runtime profile name')).toBe('-');
+    expect(submitButton.disabled).toBe(true);
+  });
+
+  it('permanently detaches Runtime profile name after editing it in Runtime configuration drawer, while keeping sync when unchanged', async () => {
+    await act(async () => {
+      root.render(<CreateRuntimeProfileComponent service={mockService} />);
+    });
+    await expandAdditionalConfig();
+
+    const displayNameInput = container.querySelector(
+      '#runtime-profile-display-name'
+    ) as HTMLInputElement;
+    const submitButton = container.querySelector(
+      'button[type="submit"]'
+    ) as HTMLButtonElement;
+    const nativeSetter = Object.getOwnPropertyDescriptor(
+      window.HTMLInputElement.prototype,
+      'value'
+    )?.set;
+
+    const setInputValue = async (input: HTMLInputElement, next: string) => {
+      await act(async () => {
+        nativeSetter?.call(input, next);
+        input.dispatchEvent(new Event('input', { bubbles: true }));
+      });
+    };
+
+    const openRuntimeDrawer = async () => {
+      const editButtons = container.querySelectorAll(
+        '.section-detail-edit-button'
+      );
+      await act(async () => {
+        (editButtons[0] as HTMLButtonElement).click();
+      });
+    };
+
+    const clickDrawerButton = async (label: 'Save' | 'Cancel') => {
+      const btn = Array.from(
+        document.body.querySelectorAll('.edit-drawer-footer button')
+      ).find(b => b.textContent?.trim() === label) as HTMLButtonElement;
+      await act(async () => {
+        btn.click();
+      });
+    };
+
+    await setInputValue(displayNameInput, 'test');
+    expect(getFieldValue('Runtime profile name')).toBe('test');
+
+    // 1. Editing name in drawer and clicking Cancel does NOT detach sync
+    await openRuntimeDrawer();
+    const drawerNameInput1 = document.body.querySelector(
+      '#edit-runtime-profile-name'
+    ) as HTMLInputElement;
+    await setInputValue(drawerNameInput1, 'cancelled-name');
+    await clickDrawerButton('Cancel');
+    await setInputValue(displayNameInput, 'still-synced');
+    expect(getFieldValue('Runtime profile name')).toBe('still-synced');
+
+    // 2. Saving another field in drawer without changing Runtime profile name does NOT detach sync
+    await openRuntimeDrawer();
+    const customImageInput = document.body.querySelector(
+      '#edit-custom-spark-image'
+    ) as HTMLInputElement;
+    await setInputValue(customImageInput, 'gcr.io/my-proj/img:1');
+    await clickDrawerButton('Save');
+    await setInputValue(displayNameInput, 'test');
+    expect(getFieldValue('Runtime profile name')).toBe('test');
+    expect(
+      container.querySelector('#runtime-profile-name-helper')?.textContent
+    ).toBe('Runtime profile name: test');
+
+    // 3. Modifying Runtime profile name in drawer detaches permanently and keeps Display name intact
+    await openRuntimeDrawer();
+    const drawerNameInput2 = document.body.querySelector(
+      '#edit-runtime-profile-name'
+    ) as HTMLInputElement;
+    await setInputValue(drawerNameInput2, '  test-123  ');
+    await clickDrawerButton('Save');
+
+    expect(displayNameInput.value).toBe('test');
+    expect(getFieldValue('Runtime profile name')).toBe('test-123');
+    expect(
+      container.querySelector('#runtime-profile-name-helper')?.textContent
+    ).toBe('Runtime profile name: test-123');
+
+    // Subsequent edits to Display name (including '---') do not modify Runtime profile name
+    await setInputValue(displayNameInput, 'another-display-name');
+    expect(getFieldValue('Runtime profile name')).toBe('test-123');
+    expect(
+      container.querySelector('#runtime-profile-name-helper')?.textContent
+    ).toBe('Runtime profile name: test-123');
+
+    await setInputValue(displayNameInput, '---');
+    expect(
+      container.querySelector('#runtime-profile-display-name-error')
+    ).toBeNull();
+    expect(
+      container.querySelector('#runtime-profile-name-helper')?.textContent
+    ).toBe('Runtime profile name: test-123');
+    expect(submitButton.disabled).toBe(false);
+
+    // Clearing Display name still triggers required error and hides helper text
+    await setInputValue(displayNameInput, '');
+    expect(
+      container.querySelector('#runtime-profile-display-name-error')
+        ?.textContent
+    ).toBe('Display name is required.');
+    expect(container.querySelector('#runtime-profile-name-helper')).toBeNull();
+    expect(submitButton.disabled).toBe(true);
+
+    // Restoring Display name brings back helper text with the detached name,
+    // and remains permanently detached even after matching the detached name
+    await setInputValue(displayNameInput, 'test-123');
+    expect(
+      container.querySelector('#runtime-profile-name-helper')?.textContent
+    ).toBe('Runtime profile name: test-123');
+    expect(submitButton.disabled).toBe(false);
+
+    await setInputValue(displayNameInput, 'after-match');
+    expect(getFieldValue('Runtime profile name')).toBe('test-123');
+    expect(
+      container.querySelector('#runtime-profile-name-helper')?.textContent
+    ).toBe('Runtime profile name: test-123');
+  });
+
+  it('clears the alphanumeric Display name error immediately after saving a custom Runtime profile name in the drawer', async () => {
+    await act(async () => {
+      root.render(<CreateRuntimeProfileComponent service={mockService} />);
+    });
+    await expandAdditionalConfig();
+
+    const displayNameInput = container.querySelector(
+      '#runtime-profile-display-name'
+    ) as HTMLInputElement;
+    const submitButton = container.querySelector(
+      'button[type="submit"]'
+    ) as HTMLButtonElement;
+    const nativeSetter = Object.getOwnPropertyDescriptor(
+      window.HTMLInputElement.prototype,
+      'value'
+    )?.set;
+
+    await act(async () => {
+      nativeSetter?.call(displayNameInput, '---');
+      displayNameInput.dispatchEvent(new Event('input', { bubbles: true }));
+    });
+    expect(
+      container.querySelector('#runtime-profile-display-name-error')
+        ?.textContent
+    ).toBe('Display name must contain at least one letter or number.');
+    expect(submitButton.disabled).toBe(true);
+
+    // Open Runtime configuration drawer and set custom Runtime profile name '12345'
+    const editButtons = container.querySelectorAll(
+      '.section-detail-edit-button'
+    );
+    await act(async () => {
+      (editButtons[0] as HTMLButtonElement).click();
+    });
+    const drawerNameInput = document.body.querySelector(
+      '#edit-runtime-profile-name'
+    ) as HTMLInputElement;
+    await act(async () => {
+      nativeSetter?.call(drawerNameInput, '12345');
+      drawerNameInput.dispatchEvent(new Event('input', { bubbles: true }));
+    });
+    const saveBtn = Array.from(
+      document.body.querySelectorAll('.edit-drawer-footer button')
+    ).find(b => b.textContent?.trim() === 'Save') as HTMLButtonElement;
+    await act(async () => {
+      saveBtn.click();
+    });
+
+    expect(
+      container.querySelector('#runtime-profile-display-name-error')
+    ).toBeNull();
+    expect(
+      container.querySelector('#runtime-profile-name-helper')?.textContent
+    ).toBe('Runtime profile name: 12345');
+    expect(getFieldValue('Runtime profile name')).toBe('12345');
+    expect(submitButton.disabled).toBe(false);
   });
 });

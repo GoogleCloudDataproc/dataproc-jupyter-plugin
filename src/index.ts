@@ -698,8 +698,8 @@ const extension: JupyterFrontEndPlugin<void> = {
           );
           const widget = new MainAreaWidget<CreateRuntimeProfile>({ content });
           widget.title.label = profileToEdit
-            ? 'Edit Runtime Profile'
-            : 'Create Runtime Profile';
+            ? 'Edit runtime profile'
+            : 'Create a runtime profile';
           widget.title.icon = iconServerless;
           if (profileToEdit) {
             const profileName = profileToEdit.name;
