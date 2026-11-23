@@ -143,7 +143,7 @@ const extension: JupyterFrontEndPlugin<void> = {
       enable_metastore_integration?: boolean;
       enable_cloud_storage_integration?: boolean;
       enable_bigquery_integration?: boolean;
-      enable_runtime_profile_integration?: boolean;
+      enable_runtime_template_integration?: boolean;
     }
 
     const executeApiChecks = async () => {
@@ -167,7 +167,9 @@ const extension: JupyterFrontEndPlugin<void> = {
         console.error('Error during app restoration:', error);
       });
     let bqFeature: SettingsResponse = await requestAPI('settings');
-    const runtimeProfileUiEnabled = Boolean(bqFeature?.enable_runtime_profile_integration);
+    const runtimeTemplateUiEnabled = Boolean(
+      bqFeature?.enable_runtime_template_integration
+    );
     // START -- Enable Preview Features.
     const settings = await settingRegistry.load(PLUGIN_ID);
 
@@ -667,7 +669,7 @@ const extension: JupyterFrontEndPlugin<void> = {
       string,
       MainAreaWidget<CreateRuntimeProfile>
     >();
-    if (runtimeProfileUiEnabled) {
+    if (!runtimeTemplateUiEnabled) {
       commands.addCommand(createRuntimeProfileComponentCommand, {
         caption: 'Create Runtime Profile',
         label: 'Create Runtime Profile',
@@ -879,17 +881,17 @@ const extension: JupyterFrontEndPlugin<void> = {
         }
       });
 
-      if (runtimeProfileUiEnabled) {
-        launcher.add({
-          command: createRuntimeProfileComponentCommand,
-          category: 'Dataproc Serverless Spark',
-          rank: serverlessIndex + 3
-        });
-      } else {
+      if (runtimeTemplateUiEnabled) {
         launcher.add({
           command: createRuntimeTemplateComponentCommand,
           category: 'Dataproc Serverless Spark',
           rank: serverlessIndex + 2
+        });
+      } else {
+        launcher.add({
+          command: createRuntimeProfileComponentCommand,
+          category: 'Dataproc Serverless Spark',
+          rank: serverlessIndex + 3
         });
       }
 
