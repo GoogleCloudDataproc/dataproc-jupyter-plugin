@@ -67,12 +67,9 @@ import {
 } from '../utils/utils';
 import { DataprocLoggingService, LOG_LEVEL } from '../utils/loggingService';
 import { Notification } from '@jupyterlab/apputils';
+import { setImmediate } from 'timers';
 
-const flushPromises = async () => {
-  for (let i = 0; i < 6; i++) {
-    await new Promise<void>(resolve => queueMicrotask(resolve));
-  }
-};
+const flushPromises = () => new Promise<void>(resolve => setImmediate(resolve));
 
 describe('ClusterService', () => {
   const mockCredentials = {
@@ -83,6 +80,8 @@ describe('ClusterService', () => {
     config_error: 0
   };
 
+  let consoleLogSpy: jest.SpyInstance;
+
   beforeEach(() => {
     jest.clearAllMocks();
     (getProjectId as jest.Mock).mockResolvedValue('test-project');
@@ -90,6 +89,13 @@ describe('ClusterService', () => {
     (statusValue as jest.Mock).mockImplementation(
       (data: any) => data.status?.state || 'RUNNING'
     );
+    consoleLogSpy = jest
+      .spyOn(console, 'log')
+      .mockImplementation(() => undefined);
+  });
+
+  afterEach(() => {
+    consoleLogSpy.mockRestore();
   });
 
   describe('listClustersAPIService', () => {
@@ -398,10 +404,6 @@ describe('ClusterService', () => {
     });
 
     it('handles response.json() rejection gracefully and sets loading to false', async () => {
-      const consoleLogSpy = jest
-        .spyOn(console, 'log')
-        .mockImplementation(() => undefined);
-
       (loggedFetch as jest.Mock).mockResolvedValue({
         json: jest.fn().mockRejectedValue(new Error('Invalid JSON'))
       });
@@ -416,7 +418,6 @@ describe('ClusterService', () => {
       await flushPromises();
 
       expect(mockSetIsLoading).toHaveBeenCalledWith(false);
-      consoleLogSpy.mockRestore();
     });
 
     it('logs and notifies when loggedFetch rejects', async () => {
@@ -536,9 +537,6 @@ describe('ClusterService', () => {
     });
 
     it('stops the cluster, sets up status polling interval, and toggles restartEnabled', async () => {
-      const consoleLogSpy = jest
-        .spyOn(console, 'log')
-        .mockImplementation(() => undefined);
       const mockSetRestartEnabled = jest.fn();
       const mockListClustersAPI = jest.fn();
       const mockStatusApi = jest.fn();
@@ -569,13 +567,9 @@ describe('ClusterService', () => {
       expect(mockStatusApi).toHaveBeenCalledWith('cluster-1');
 
       clearInterval(timerRef.current);
-      consoleLogSpy.mockRestore();
     });
 
     it('emits error notification when restart stop call returns an error code or throws', async () => {
-      const consoleLogSpy = jest
-        .spyOn(console, 'log')
-        .mockImplementation(() => undefined);
       const timerRef: { current: any } = { current: undefined };
 
       (authenticatedFetch as jest.Mock).mockResolvedValueOnce({
@@ -615,16 +609,11 @@ describe('ClusterService', () => {
         'Error restarting cluster',
         LOG_LEVEL.ERROR
       );
-      consoleLogSpy.mockRestore();
     });
   });
 
   describe('deleteClusterApi', () => {
     it('sends DELETE request and emits success notification when deletion succeeds', async () => {
-      const consoleLogSpy = jest
-        .spyOn(console, 'log')
-        .mockImplementation(() => undefined);
-
       (loggedFetch as jest.Mock).mockResolvedValue({
         json: jest.fn().mockResolvedValue({ name: 'operations/delete-op' })
       });
@@ -641,14 +630,9 @@ describe('ClusterService', () => {
         'success',
         { autoClose: 5000 }
       );
-      consoleLogSpy.mockRestore();
     });
 
     it('emits error notification when delete response contains an error or loggedFetch rejects', async () => {
-      const consoleLogSpy = jest
-        .spyOn(console, 'log')
-        .mockImplementation(() => undefined);
-
       (loggedFetch as jest.Mock).mockResolvedValueOnce({
         json: jest.fn().mockResolvedValue({
           error: { code: 403, message: 'Delete permission denied' }
@@ -680,16 +664,11 @@ describe('ClusterService', () => {
         'error',
         { autoClose: 5000 }
       );
-      consoleLogSpy.mockRestore();
     });
   });
 
   describe('startStopAPI, startClusterApi, and stopClusterApi', () => {
     it('calls startStopAPI with start and stop operations and handles API/network errors', async () => {
-      const consoleLogSpy = jest
-        .spyOn(console, 'log')
-        .mockImplementation(() => undefined);
-
       (loggedFetch as jest.Mock).mockResolvedValueOnce({
         json: jest.fn().mockResolvedValue({
           error: { code: 400, message: 'Start failed message' }
@@ -729,7 +708,6 @@ describe('ClusterService', () => {
         'error',
         { autoClose: 5000 }
       );
-      consoleLogSpy.mockRestore();
     });
   });
 });
