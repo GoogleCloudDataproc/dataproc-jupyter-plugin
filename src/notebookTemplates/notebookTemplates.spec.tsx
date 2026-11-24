@@ -15,71 +15,63 @@
  * limitations under the License.
  */
 
+import React, { act } from 'react';
+import { createRoot, Root } from 'react-dom/client';
+import { JupyterLab } from '@jupyterlab/application';
+import { IThemeManager } from '@jupyterlab/apputils';
+import { IFileBrowserFactory } from '@jupyterlab/filebrowser';
+import { ISettingRegistry } from '@jupyterlab/settingregistry';
+import { NotebookTemplates } from './notebookTemplates';
+import ListNotebookTemplates from './listNotebookTemplates';
+import LoginErrorComponent from '../utils/loginErrorComponent';
+import { checkConfig } from '../utils/utils';
+
 (globalThis as any).IS_REACT_ACT_ENVIRONMENT = true;
 
-jest.mock('../handler/handler', () => ({
-  requestAPI: jest.fn().mockResolvedValue({
-    dataproc_url: 'https://dataproc.googleapis.com/',
-    compute_url: 'https://compute.googleapis.com/compute',
-    metastore_url: 'https://metastore.googleapis.com/',
-    cloudkms_url: 'https://cloudkms.googleapis.com/',
-    cloudresourcemanager_url: 'https://cloudresourcemanager.googleapis.com/',
-    datacatalog_url: 'https://datacatalog.googleapis.com/',
-    storage_url: 'https://storage.googleapis.com/'
-  })
+// Mock ../utils/const to prevent its module-level gcpServiceUrls IIFE from invoking requestAPI.
+jest.mock('../utils/const', () => ({
+  LOGIN_STATE: '1'
 }));
 
 jest.mock('../utils/utils', () => ({
   checkConfig: jest.fn()
 }));
 
-const mockListNotebookTemplatesProps = jest.fn();
 jest.mock('./listNotebookTemplates', () => ({
   __esModule: true,
-  default: (props: any) => {
-    mockListNotebookTemplatesProps(props);
-    return (
-      <div data-testid="mock-list-notebook-templates">
-        Mock ListNotebookTemplates
-      </div>
-    );
-  }
+  default: jest.fn(() => (
+    <div data-testid="mock-list-notebook-templates">
+      Mock ListNotebookTemplates
+    </div>
+  ))
 }));
 
-const mockLoginErrorProps = jest.fn();
 jest.mock('../utils/loginErrorComponent', () => ({
   __esModule: true,
-  default: (props: any) => {
-    mockLoginErrorProps(props);
-    return (
-      <div data-testid="mock-login-error">
-        LoginError: {String(props.loginError)}, ConfigError:{' '}
-        {String(props.configError)}
-      </div>
-    );
-  }
+  default: jest.fn(({ loginError, configError }: any) => (
+    <div data-testid="mock-login-error">
+      LoginError: {String(loginError)}, ConfigError: {String(configError)}
+    </div>
+  ))
 }));
-
-import React, { act } from 'react';
-import { createRoot, Root } from 'react-dom/client';
-import { NotebookTemplates } from './notebookTemplates';
-import { checkConfig } from '../utils/utils';
 
 describe('NotebookTemplates Widget and NotebookTemplatesComponent', () => {
   let container: HTMLDivElement;
   let root: Root;
 
-  const mockApp: any = { id: 'mock-app' };
-  const mockFactory: any = { id: 'mock-factory' };
-  const mockSettingRegistry: any = { id: 'mock-settings' };
-  const mockThemeManager: any = {
+  const mockApp = { id: 'mock-app' } as unknown as JupyterLab;
+  const mockFactory = { id: 'mock-factory' } as unknown as IFileBrowserFactory;
+  const mockSettingRegistry = {
+    id: 'mock-settings'
+  } as unknown as ISettingRegistry;
+  const mockThemeManager = {
     theme: 'JupyterLab Light',
     isLight: jest.fn().mockReturnValue(true),
     themeChanged: {
       connect: jest.fn(),
       disconnect: jest.fn()
     }
-  };
+  } as unknown as IThemeManager;
 
   const mockPendingConfigCheck = () => {
     (checkConfig as jest.Mock).mockImplementation(
@@ -188,7 +180,7 @@ describe('NotebookTemplates Widget and NotebookTemplatesComponent', () => {
 
   describe('error states', () => {
     it('renders LoginErrorComponent when checkConfig reports loginError', async () => {
-      mockResolvedConfigCheck({ loginError: true });
+      mockResolvedConfigCheck({ loginError: true, configError: false });
 
       await renderWidget();
 
@@ -196,11 +188,13 @@ describe('NotebookTemplates Widget and NotebookTemplatesComponent', () => {
         '[data-testid="mock-login-error"]'
       );
       expect(errorEl).not.toBeNull();
-      expect(errorEl?.textContent).toContain('LoginError: true');
+      expect(errorEl?.textContent).toContain(
+        'LoginError: true, ConfigError: false'
+      );
     });
 
     it('renders LoginErrorComponent when checkConfig reports configError', async () => {
-      mockResolvedConfigCheck({ configError: true });
+      mockResolvedConfigCheck({ loginError: false, configError: true });
 
       await renderWidget();
 
@@ -208,7 +202,9 @@ describe('NotebookTemplates Widget and NotebookTemplatesComponent', () => {
         '[data-testid="mock-login-error"]'
       );
       expect(errorEl).not.toBeNull();
-      expect(errorEl?.textContent).toContain('ConfigError: true');
+      expect(errorEl?.textContent).toContain(
+        'LoginError: false, ConfigError: true'
+      );
     });
 
     it('forwards app, settingRegistry, error flags, and setters to LoginErrorComponent', async () => {
@@ -216,7 +212,7 @@ describe('NotebookTemplates Widget and NotebookTemplatesComponent', () => {
 
       await renderWidget();
 
-      expect(mockLoginErrorProps).toHaveBeenCalledWith(
+      expect(LoginErrorComponent).toHaveBeenCalledWith(
         expect.objectContaining({
           loginError: true,
           configError: false,
@@ -224,12 +220,13 @@ describe('NotebookTemplates Widget and NotebookTemplatesComponent', () => {
           setConfigError: expect.any(Function),
           settingRegistry: mockSettingRegistry,
           app: mockApp
-        })
+        }),
+        expect.anything()
       );
     });
 
     it('hides the loading spinner and ListNotebookTemplates when an error occurs', async () => {
-      mockResolvedConfigCheck({ configError: true });
+      mockResolvedConfigCheck({ loggedIn: true, configError: true });
 
       await renderWidget();
 
@@ -257,11 +254,14 @@ describe('NotebookTemplates Widget and NotebookTemplatesComponent', () => {
 
       await renderWidget();
 
-      expect(mockListNotebookTemplatesProps).toHaveBeenCalledWith({
-        app: mockApp,
-        themeManager: mockThemeManager,
-        factory: mockFactory
-      });
+      expect(ListNotebookTemplates).toHaveBeenCalledWith(
+        {
+          app: mockApp,
+          themeManager: mockThemeManager,
+          factory: mockFactory
+        },
+        expect.anything()
+      );
     });
 
     it('hides the loading spinner and LoginErrorComponent when authenticated', async () => {
