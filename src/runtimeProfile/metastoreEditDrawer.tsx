@@ -29,6 +29,7 @@ import {
   Select,
   TextField
 } from '@mui/material';
+import { Notification } from '@jupyterlab/apputils';
 import { EditDrawer } from '../controls/EditDrawer';
 import { ProjectSelectorModal } from '../controls/ProjectSelectorModal';
 import {
@@ -524,9 +525,14 @@ export const MetastoreEditDrawer: React.FC<IMetastoreEditDrawerProps> = ({
           setDpmsServicesList(services);
         }
       })
-      .catch(() => {
+      .catch(error => {
         if (!cancelled) {
           setDpmsServicesList([]);
+          Notification.emit(
+            `Failed to fetch Dataproc Metastore services: ${error}`,
+            'error',
+            { autoClose: 5000 }
+          );
         }
       })
       .finally(() => {

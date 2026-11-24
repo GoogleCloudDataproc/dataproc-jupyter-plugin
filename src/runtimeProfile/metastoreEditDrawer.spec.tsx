@@ -80,6 +80,7 @@ import {
   listIcebergCatalogsAPI
 } from '../utils/biglakeService';
 import { metastoreServiceListAPI } from '../utils/metastoreService';
+import { Notification } from '@jupyterlab/apputils';
 
 describe('MetastoreEditDrawer & Metastore Flow', () => {
   const initialLakehouseConfig: IMetastoreConfig = {
@@ -540,6 +541,23 @@ describe('MetastoreEditDrawer interactions', () => {
     await wait();
 
     expect(saveButton().disabled).toBe(true);
+  });
+
+  it('shows the API error when Dataproc Metastore services fail to load', async () => {
+    const notifySpy = jest.spyOn(Notification, 'emit').mockImplementation();
+    (metastoreServiceListAPI as jest.Mock).mockRejectedValueOnce(
+      new Error('Dataproc Metastore API is disabled')
+    );
+    await renderDrawer();
+    await click(cards()[1]);
+    await wait();
+
+    expect(notifySpy).toHaveBeenCalledWith(
+      'Failed to fetch Dataproc Metastore services: Error: Dataproc Metastore API is disabled',
+      'error',
+      { autoClose: 5000 }
+    );
+    notifySpy.mockRestore();
   });
 
   it('renders a loader spinner with loadingText while loading services and shows None once loaded', async () => {

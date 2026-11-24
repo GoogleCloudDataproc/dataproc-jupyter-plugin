@@ -46,6 +46,9 @@ export const metastoreServiceListAPI = async (
     }
   });
 
-  const json = (await resp.json()) as { services: { name: string }[] };
-  return json.services.map(service => service.name);
+  const json = await resp.json();
+  if (json.error) {
+    throw new Error(json.error.message);
+  }
+  return (json.services ?? []).map((service: { name: string }) => service.name);
 };
