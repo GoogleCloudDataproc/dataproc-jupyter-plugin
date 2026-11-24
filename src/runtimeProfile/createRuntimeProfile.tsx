@@ -126,7 +126,8 @@ import {
   runtimeProfileService
 } from './runtimeProfileService';
 import { registerSessionKernelsInLauncher } from './sessionKernelLauncher';
-import { authApi, IAuthCredentials } from '../utils/utils';
+import { authApi, handleApiError, IAuthCredentials } from '../utils/utils';
+import ApiEnableDialog from '../utils/apiErrorPopup';
 import { requestRuntimeProfileListTab } from './runtimeProfileNavigation';
 import {
   ALL_MACHINE_TYPES,
@@ -692,6 +693,9 @@ export const CreateRuntimeProfileComponent: React.FC<
     useState<boolean>(false);
   const [isOtherCustomizationDrawerOpen, setIsOtherCustomizationDrawerOpen] =
     useState<boolean>(false);
+  const [apiDialogOpen, setApiDialogOpen] = useState<boolean>(false);
+  const [enableLink, setEnableLink] = useState<string>('');
+  const [isApiDisabled, setIsApiDisabled] = useState<boolean>(false);
 
   // Tier and Lightning Engine state
   const initialTierValue =
@@ -1195,6 +1199,23 @@ export const CreateRuntimeProfileComponent: React.FC<
       autoscalingConfig.maxExecutors
     ]
   );
+  // Same popup as Clusters and Batches: block Create when the Dataproc API is
+  // disabled (403), since the form makes no Dataproc call before submit.
+  useEffect(() => {
+    void service.getDataprocApiError().then(async errorResponse => {
+      if (errorResponse?.error?.code === 403) {
+        handleApiError(
+          errorResponse,
+          await authApi(),
+          setApiDialogOpen,
+          setEnableLink,
+          setIsApiDisabled,
+          'createRuntimeProfile'
+        );
+      }
+    });
+  }, [service]);
+
   // Load Regions from service
   useEffect(() => {
     let isMounted = true;
@@ -1990,13 +2011,15 @@ export const CreateRuntimeProfileComponent: React.FC<
                   isSubmitting ||
                   hasFormErrors ||
                   isDefaultNetworkUnavailable ||
-                  isCheckingNetworkAvailability
+                  isCheckingNetworkAvailability ||
+                  isApiDisabled
                 }
                 className={`runtime-profile-submit-btn ${
                   isSubmitting ||
                   hasFormErrors ||
                   isDefaultNetworkUnavailable ||
-                  isCheckingNetworkAvailability
+                  isCheckingNetworkAvailability ||
+                  isApiDisabled
                     ? 'submit-button-disable-style'
                     : 'submit-button-style'
                 }`}
@@ -2142,6 +2165,14 @@ export const CreateRuntimeProfileComponent: React.FC<
           setIsOtherCustomizationDrawerOpen(false);
         }}
       />
+      {apiDialogOpen && (
+        <ApiEnableDialog
+          open={apiDialogOpen}
+          onCancel={() => setApiDialogOpen(false)}
+          onEnable={() => setApiDialogOpen(false)}
+          enableLink={enableLink}
+        />
+      )}
     </div>
   );
 };

@@ -112,10 +112,12 @@ export class RuntimeProfileService implements IRuntimeProfileService {
           );
           return null;
         });
-        throw new Error(
+        const error = new Error(
           errorData?.error?.message ||
             `Failed to fetch runtime profiles: ${response.statusText}`
         );
+        // Keeps the API response so the list can spot a disabled API (403).
+        throw Object.assign(error, { errorResponse: errorData });
       }
 
       const data: {
@@ -225,6 +227,25 @@ export class RuntimeProfileService implements IRuntimeProfileService {
 
   constructor(useMock: boolean = RUNTIME_PROFILE_USE_MOCK) {
     this.useMock = useMock;
+  }
+
+  /**
+   * Error response of one small Dataproc request, or undefined when it works.
+   * The create form uses it to spot a disabled Dataproc API (403).
+   */
+  async getDataprocApiError(): Promise<any> {
+    if (this.useMock) {
+      return undefined;
+    }
+    const response = await authenticatedFetch({
+      uri: 'sessionTemplates',
+      method: HTTP_METHOD.GET,
+      regionIdentifier: 'locations',
+      queryParams: new URLSearchParams({ pageSize: '1' })
+    }).catch(() => undefined);
+    return response && !response.ok
+      ? response.json().catch(() => undefined)
+      : undefined;
   }
 
   /**

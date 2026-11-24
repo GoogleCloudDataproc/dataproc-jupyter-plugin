@@ -4050,4 +4050,22 @@ describe('CreateRuntimeProfileComponent UI & Service', () => {
     expect(getFieldValue('Runtime profile name')).toBe('12345');
     expect(submitButton.disabled).toBe(false);
   });
+
+  it('shows the API Not Enabled popup and disables Create on a 403', async () => {
+    jest
+      .spyOn(mockService, 'getDataprocApiError')
+      .mockResolvedValue({ error: { code: 403, message: 'API disabled' } });
+
+    await act(async () => {
+      root.render(<CreateRuntimeProfileComponent service={mockService} />);
+    });
+
+    expect(document.querySelector('[role="dialog"]')?.textContent).toContain(
+      'API Not Enabled'
+    );
+    expect(
+      (container.querySelector('button[type="submit"]') as HTMLButtonElement)
+        .disabled
+    ).toBe(true);
+  });
 });
