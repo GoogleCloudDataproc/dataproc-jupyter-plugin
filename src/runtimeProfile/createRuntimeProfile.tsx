@@ -128,6 +128,7 @@ import {
 import { registerSessionKernelsInLauncher } from './sessionKernelLauncher';
 import { authApi, handleApiError, IAuthCredentials } from '../utils/utils';
 import ApiEnableDialog from '../utils/apiErrorPopup';
+import LoginErrorComponent from '../utils/loginErrorComponent';
 import { requestRuntimeProfileListTab } from './runtimeProfileNavigation';
 import {
   ALL_MACHINE_TYPES,
@@ -696,6 +697,7 @@ export const CreateRuntimeProfileComponent: React.FC<
   const [apiDialogOpen, setApiDialogOpen] = useState<boolean>(false);
   const [enableLink, setEnableLink] = useState<string>('');
   const [isApiDisabled, setIsApiDisabled] = useState<boolean>(false);
+  const [loginError, setLoginError] = useState<boolean>(false);
 
   // Tier and Lightning Engine state
   const initialTierValue =
@@ -1231,6 +1233,11 @@ export const CreateRuntimeProfileComponent: React.FC<
       let credentials: IAuthCredentials | undefined;
       try {
         credentials = await authApi();
+        // Like Clusters and Batches, revoked credentials show the
+        // "Sign in with Google" button instead of the form.
+        if (isMounted && credentials?.login_error === 1) {
+          setLoginError(true);
+        }
         const loadedRegions = await service.getRegions();
 
         if (isMounted) {
@@ -1498,6 +1505,19 @@ export const CreateRuntimeProfileComponent: React.FC<
     // Otherwise (scrolling anywhere outside Summary & Pricing Estimate), scroll the create form container
     formScrollContainerRef.current.scrollTop += event.deltaY;
   };
+
+  if (loginError) {
+    return (
+      <div className="login-error-parent">
+        <LoginErrorComponent
+          loginError={loginError}
+          setLoginError={setLoginError}
+          setConfigError={() => undefined}
+          app={app}
+        />
+      </div>
+    );
+  }
 
   return (
     <div
