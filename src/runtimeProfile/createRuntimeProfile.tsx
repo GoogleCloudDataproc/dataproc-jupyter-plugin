@@ -1202,18 +1202,25 @@ export const CreateRuntimeProfileComponent: React.FC<
   // Same popup as Clusters and Batches: block Create when the Dataproc API is
   // disabled (403), since the form makes no Dataproc call before submit.
   useEffect(() => {
+    let isMounted = true;
     void service.getDataprocApiError().then(async errorResponse => {
       if (errorResponse?.error?.code === 403) {
-        handleApiError(
-          errorResponse,
-          await authApi(),
-          setApiDialogOpen,
-          setEnableLink,
-          setIsApiDisabled,
-          'createRuntimeProfile'
-        );
+        const credentials = await authApi();
+        if (isMounted) {
+          handleApiError(
+            errorResponse,
+            credentials,
+            setApiDialogOpen,
+            setEnableLink,
+            setIsApiDisabled,
+            'createRuntimeProfile'
+          );
+        }
       }
     });
+    return () => {
+      isMounted = false;
+    };
   }, [service]);
 
   // Load Regions from service

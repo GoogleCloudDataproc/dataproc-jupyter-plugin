@@ -115,9 +115,13 @@ export default function RuntimeProfileList({ app }: { app?: JupyterLab }) {
       if (errorResponse?.error?.code === 403) {
         // Same popup as Clusters and Batches. Create stays disabled until a
         // later fetch (Refresh) succeeds.
+        const credentials = await authApi();
+        if (fetchId !== fetchIdRef.current) {
+          return;
+        }
         handleApiError(
           errorResponse,
-          await authApi(),
+          credentials,
           setApiDialogOpen,
           setEnableLink,
           setIsApiDisabled,
