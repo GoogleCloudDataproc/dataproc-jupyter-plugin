@@ -338,7 +338,6 @@ export class ClusterService {
           response
             .json()
             .then((formattedResponse: any) => {
-              console.log(formattedResponse);
               if (formattedResponse?.error?.code) {
                 Notification.emit(
                   `Error deleting cluster : ${formattedResponse?.error?.message}`,
@@ -390,7 +389,6 @@ export class ClusterService {
           response
             .json()
             .then((formattedResponse: any) => {
-              console.log(formattedResponse);
               if (formattedResponse?.error?.code) {
                 Notification.emit(formattedResponse?.error?.message, 'error', {
                   autoClose: 5000
