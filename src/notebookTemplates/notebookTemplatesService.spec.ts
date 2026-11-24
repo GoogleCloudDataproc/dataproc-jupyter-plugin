@@ -15,27 +15,21 @@
  * limitations under the License.
  */
 
-jest.mock('../handler/handler', () => ({
-  requestAPI: jest.fn().mockResolvedValue({
-    dataproc_url: 'https://dataproc.googleapis.com/',
-    compute_url: 'https://compute.googleapis.com/compute',
-    metastore_url: 'https://metastore.googleapis.com/',
-    cloudkms_url: 'https://cloudkms.googleapis.com/',
-    cloudresourcemanager_url: 'https://cloudresourcemanager.googleapis.com/',
-    datacatalog_url: 'https://datacatalog.googleapis.com/',
-    storage_url: 'https://storage.googleapis.com/'
-  })
-}));
-
-jest.mock('../utils/utils', () => ({
-  loggedFetch: jest.fn()
-}));
-
 import React from 'react';
 import { setImmediate } from 'timers';
 import NotebookTemplateService from './notebookTemplatesService';
 import { loggedFetch } from '../utils/utils';
 import { NOTEBOOK_TEMPLATES_LIST_URL } from '../utils/const';
+
+// Mock ../utils/const to prevent its module-level gcpServiceUrls IIFE from invoking requestAPI.
+jest.mock('../utils/const', () => ({
+  NOTEBOOK_TEMPLATES_LIST_URL:
+    'https://api.github.com/repos/GoogleCloudPlatform/ai-ml-recipes/contents/.ci/index.json'
+}));
+
+jest.mock('../utils/utils', () => ({
+  loggedFetch: jest.fn()
+}));
 
 const flushPromises = () => new Promise<void>(resolve => setImmediate(resolve));
 
@@ -187,9 +181,7 @@ describe('NotebookTemplateService', () => {
 
       expect(consoleErrorSpy).toHaveBeenCalledWith(
         'Error fetching data:',
-        expect.objectContaining({
-          message: 'Failed to fetch notebook content. Status: 404'
-        })
+        new Error('Failed to fetch notebook content. Status: 404')
       );
     });
 
@@ -223,6 +215,24 @@ describe('NotebookTemplateService', () => {
 
       await invokeListService();
 
+      expect(mockSetTemplateList).not.toHaveBeenCalled();
+      expect(mockSetIsLoading).toHaveBeenCalledWith(false);
+    });
+
+    it('logs an error and clears loading state when response JSON parsing rejects', async () => {
+      const parseError = new SyntaxError('Unexpected token');
+      (loggedFetch as jest.Mock).mockResolvedValue({
+        ok: true,
+        status: 200,
+        json: jest.fn().mockRejectedValue(parseError)
+      });
+
+      await invokeListService();
+
+      expect(consoleErrorSpy).toHaveBeenCalledWith(
+        'Error fetching data:',
+        parseError
+      );
       expect(mockSetTemplateList).not.toHaveBeenCalled();
       expect(mockSetIsLoading).toHaveBeenCalledWith(false);
     });
@@ -285,9 +295,7 @@ describe('NotebookTemplateService', () => {
 
       expect(consoleErrorSpy).toHaveBeenCalledWith(
         'Error fetching notebook content',
-        expect.objectContaining({
-          message: 'Failed to fetch notebook content. Status: 500'
-        })
+        new Error('Failed to fetch notebook content. Status: 500')
       );
     });
 
