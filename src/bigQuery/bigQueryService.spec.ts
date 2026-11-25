@@ -394,6 +394,31 @@ describe('BigQueryService', () => {
       expect(setDatabaseNames).toHaveBeenCalledWith([]);
       expect(setDataSetResponse).toHaveBeenCalledWith([]);
 
+      setDatabaseNames.mockClear();
+      setDataSetResponse.mockClear();
+      (requestAPI as jest.Mock).mockResolvedValueOnce({
+        entries: [
+          {
+            entrySource: {
+              location: 'eu',
+              resource: 'projects/p/datasets/ds_eu'
+            }
+          }
+        ]
+      });
+      await BigQueryService.getBigQueryDatasetsAPIService(
+        'bigframes',
+        mockSettingsRegistry('us-central1'),
+        setDatabaseNames,
+        setDataSetResponse,
+        'proj',
+        jest.fn(),
+        jest.fn(),
+        jest.fn()
+      );
+      expect(setDatabaseNames).toHaveBeenCalledWith([]);
+      expect(setDataSetResponse).toHaveBeenCalledWith([]);
+
       (requestAPI as jest.Mock).mockRejectedValueOnce(new Error('DS err'));
       await BigQueryService.getBigQueryDatasetsAPIService(
         'bigframes',
@@ -443,7 +468,7 @@ describe('BigQueryService', () => {
         'proj',
         setIsIconLoading
       );
-      await new Promise(resolve => setTimeout(resolve, 0));
+      await new Promise(process.nextTick);
 
       expect(setTableResponse).toHaveBeenCalledWith([
         { tableReference: { tableId: 't1', datasetId: 'ds' } },
@@ -573,7 +598,7 @@ describe('BigQueryService', () => {
       );
     });
 
-    it('fetches projects list when API is enabled and handles disabled/error states', async () => {
+    it('fetches projects list when API is enabled and handles disabled state', async () => {
       (authApi as jest.Mock).mockResolvedValue({ project_id: 'active-proj' });
       (requestAPI as jest.Mock)
         .mockResolvedValueOnce({ is_enabled: true })
@@ -608,7 +633,9 @@ describe('BigQueryService', () => {
       expect(setProjectNameInfo).toHaveBeenCalledWith([]);
       expect(setApiError).toHaveBeenCalledWith(true);
       expect(setIsLoading).toHaveBeenCalledWith(false);
+    });
 
+    it('checkBigQueryDatasetsAPIService returns error on rejection', async () => {
       (requestAPI as jest.Mock).mockRejectedValueOnce(
         new Error('Check failed')
       );
