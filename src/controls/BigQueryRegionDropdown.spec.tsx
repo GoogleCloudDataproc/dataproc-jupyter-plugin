@@ -161,11 +161,10 @@ describe('BigQueryRegionDropdown Component', () => {
     const clearButton = container.querySelector(
       'button[aria-label="Clear"]'
     ) as HTMLButtonElement;
-    if (clearButton) {
-      await act(async () => {
-        clearButton.click();
-      });
-    }
+    expect(clearButton).not.toBeNull();
+    await act(async () => {
+      clearButton.click();
+    });
     expect(onRegionChange).not.toHaveBeenCalled();
   });
 });
