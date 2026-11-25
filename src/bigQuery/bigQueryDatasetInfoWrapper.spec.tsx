@@ -65,24 +65,26 @@ describe('BigQueryDatasetWrapper', () => {
       mockThemeManager
     );
 
-    expect(widget.title.label).toBe('analytics_ds');
+    try {
+      expect(widget.title.label).toBe('analytics_ds');
 
-    await act(async () => {
-      root.render(widget.renderInternal());
-    });
+      await act(async () => {
+        root.render(widget.renderInternal());
+      });
 
-    expect(container.querySelector('.title-overlay')?.textContent).toBe(
-      'analytics_ds'
-    );
-    expect(container.querySelector('.db-title')?.textContent).toBe(
-      'Dataset info'
-    );
-    expect(
-      container.querySelector('[data-testid="bq-dataset-info-mock"]')
-        ?.textContent
-    ).toBe('analytics_ds:test-project');
-
-    widget.dispose();
+      expect(container.querySelector('.title-overlay')?.textContent).toBe(
+        'analytics_ds'
+      );
+      expect(container.querySelector('.db-title')?.textContent).toBe(
+        'Dataset info'
+      );
+      expect(
+        container.querySelector('[data-testid="bq-dataset-info-mock"]')
+          ?.textContent
+      ).toBe('analytics_ds:test-project');
+    } finally {
+      widget.dispose();
+    }
     expect(mockThemeManager.themeChanged.disconnect).toHaveBeenCalled();
   });
 });
