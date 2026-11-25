@@ -108,6 +108,8 @@ describe('BigQuerySchemaInfo Component', () => {
     expect(firstCells[3].textContent).toBe('PK');
     expect(firstCells[4].textContent).toBe('und:ci');
     expect(firstCells[5].textContent).toBe('N/A');
+    // bigQuerySchema.tsx defines accessor 'policyTags ' (trailing space), so cell 6 renders empty.
+    expect(firstCells[6].textContent).toBe('');
     expect(firstCells[7].textContent).toBe('policy-1');
     expect(firstCells[8].textContent).toBe('Unique user ID');
   });
