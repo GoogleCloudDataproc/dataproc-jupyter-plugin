@@ -15,25 +15,16 @@
  * limitations under the License.
  */
 
-(globalThis as any).IS_REACT_ACT_ENVIRONMENT = true;
-
-jest.mock('../handler/handler', () => ({
-  requestAPI: jest.fn().mockResolvedValue({
-    dataproc_url: 'https://dataproc.googleapis.com/',
-    compute_url: 'https://compute.googleapis.com/compute',
-    metastore_url: 'https://metastore.googleapis.com/',
-    cloudkms_url: 'https://cloudkms.googleapis.com/',
-    cloudresourcemanager_url: 'https://cloudresourcemanager.googleapis.com/',
-    datacatalog_url: 'https://datacatalog.googleapis.com/',
-    storage_url: 'https://storage.googleapis.com/'
-  })
-}));
-
 import React, { act } from 'react';
 import { createRoot, Root } from 'react-dom/client';
 import * as path from 'path';
 import ListNotebookTemplates from './listNotebookTemplates';
 import NotebookTemplateService from './notebookTemplatesService';
+
+(globalThis as any).IS_REACT_ACT_ENVIRONMENT = true;
+
+// Mock ../utils/const to prevent its module-level gcpServiceUrls IIFE from invoking requestAPI.
+jest.mock('../utils/const', () => ({}));
 
 describe('ListNotebookTemplates Component', () => {
   let container: HTMLDivElement;
