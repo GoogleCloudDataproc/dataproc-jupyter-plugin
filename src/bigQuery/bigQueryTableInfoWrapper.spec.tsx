@@ -91,8 +91,9 @@ describe('BigQueryTableWrapper', () => {
     jest
       .spyOn(BigQueryService, 'getBigQuerySchemaInfoAPIService')
       .mockImplementation(
-        async (_dataset, _table, _projectId, setSchemaInfoResponse) => {
+        (_dataset, _table, _projectId, setSchemaInfoResponse) => {
           setSchemaInfoResponse(schemaFields);
+          return Promise.resolve();
         }
       );
 

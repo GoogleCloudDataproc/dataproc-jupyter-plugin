@@ -56,10 +56,10 @@ describe('BigQueryTableInfo Component', () => {
   it('shows loading spinner while fetching dataset and table info', async () => {
     jest
       .spyOn(BigQueryService, 'getBigQueryDatasetInfoAPIService')
-      .mockImplementation(async () => new Promise(() => undefined));
+      .mockImplementation(() => new Promise(() => {}));
     jest
       .spyOn(BigQueryService, 'getBigQueryTableInfoAPIService')
-      .mockImplementation(async () => new Promise(() => undefined));
+      .mockImplementation(() => new Promise(() => {}));
 
     await act(async () => {
       root.render(
@@ -88,14 +88,15 @@ describe('BigQueryTableInfo Component', () => {
   it('fetches table info with datasetInfo and renders table details once loaded', async () => {
     jest
       .spyOn(BigQueryService, 'getBigQueryDatasetInfoAPIService')
-      .mockImplementation(async (_dataset, _projectId, setDatasetInfo) => {
+      .mockImplementation((_dataset, _projectId, setDatasetInfo) => {
         setDatasetInfo({ 'Case insensitive': true });
+        return Promise.resolve();
       });
 
     jest
       .spyOn(BigQueryService, 'getBigQueryTableInfoAPIService')
       .mockImplementation(
-        async (
+        (
           _title,
           _dataset,
           setTableInfo,
@@ -111,6 +112,7 @@ describe('BigQueryTableInfo Component', () => {
             });
             setIsLoading(false);
           }
+          return Promise.resolve();
         }
       );
 
@@ -129,8 +131,14 @@ describe('BigQueryTableInfo Component', () => {
     );
     const rows = Array.from(container.querySelectorAll('tbody tr.tr-row'));
     expect(rows).toHaveLength(3);
-    expect(rows[0].textContent).toContain('test-project:analytics.events');
-    expect(rows[1].textContent).toContain('US');
-    expect(rows[2].textContent).toContain('true');
+    const getRowValue = (label: string) => {
+      const row = rows.find(
+        r => r.querySelector('.bold-column')?.textContent === label
+      );
+      return row?.querySelectorAll('td')[1]?.textContent;
+    };
+    expect(getRowValue('Table ID')).toBe('test-project:analytics.events');
+    expect(getRowValue('Data location')).toBe('US');
+    expect(getRowValue('Case insensitive')).toBe('true');
   });
 });
