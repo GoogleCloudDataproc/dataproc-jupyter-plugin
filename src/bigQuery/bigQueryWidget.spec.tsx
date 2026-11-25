@@ -122,7 +122,7 @@ jest.mock('react-arborist', () => {
   return { Tree };
 });
 
-import { act } from 'react';
+import { act } from 'react-dom/test-utils';
 import { createRoot, Root } from 'react-dom/client';
 import { BigQueryWidget } from './bigQueryWidget';
 import { BigQueryService } from './bigQueryService';
@@ -547,9 +547,9 @@ describe('BigQueryWidget', () => {
     expect(container.textContent).toContain('ds_s');
     expect(container.textContent).toContain('tbl_s');
 
-    const clearBtn = container.querySelector(
-      'button[aria-label="toggle password visibility"]'
-    ) as HTMLButtonElement;
+    const clearBtn = container
+      .querySelector('.search-clear-icon')
+      ?.closest('button') as HTMLButtonElement;
     await act(async () => {
       clearBtn.click();
     });
