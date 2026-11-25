@@ -255,6 +255,30 @@ async def test_post_config_handler_gcloud_error(jp_fetch, monkeypatch):
     assert payload == {"config": "Project and region update failed"}
 
 
+@pytest.mark.parametrize(
+    "returncode,expected_status",
+    [(0, "SUCCEEDED"), (1, "FAILED")],
+)
+async def test_login_handler_runs_gcloud_without_input(
+    jp_fetch, monkeypatch, returncode, expected_status
+):
+    process = Mock(returncode=returncode)
+    process.communicate.return_value = (b"", b"")
+    popen = Mock(return_value=process)
+    monkeypatch.setattr(
+        "dataproc_jupyter_plugin.handlers.subprocess",
+        Mock(Popen=popen, PIPE=subprocess.PIPE, DEVNULL=subprocess.DEVNULL),
+    )
+
+    response = await jp_fetch(
+        "dataproc-plugin", "login", method="POST", allow_nonstandard_methods=True
+    )
+
+    assert json.loads(response.body) == {"login": expected_status}
+    # With no input, gcloud cannot wait on a question that the UI never shows.
+    assert popen.call_args.kwargs["stdin"] == subprocess.DEVNULL
+
+
 async def test_resource_manager_handler_success(jp_fetch, monkeypatch):
     # Mock the project ID retrieval
     mock_gcp_project = AsyncMock(return_value="my-project-123")

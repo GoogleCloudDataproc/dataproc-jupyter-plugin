@@ -164,8 +164,15 @@ class LoginHandler(APIHandler):
     @tornado.web.authenticated
     async def post(self):
         cmd = "gcloud auth login"
+        # gcloud asks questions on a terminal, such as a confirmation on Compute
+        # Engine VMs. Nobody sees them here, so with no input gcloud takes its
+        # default answers instead of waiting forever.
         process = subprocess.Popen(
-            cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True
+            cmd,
+            stdin=subprocess.DEVNULL,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            shell=True,
         )
         output, _ = process.communicate()
         # Check if the authentication was successful
