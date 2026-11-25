@@ -34,6 +34,7 @@ jest.mock('../utils/const', () => ({
 }));
 
 jest.mock('../utils/utils', () => ({
+  ...jest.requireActual('../utils/utils'),
   checkConfig: jest.fn()
 }));
 
