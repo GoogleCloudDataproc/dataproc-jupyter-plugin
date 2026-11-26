@@ -15,7 +15,13 @@
  * limitations under the License.
  */
 
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState
+} from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { JupyterLab } from '@jupyterlab/application';
 import { IThemeManager, Notification } from '@jupyterlab/apputils';
@@ -208,6 +214,7 @@ export const generateRandomHex = (): string => {
 const DISPLAY_NAME_REQUIRED_ERROR = 'Display name is required.';
 const DISPLAY_NAME_ALPHANUMERIC_ERROR =
   'Display name must contain at least one letter or number.';
+const REGION_REQUIRED_ERROR = 'Region is required.';
 
 /**
  * Initial default Serverless Spark runtime configuration for a new Runtime Profile.
@@ -670,13 +677,25 @@ export const CreateRuntimeProfileComponent: React.FC<
     initialMetastoreConfig?.projectId
   );
   const [isLoadingOptions, setIsLoadingOptions] = useState<boolean>(true);
+  const isLoadingOptionsRef = useRef<boolean>(true);
+  const pendingInitialLoadRef = useRef<Promise<{
+    region: string;
+    projectId?: string;
+  }> | null>(null);
   // Collapsed by default; the summary panel already shows these settings.
   const [expandAdditionalConfig, setExpandAdditionalConfig] =
     useState<boolean>(false);
   const [isDefaultNetworkUnavailable, setIsDefaultNetworkUnavailable] =
     useState<boolean>(false);
-  const [isCheckingNetworkAvailability, setIsCheckingNetworkAvailability] =
-    useState<boolean>(false);
+  const pendingNetworkCheckRef = useRef<{
+    key: string;
+    promise: Promise<boolean>;
+    isActive: () => boolean;
+  } | null>(null);
+  const networkCheckResultRef = useRef<{
+    key: string;
+    available: boolean;
+  } | null>(null);
   const [isRuntimeConfigDrawerOpen, setIsRuntimeConfigDrawerOpen] =
     useState<boolean>(false);
   const [isMetastoreDrawerOpen, setIsMetastoreDrawerOpen] =
@@ -751,6 +770,8 @@ export const CreateRuntimeProfileComponent: React.FC<
   const {
     control,
     handleSubmit,
+    getValues,
+    setError,
     setValue,
     trigger,
     watch,
@@ -766,6 +787,7 @@ export const CreateRuntimeProfileComponent: React.FC<
 
   const selectedRegion = watch('region');
   const hasFormErrors = Object.keys(errors).length > 0;
+  const isRegionMissingAfterLoad = !isLoadingOptions && !selectedRegion?.trim();
 
   // Configuration values derived from initial props or defaults.
   const [runtimeEnvironmentConfig, setRuntimeEnvironmentConfig] =
@@ -1195,31 +1217,74 @@ export const CreateRuntimeProfileComponent: React.FC<
       autoscalingConfig.maxExecutors
     ]
   );
-  // Load Regions from service
+  // Load Regions from service (pre-filling region from authApi immediately so
+  // the Region dropdown populates early and getSubnetworks runs in parallel).
   useEffect(() => {
     let isMounted = true;
-    const loadInitialData = async () => {
+    const loadPromise = (async (): Promise<{
+      region: string;
+      projectId?: string;
+    }> => {
+      isLoadingOptionsRef.current = true;
       setIsLoadingOptions(true);
       let credentials: IAuthCredentials | undefined;
       try {
         credentials = await authApi();
+        const settingsRegion =
+          typeof credentials?.region_id === 'string'
+            ? credentials.region_id.trim()
+            : '';
+        const credentialsProjectId =
+          typeof credentials?.project_id === 'string'
+            ? credentials.project_id.trim()
+            : '';
+        const provisionalRegion =
+          !isEditMode &&
+          !credentials?.login_error &&
+          !credentials?.config_error &&
+          settingsRegion
+            ? settingsRegion
+            : '';
+
+        if (isMounted) {
+          if (credentialsProjectId) {
+            setProjectId(prev => prev || credentialsProjectId);
+          }
+          if (provisionalRegion && !getValues('region')) {
+            setRegions(prev =>
+              prev.length > 0
+                ? prev
+                : [{ name: provisionalRegion, displayName: provisionalRegion }]
+            );
+            setValue('region', provisionalRegion, { shouldValidate: true });
+          }
+        }
+
         const loadedRegions = await service.getRegions();
 
         if (isMounted) {
-          if (credentials?.project_id) {
-            setProjectId(prev => prev || credentials?.project_id);
-          }
           setRegions(loadedRegions);
+          isLoadingOptionsRef.current = false;
 
-          // Pre-select the region saved in Settings, else the first region.
+          // Pre-select the region saved in Settings if available; otherwise
+          // leave empty so the user chooses from the populated region list.
           // An edited profile keeps its own region, which can't change.
-          const defaultRegion =
-            loadedRegions.find(r => r.name === credentials?.region_id) ??
-            loadedRegions[0];
-          if (defaultRegion && !isEditMode) {
-            setValue('region', defaultRegion.name, { shouldValidate: true });
+          const defaultRegion = settingsRegion
+            ? loadedRegions.find(r => r.name === settingsRegion)
+            : undefined;
+          if (!isEditMode) {
+            const resolvedRegion = defaultRegion?.name ?? '';
+            setValue('region', resolvedRegion, { shouldValidate: true });
+            return {
+              region: resolvedRegion,
+              projectId: credentialsProjectId || undefined
+            };
           }
         }
+        return {
+          region: getValues('region') || '',
+          projectId: credentialsProjectId || undefined
+        };
       } catch (error) {
         console.error('Failed to load runtime profile initial data', error);
         // Same as the Settings region dropdown: skip the popup when there is
@@ -1233,21 +1298,139 @@ export const CreateRuntimeProfileComponent: React.FC<
             autoClose: 5000
           });
         }
+        return {
+          region: isMounted ? getValues('region') || '' : '',
+          projectId:
+            typeof credentials?.project_id === 'string'
+              ? credentials.project_id.trim() || undefined
+              : undefined
+        };
       } finally {
         if (isMounted) {
+          isLoadingOptionsRef.current = false;
           setIsLoadingOptions(false);
         }
       }
-    };
+    })();
 
-    loadInitialData();
+    pendingInitialLoadRef.current = loadPromise;
+    void loadPromise.finally(() => {
+      if (pendingInitialLoadRef.current === loadPromise) {
+        pendingInitialLoadRef.current = null;
+      }
+    });
 
     return () => {
       isMounted = false;
+      if (pendingInitialLoadRef.current === loadPromise) {
+        pendingInitialLoadRef.current = null;
+      }
     };
-  }, [service, setValue, isEditMode]);
+  }, [service, setValue, getValues, isEditMode]);
 
-  // Verify default/selected project subnetwork availability in the chosen region
+  // Verify default/selected project subnetwork availability in a region.
+  // Shared by the background effect and onSubmit so in-flight checks are
+  // reused without duplicating API calls or blinking the Create button.
+  const verifyProjectSubnetwork = useCallback(
+    async (
+      targetRegion: string,
+      targetProjectId?: string,
+      shouldApplyState: () => boolean = () => true
+    ): Promise<boolean> => {
+      if (
+        (networkAndSecurityConfig.networkSource ?? 'project') !== 'project' ||
+        !service.getSubnetworks
+      ) {
+        return true;
+      }
+
+      const activeNetwork =
+        networkAndSecurityConfig.primaryNetwork ||
+        networkAndSecurityConfig.networkInThisProject ||
+        'default';
+      const activeSubnetwork = extractSubnetShortName(
+        networkAndSecurityConfig.subnetwork || 'default'
+      );
+      const networkKey = `${activeNetwork}|${activeSubnetwork}|${
+        targetProjectId ?? ''
+      }|${targetRegion}`;
+
+      if (
+        pendingNetworkCheckRef.current?.key === networkKey &&
+        pendingNetworkCheckRef.current.isActive()
+      ) {
+        const isAvailable = await pendingNetworkCheckRef.current.promise;
+        if (!isAvailable) {
+          return false;
+        }
+      }
+
+      if (networkCheckResultRef.current?.key === networkKey) {
+        const { available } = networkCheckResultRef.current;
+        if (shouldApplyState()) {
+          setIsDefaultNetworkUnavailable(!available);
+        }
+        return available;
+      }
+
+      const checkPromise = (async (): Promise<boolean> => {
+        try {
+          const subnetworks = await service.getSubnetworks?.(
+            activeNetwork,
+            targetProjectId,
+            targetRegion
+          );
+          if (!shouldApplyState()) {
+            return true;
+          }
+          const isAvailable =
+            Array.isArray(subnetworks) &&
+            subnetworks.some(
+              opt =>
+                (typeof opt === 'string' ? opt : opt.name) === activeSubnetwork
+            );
+          networkCheckResultRef.current = {
+            key: networkKey,
+            available: isAvailable
+          };
+          setIsDefaultNetworkUnavailable(!isAvailable);
+          if (!isAvailable) {
+            setExpandAdditionalConfig(true);
+          }
+          return isAvailable;
+        } catch (error) {
+          console.error('Failed to verify subnetwork availability:', error);
+          if (shouldApplyState()) {
+            networkCheckResultRef.current = { key: networkKey, available: true };
+            setIsDefaultNetworkUnavailable(false);
+          }
+          return true;
+        }
+      })();
+
+      const pendingEntry = {
+        key: networkKey,
+        promise: checkPromise,
+        isActive: shouldApplyState
+      };
+      pendingNetworkCheckRef.current = pendingEntry;
+      try {
+        return await checkPromise;
+      } finally {
+        if (pendingNetworkCheckRef.current === pendingEntry) {
+          pendingNetworkCheckRef.current = null;
+        }
+      }
+    },
+    [
+      service,
+      networkAndSecurityConfig.networkSource,
+      networkAndSecurityConfig.primaryNetwork,
+      networkAndSecurityConfig.networkInThisProject,
+      networkAndSecurityConfig.subnetwork
+    ]
+  );
+
   useEffect(() => {
     if (
       isEditMode ||
@@ -1255,54 +1438,14 @@ export const CreateRuntimeProfileComponent: React.FC<
       (networkAndSecurityConfig.networkSource ?? 'project') !== 'project' ||
       !service.getSubnetworks
     ) {
+      pendingNetworkCheckRef.current = null;
+      networkCheckResultRef.current = null;
       setIsDefaultNetworkUnavailable(false);
-      setIsCheckingNetworkAvailability(false);
       return;
     }
 
-    const activeNetwork =
-      networkAndSecurityConfig.primaryNetwork ||
-      networkAndSecurityConfig.networkInThisProject ||
-      'default';
-    const activeSubnetwork = extractSubnetShortName(
-      networkAndSecurityConfig.subnetwork || 'default'
-    );
-
     let isMounted = true;
-    const checkDefaultSubnetwork = async () => {
-      setIsCheckingNetworkAvailability(true);
-      try {
-        const subnetworks = await service.getSubnetworks?.(
-          activeNetwork,
-          projectId,
-          selectedRegion
-        );
-        if (!isMounted) {
-          return;
-        }
-        const isAvailable =
-          Array.isArray(subnetworks) &&
-          subnetworks.some(
-            opt =>
-              (typeof opt === 'string' ? opt : opt.name) === activeSubnetwork
-          );
-        setIsDefaultNetworkUnavailable(!isAvailable);
-        if (!isAvailable) {
-          setExpandAdditionalConfig(true);
-        }
-      } catch (error) {
-        console.error('Failed to verify subnetwork availability:', error);
-        if (isMounted) {
-          setIsDefaultNetworkUnavailable(false);
-        }
-      } finally {
-        if (isMounted) {
-          setIsCheckingNetworkAvailability(false);
-        }
-      }
-    };
-
-    void checkDefaultSubnetwork();
+    void verifyProjectSubnetwork(selectedRegion, projectId, () => isMounted);
 
     return () => {
       isMounted = false;
@@ -1313,9 +1456,7 @@ export const CreateRuntimeProfileComponent: React.FC<
     projectId,
     service,
     networkAndSecurityConfig.networkSource,
-    networkAndSecurityConfig.primaryNetwork,
-    networkAndSecurityConfig.networkInThisProject,
-    networkAndSecurityConfig.subnetwork
+    verifyProjectSubnetwork
   ]);
 
   const handleBack = () => {
@@ -1383,7 +1524,42 @@ export const CreateRuntimeProfileComponent: React.FC<
     const submittingWidget =
       app?.shell?.activeWidget ?? app?.shell?.currentWidget;
     try {
-      const payload = buildPayload(data);
+      let effectiveRegion = data.region;
+      let effectiveProjectId = projectId;
+
+      if (!isEditMode) {
+        if (pendingInitialLoadRef.current) {
+          const initialResult = await pendingInitialLoadRef.current;
+          if (initialResult.region) {
+            effectiveRegion = initialResult.region;
+          }
+          if (!effectiveProjectId && initialResult.projectId) {
+            effectiveProjectId = initialResult.projectId;
+          }
+        }
+
+        if (!effectiveRegion?.trim()) {
+          setError('region', {
+            type: 'required',
+            message: REGION_REQUIRED_ERROR
+          });
+          return;
+        }
+
+        const isNetworkAvailable = await verifyProjectSubnetwork(
+          effectiveRegion,
+          effectiveProjectId
+        );
+        if (!isNetworkAvailable) {
+          return;
+        }
+      }
+
+      const submissionData: IRuntimeProfileFormData = {
+        ...data,
+        region: effectiveRegion
+      };
+      const payload = buildPayload(submissionData);
 
       if (isEditMode && profile) {
         const updatedProfile = await service.updateRuntimeProfile(
@@ -1398,7 +1574,11 @@ export const CreateRuntimeProfileComponent: React.FC<
         );
         eventEmitter.emit(RUNTIME_PROFILE_UPDATED_EVENT, updatedProfile);
       } else {
-        await service.createRuntimeProfile(payload, undefined, data.region);
+        await service.createRuntimeProfile(
+          payload,
+          undefined,
+          submissionData.region
+        );
 
         Notification.emit(
           `Runtime profile "${data.displayName}" created successfully.`,
@@ -1604,32 +1784,77 @@ export const CreateRuntimeProfileComponent: React.FC<
                 />
               </div>
               <div className="runtime-profile-col">
-                <FormControl size="small" fullWidth variant="outlined">
-                  <InputLabel id="runtime-profile-region-label" shrink>
-                    Region *
-                  </InputLabel>
-                  <Controller
-                    name="region"
-                    control={control}
-                    rules={{ required: 'Region is required' }}
-                    render={({ field }) => (
-                      <Select
-                        {...field}
-                        labelId="runtime-profile-region-label"
-                        id="runtime-profile-region"
-                        label="Region *"
-                        notched
-                        disabled={isLoadingOptions || isEditMode}
-                      >
-                        {regionOptions.map(r => (
-                          <MenuItem key={r.name} value={r.name}>
-                            {r.displayName}
-                          </MenuItem>
-                        ))}
-                      </Select>
-                    )}
-                  />
-                </FormControl>
+                <Controller
+                  name="region"
+                  control={control}
+                  rules={{
+                    validate: (value: string) => {
+                      if (value?.trim()) {
+                        return true;
+                      }
+                      if (isLoadingOptionsRef.current) {
+                        return true;
+                      }
+                      return REGION_REQUIRED_ERROR;
+                    }
+                  }}
+                  render={({ field, fieldState }) => {
+                    const regionError =
+                      fieldState.error?.message ||
+                      (!isLoadingOptions && !field.value?.trim()
+                        ? REGION_REQUIRED_ERROR
+                        : undefined);
+                    return (
+                      <>
+                        <FormControl
+                          size="small"
+                          fullWidth
+                          variant="outlined"
+                          error={Boolean(regionError)}
+                        >
+                          <InputLabel id="runtime-profile-region-label" shrink>
+                            Region *
+                          </InputLabel>
+                          <Select
+                            {...field}
+                            labelId="runtime-profile-region-label"
+                            id="runtime-profile-region"
+                            label="Region *"
+                            notched
+                            error={Boolean(regionError)}
+                            disabled={isLoadingOptions || isEditMode}
+                            SelectDisplayProps={{
+                              'aria-describedby': regionError
+                                ? 'runtime-profile-region-error'
+                                : undefined
+                            }}
+                          >
+                            {regionOptions.map(r => (
+                              <MenuItem key={r.name} value={r.name}>
+                                {r.displayName}
+                              </MenuItem>
+                            ))}
+                          </Select>
+                        </FormControl>
+                        {regionError && (
+                          <div
+                            id="runtime-profile-region-error"
+                            className="runtime-profile-field-error"
+                            role="alert"
+                          >
+                            <span
+                              className="runtime-profile-field-error-icon"
+                              aria-hidden="true"
+                            >
+                              <FieldErrorIcon />
+                            </span>
+                            <span>{regionError}</span>
+                          </div>
+                        )}
+                      </>
+                    );
+                  }}
+                />
               </div>
             </div>
 
@@ -1990,13 +2215,13 @@ export const CreateRuntimeProfileComponent: React.FC<
                   isSubmitting ||
                   hasFormErrors ||
                   isDefaultNetworkUnavailable ||
-                  isCheckingNetworkAvailability
+                  isRegionMissingAfterLoad
                 }
                 className={`runtime-profile-submit-btn ${
                   isSubmitting ||
                   hasFormErrors ||
                   isDefaultNetworkUnavailable ||
-                  isCheckingNetworkAvailability
+                  isRegionMissingAfterLoad
                     ? 'submit-button-disable-style'
                     : 'submit-button-style'
                 }`}
