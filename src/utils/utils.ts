@@ -28,6 +28,7 @@ import {
   DCU_HOURS,
   GB_MONTHS,
   HTTP_METHOD,
+  LOGIN_STATE,
   PYSPARK,
   SPARK,
   SPARKR,
@@ -312,9 +313,11 @@ export const login = async (
     const loginStatus = (data as { login: string }).login;
     if (loginStatus === STATUS_SUCCESS) {
       setLoginError(false);
+      localStorage.setItem('loginState', LOGIN_STATE);
       window.location.reload();
     } else {
       setLoginError(true);
+      localStorage.removeItem('loginState');
     }
   }
 };
