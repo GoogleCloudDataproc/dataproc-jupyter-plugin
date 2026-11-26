@@ -27,6 +27,7 @@ import refreshIcon from '../../style/icons/refresh_icon.svg';
 import { CircularProgress } from '@mui/material';
 import { DataprocLoggingService, LOG_LEVEL } from '../utils/loggingService';
 import { eventEmitter } from '../utils/signalEmitter';
+import { authApi } from '../utils/utils';
 import {
   IRuntimeProfileRow,
   IRuntimeProfileTemplate,
@@ -54,6 +55,7 @@ export default function RuntimeProfileList({ app }: { app?: JupyterLab }) {
   const [selectedProfile, setSelectedProfile] =
     useState<IRuntimeProfileTemplate | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isConfigIncomplete, setIsConfigIncomplete] = useState(false);
   const [pageTokens, setPageTokens] = useState<string[]>(['']);
   const [pageOffsets, setPageOffsets] = useState<number[]>([0]);
   const [currentPage, setCurrentPage] = useState(0);
@@ -84,6 +86,27 @@ export default function RuntimeProfileList({ app }: { app?: JupyterLab }) {
     const fetchId = ++fetchIdRef.current;
     setIsLoading(true);
     try {
+      const credentials = await authApi();
+      if (fetchId !== fetchIdRef.current) {
+        return;
+      }
+      const projectId =
+        typeof credentials?.project_id === 'string'
+          ? credentials.project_id.trim()
+          : '';
+      const regionId =
+        typeof credentials?.region_id === 'string'
+          ? credentials.region_id.trim()
+          : '';
+      if (!projectId || !regionId || credentials?.config_error) {
+        setIsConfigIncomplete(true);
+        setRawTemplates([]);
+        setProfiles([]);
+        setNextPageToken(null);
+        return;
+      }
+
+      setIsConfigIncomplete(false);
       const { templates, nextPageToken: newNextPageToken } =
         await RuntimeProfileService.fetchRuntimeProfiles(token);
       if (fetchId !== fetchIdRef.current) {
@@ -261,6 +284,10 @@ export default function RuntimeProfileList({ app }: { app?: JupyterLab }) {
         {isLoading ? (
           <div className="loading-spinner-container">
             <CircularProgress size={24} />
+          </div>
+        ) : isConfigIncomplete ? (
+          <div className="no-profiles-message">
+            Configure a project and region in Common settings
           </div>
         ) : profiles.length === 0 ? (
           <div className="no-profiles-message">No rows to display</div>
