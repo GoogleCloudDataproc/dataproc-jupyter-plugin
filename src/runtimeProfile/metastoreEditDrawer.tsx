@@ -47,6 +47,11 @@ import {
   listIcebergCatalogsAPI
 } from '../utils/biglakeService';
 import { metastoreServiceListAPI } from '../utils/metastoreService';
+import ApiEnableDialog from '../utils/apiErrorPopup';
+import {
+  METASTORE_API_NOT_ENABLED_MESSAGE,
+  METASTORE_API_URL
+} from '../utils/const';
 import { authApi } from '../utils/utils';
 
 export const DATAPROC_METASTORE = 'Dataproc Metastore';
@@ -348,6 +353,8 @@ export const MetastoreEditDrawer: React.FC<IMetastoreEditDrawerProps> = ({
   const [dpmsServicesList, setDpmsServicesList] = useState<string[]>([]);
   const [isLoadingDpmsServices, setIsLoadingDpmsServices] =
     useState<boolean>(false);
+  const [apiDialogOpen, setApiDialogOpen] = useState<boolean>(false);
+  const [enableLink, setEnableLink] = useState<string>('');
 
   const update = (changes: Partial<IMetastoreDrawerState>) =>
     setState(prev => ({ ...prev, ...changes }));
@@ -385,6 +392,7 @@ export const MetastoreEditDrawer: React.FC<IMetastoreEditDrawerProps> = ({
   // Reset the fields from the saved config each time the drawer opens, and
   // default empty project fields to the profile's project or signed-in project.
   useEffect(() => {
+    setApiDialogOpen(false);
     if (!open) {
       return;
     }
@@ -528,6 +536,22 @@ export const MetastoreEditDrawer: React.FC<IMetastoreEditDrawerProps> = ({
       .catch(error => {
         if (!cancelled) {
           setDpmsServicesList([]);
+          const errorResponse = (error as any)?.errorResponse;
+          const errorMessage =
+            error instanceof Error ? error.message : String(error);
+          if (
+            errorResponse?.error?.code === 403 ||
+            errorMessage.includes('has not been used in project') ||
+            errorMessage.includes('is disabled')
+          ) {
+            setEnableLink(
+              `${METASTORE_API_URL}?project=${encodeURIComponent(
+                state.projectId.trim()
+              )}`
+            );
+            setApiDialogOpen(true);
+            return;
+          }
           Notification.emit(
             `Failed to fetch Dataproc Metastore services: ${error}`,
             'error',
@@ -915,6 +939,16 @@ export const MetastoreEditDrawer: React.FC<IMetastoreEditDrawerProps> = ({
             : changeProjectId(selectedId)
         }
       />
+
+      {apiDialogOpen && (
+        <ApiEnableDialog
+          open={apiDialogOpen}
+          message={METASTORE_API_NOT_ENABLED_MESSAGE}
+          enableLink={enableLink}
+          onCancel={() => setApiDialogOpen(false)}
+          onEnable={() => setApiDialogOpen(false)}
+        />
+      )}
     </>
   );
 };

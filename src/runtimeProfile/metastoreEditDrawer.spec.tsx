@@ -80,6 +80,10 @@ import {
   listIcebergCatalogsAPI
 } from '../utils/biglakeService';
 import { metastoreServiceListAPI } from '../utils/metastoreService';
+import {
+  METASTORE_API_NOT_ENABLED_MESSAGE,
+  METASTORE_API_URL
+} from '../utils/const';
 import { Notification } from '@jupyterlab/apputils';
 
 describe('MetastoreEditDrawer & Metastore Flow', () => {
@@ -543,17 +547,78 @@ describe('MetastoreEditDrawer interactions', () => {
     expect(saveButton().disabled).toBe(true);
   });
 
-  it('shows the API error when Dataproc Metastore services fail to load', async () => {
+  it('shows the API Not Enabled dialog and opens METASTORE_API_URL on Enable when Dataproc Metastore API is disabled', async () => {
+    const notifySpy = jest.spyOn(Notification, 'emit').mockImplementation();
+    const openSpy = jest.spyOn(window, 'open').mockImplementation();
+    (metastoreServiceListAPI as jest.Mock).mockRejectedValueOnce(
+      Object.assign(
+        new Error(
+          'Dataproc Metastore API has not been used in project my-project before or it is disabled'
+        ),
+        { errorResponse: { error: { code: 403 } } }
+      )
+    );
+
+    await renderDrawer();
+    await click(cards()[1]);
+    await wait();
+
+    expect(notifySpy).not.toHaveBeenCalled();
+    const dialog = document.body.querySelector('[role="dialog"]');
+    expect(dialog).not.toBeNull();
+    expect(dialog?.textContent).toContain('API Not Enabled');
+    expect(dialog?.textContent).toContain(METASTORE_API_NOT_ENABLED_MESSAGE);
+
+    const enableBtn = Array.from(
+      dialog?.querySelectorAll('button') ?? []
+    ).find(b => b.textContent?.trim() === 'Enable') as HTMLButtonElement;
+    await click(enableBtn);
+
+    expect(openSpy).toHaveBeenCalledWith(
+      `${METASTORE_API_URL}?project=my-project`,
+      '_blank'
+    );
+    expect(document.body.querySelector('[role="dialog"]')).toBeNull();
+
+    openSpy.mockRestore();
+    notifySpy.mockRestore();
+  });
+
+  it('closes the API Not Enabled dialog on Cancel without opening a link', async () => {
+    const openSpy = jest.spyOn(window, 'open').mockImplementation();
+    (metastoreServiceListAPI as jest.Mock).mockRejectedValueOnce(
+      Object.assign(new Error('API disabled'), {
+        errorResponse: { error: { code: 403 } }
+      })
+    );
+
+    await renderDrawer();
+    await click(cards()[1]);
+    await wait();
+
+    const dialog = document.body.querySelector('[role="dialog"]');
+    expect(dialog).not.toBeNull();
+    const cancelBtn = Array.from(
+      dialog?.querySelectorAll('button') ?? []
+    ).find(b => b.textContent?.trim() === 'Cancel') as HTMLButtonElement;
+    await click(cancelBtn);
+
+    expect(openSpy).not.toHaveBeenCalled();
+    expect(document.body.querySelector('[role="dialog"]')).toBeNull();
+    openSpy.mockRestore();
+  });
+
+  it('shows the API error notification when Dataproc Metastore services fail with a non-403 error', async () => {
     const notifySpy = jest.spyOn(Notification, 'emit').mockImplementation();
     (metastoreServiceListAPI as jest.Mock).mockRejectedValueOnce(
-      new Error('Dataproc Metastore API is disabled')
+      new Error('Internal Server Error')
     );
     await renderDrawer();
     await click(cards()[1]);
     await wait();
 
     expect(notifySpy).toHaveBeenCalledWith(
-      'Failed to fetch Dataproc Metastore services: Error: Dataproc Metastore API is disabled',
+      'Failed to fetch Dataproc Metastore services: Error: Internal Server Error',
       'error',
       { autoClose: 5000 }
     );

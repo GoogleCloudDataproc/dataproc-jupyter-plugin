@@ -48,12 +48,15 @@ export const metastoreServiceListAPI = async (
 
   const json = await resp.json().catch(() => null);
   if (!resp.ok || !json || json.error) {
-    throw new Error(
+    const error = new Error(
       json?.error?.message ||
         `Failed to fetch Dataproc Metastore services: ${
           resp.statusText || resp.status
         }`
     );
+    throw Object.assign(error, {
+      errorResponse: json ?? { error: { code: resp.status } }
+    });
   }
   return (json.services ?? []).map((service: { name: string }) => service.name);
 };
