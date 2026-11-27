@@ -16,7 +16,6 @@
  */
 
 import React from 'react';
-import { setImmediate } from 'timers';
 import { Notification } from '@jupyterlab/apputils';
 import { SessionService } from './sessionService';
 import {
@@ -48,22 +47,26 @@ jest.mock('../handler/handler', () => ({
   })
 }));
 
-jest.mock('@jupyterlab/apputils', () => ({
-  Notification: {
-    emit: jest.fn()
-  }
-}));
+jest.mock('@jupyterlab/apputils', () => {
+  const actual = jest.requireActual('@jupyterlab/apputils');
+  return {
+    ...actual,
+    Notification: {
+      ...actual.Notification,
+      emit: jest.fn()
+    }
+  };
+});
 
-jest.mock('../utils/loggingService', () => ({
-  DataprocLoggingService: {
-    log: jest.fn()
-  },
-  LOG_LEVEL: {
-    INFO: 0,
-    WARN: 1,
-    ERROR: 2
-  }
-}));
+jest.mock('../utils/loggingService', () => {
+  const actual = jest.requireActual('../utils/loggingService');
+  return {
+    ...actual,
+    DataprocLoggingService: {
+      log: jest.fn()
+    }
+  };
+});
 
 jest.mock('../utils/utils', () => ({
   ...jest.requireActual('../utils/utils'),
@@ -75,7 +78,8 @@ jest.mock('../utils/utils', () => ({
   handleApiError: jest.fn()
 }));
 
-const flushPromises = () => new Promise<void>(resolve => setImmediate(resolve));
+const flushPromises = () =>
+  new Promise<void>(resolve => setTimeout(resolve, 0));
 
 const mockJsonResponse = (payload: unknown) => ({
   json: jest.fn().mockResolvedValue(payload)
