@@ -38,6 +38,18 @@ import {
 } from './runtimeProfileService';
 import { Notification } from '@jupyterlab/apputils';
 import { eventEmitter } from '../utils/signalEmitter';
+import { authApi } from '../utils/utils';
+
+jest.mock('../utils/utils', () => ({
+  ...jest.requireActual('../utils/utils'),
+  authApi: jest.fn().mockResolvedValue({
+    project_id: 'test-project',
+    region_id: 'us-central1',
+    access_token: 'test-token',
+    config_error: 0,
+    login_error: 0
+  })
+}));
 
 jest.mock('@jupyterlab/apputils', () => ({
   ...jest.requireActual('@jupyterlab/apputils'),
@@ -453,6 +465,46 @@ describe('RuntimeProfileList Component', () => {
       expect.stringContaining('Failed to fetch runtime profiles:'),
       'error',
       { autoClose: 5000 }
+    );
+  });
+
+  it('should show config message without fetching when region or project is not configured', async () => {
+    (authApi as jest.Mock).mockResolvedValueOnce({
+      project_id: 'test-project',
+      region_id: {} as unknown as string,
+      access_token: 'test-token',
+      config_error: 1,
+      login_error: 0
+    });
+
+    await act(async () => {
+      root.render(<RuntimeProfileList />);
+    });
+
+    expect(RuntimeProfileService.fetchRuntimeProfiles).not.toHaveBeenCalled();
+    expect(Notification.emit).not.toHaveBeenCalled();
+    expect(container.querySelector('.no-profiles-message')?.textContent).toBe(
+      'Configure a project and region in Common settings'
+    );
+    expect(container.querySelector('.runtime-profile-table')).toBeNull();
+  });
+
+  it('should show config message without fetching when project is missing', async () => {
+    (authApi as jest.Mock).mockResolvedValueOnce({
+      project_id: '' as string,
+      region_id: 'us-central1',
+      access_token: 'test-token',
+      config_error: 1,
+      login_error: 0
+    });
+
+    await act(async () => {
+      root.render(<RuntimeProfileList />);
+    });
+
+    expect(RuntimeProfileService.fetchRuntimeProfiles).not.toHaveBeenCalled();
+    expect(container.querySelector('.no-profiles-message')?.textContent).toBe(
+      'Configure a project and region in Common settings'
     );
   });
 

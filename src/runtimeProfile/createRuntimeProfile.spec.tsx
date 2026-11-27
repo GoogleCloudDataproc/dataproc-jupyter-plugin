@@ -38,7 +38,7 @@ jest.mock('@jupyterlab/apputils', () => ({
 
 jest.mock('../utils/utils', () => ({
   ...jest.requireActual('../utils/utils'),
-  authApi: jest.fn().mockResolvedValue(undefined)
+  authApi: jest.fn().mockResolvedValue({ region_id: 'us-central1' })
 }));
 
 import React, { act } from 'react';
@@ -3787,6 +3787,359 @@ describe('CreateRuntimeProfileComponent UI & Service', () => {
     } finally {
       errorSpy.mockRestore();
     }
+  });
+
+  describe('Create button loading and Region validation', () => {
+    const createDeferred = <T,>() => {
+      let resolve!: (value: T) => void;
+      const promise = new Promise<T>(r => {
+        resolve = r;
+      });
+      return { promise, resolve };
+    };
+
+    const submitForm = async () => {
+      const form = container.querySelector('form') as HTMLFormElement;
+      await act(async () => {
+        form.dispatchEvent(
+          new Event('submit', { bubbles: true, cancelable: true })
+        );
+      });
+    };
+
+    it('keeps the Create button enabled while the background subnetwork check is pending and aborts submit if unavailable', async () => {
+      const subnets =
+        createDeferred<Array<{ name: string; ipCidrRange?: string }>>();
+      jest
+        .spyOn(mockService, 'getSubnetworks')
+        .mockReturnValue(subnets.promise);
+      const createSpy = jest
+        .spyOn(mockService, 'createRuntimeProfile')
+        .mockResolvedValue({ displayName: 'created', region: 'us-central1' });
+
+      await act(async () => {
+        root.render(<CreateRuntimeProfileComponent service={mockService} />);
+      });
+
+      const submitBtn = container.querySelector(
+        '.runtime-profile-submit-btn'
+      ) as HTMLButtonElement;
+      expect(submitBtn.disabled).toBe(false);
+      expect(submitBtn.classList.contains('submit-button-style')).toBe(true);
+
+      await submitForm();
+      expect(createSpy).not.toHaveBeenCalled();
+
+      await act(async () => {
+        subnets.resolve([]);
+        await subnets.promise;
+      });
+
+      expect(createSpy).not.toHaveBeenCalled();
+      expect(
+        container.querySelector(
+          '[data-testid="default-network-warning-banner"]'
+        )
+      ).not.toBeNull();
+      expect(submitBtn.disabled).toBe(true);
+    });
+
+    it('proceeds with creation once a pending subnetwork check resolves as available', async () => {
+      const subnets =
+        createDeferred<Array<{ name: string; ipCidrRange?: string }>>();
+      jest
+        .spyOn(mockService, 'getSubnetworks')
+        .mockReturnValue(subnets.promise);
+      const createSpy = jest
+        .spyOn(mockService, 'createRuntimeProfile')
+        .mockResolvedValue({ displayName: 'created', region: 'us-central1' });
+
+      await act(async () => {
+        root.render(<CreateRuntimeProfileComponent service={mockService} />);
+      });
+
+      await submitForm();
+      expect(createSpy).not.toHaveBeenCalled();
+
+      await act(async () => {
+        subnets.resolve([{ name: 'default', ipCidrRange: '10.128.0.0/20' }]);
+        await subnets.promise;
+      });
+
+      expect(createSpy).toHaveBeenCalledTimes(1);
+    });
+
+    it('pre-fills Region immediately from authApi and starts getSubnetworks in parallel while getRegions is pending', async () => {
+      const regions =
+        createDeferred<Array<{ name: string; displayName: string }>>();
+      (authApi as jest.Mock).mockResolvedValueOnce({
+        project_id: 'my-project',
+        region_id: 'us-east1'
+      });
+      jest.spyOn(mockService, 'getRegions').mockReturnValue(regions.promise);
+      const subnetworksSpy = jest
+        .spyOn(mockService, 'getSubnetworks')
+        .mockResolvedValue([{ name: 'default', ipCidrRange: '10.142.0.0/20' }]);
+
+      await act(async () => {
+        root.render(<CreateRuntimeProfileComponent service={mockService} />);
+      });
+
+      const submitBtn = container.querySelector(
+        '.runtime-profile-submit-btn'
+      ) as HTMLButtonElement;
+      expect(
+        container.querySelector('#runtime-profile-region')?.textContent
+      ).toBe('us-east1');
+      expect(subnetworksSpy).toHaveBeenCalledWith(
+        'default',
+        'my-project',
+        'us-east1'
+      );
+      expect(submitBtn.disabled).toBe(false);
+      expect(
+        container.querySelector('#runtime-profile-region-error')
+      ).toBeNull();
+
+      await act(async () => {
+        regions.resolve([
+          { name: 'us-central1', displayName: 'us-central1 (Iowa)' },
+          { name: 'us-east1', displayName: 'us-east1 (South Carolina)' }
+        ]);
+        await regions.promise;
+      });
+
+      expect(
+        container.querySelector('#runtime-profile-region')?.textContent
+      ).toBe('us-east1 (South Carolina)');
+      expect(submitBtn.disabled).toBe(false);
+    });
+
+    it('awaits pending authApi and region load seamlessly when Create is clicked early without flashing a Region error', async () => {
+      const credentials = createDeferred<{
+        project_id: string;
+        region_id: string;
+      }>();
+      const regions =
+        createDeferred<Array<{ name: string; displayName: string }>>();
+      (authApi as jest.Mock).mockReturnValueOnce(credentials.promise);
+      jest.spyOn(mockService, 'getRegions').mockReturnValue(regions.promise);
+      jest
+        .spyOn(mockService, 'getSubnetworks')
+        .mockResolvedValue([{ name: 'default', ipCidrRange: '10.128.0.0/20' }]);
+      const createSpy = jest
+        .spyOn(mockService, 'createRuntimeProfile')
+        .mockResolvedValue({ displayName: 'created', region: 'us-central1' });
+
+      await act(async () => {
+        root.render(<CreateRuntimeProfileComponent service={mockService} />);
+      });
+
+      await submitForm();
+      expect(
+        container.querySelector('#runtime-profile-region-error')
+      ).toBeNull();
+      expect(createSpy).not.toHaveBeenCalled();
+
+      await act(async () => {
+        credentials.resolve({
+          project_id: 'my-project',
+          region_id: 'us-central1'
+        });
+        await credentials.promise;
+        regions.resolve([
+          { name: 'us-central1', displayName: 'us-central1 (Iowa)' }
+        ]);
+        await regions.promise;
+      });
+
+      expect(createSpy).toHaveBeenCalledWith(
+        expect.objectContaining({ region: 'us-central1' }),
+        undefined,
+        'us-central1'
+      );
+    });
+
+    it('shows "Region is required.", disables Create, lists all regions when authApi has no region (including {}), and enables Create after selection', async () => {
+      // gcloud returns {} (empty object) for unset region_id with config_error: 1
+      (authApi as jest.Mock).mockResolvedValueOnce({
+        project_id: 'my-project',
+        region_id: {} as unknown as string,
+        config_error: 1,
+        login_error: 0
+      });
+      const getRegionsSpy = jest.spyOn(mockService, 'getRegions');
+      jest
+        .spyOn(mockService, 'getSubnetworks')
+        .mockResolvedValue([{ name: 'default', ipCidrRange: '10.142.0.0/20' }]);
+
+      await act(async () => {
+        root.render(<CreateRuntimeProfileComponent service={mockService} />);
+      });
+
+      expect(getRegionsSpy).toHaveBeenCalledTimes(1);
+      const submitBtn = container.querySelector(
+        '.runtime-profile-submit-btn'
+      ) as HTMLButtonElement;
+      expect(submitBtn.disabled).toBe(true);
+      expect(submitBtn.classList.contains('submit-button-disable-style')).toBe(
+        true
+      );
+      expect(
+        container.querySelector('#runtime-profile-region-error')?.textContent
+      ).toBe('Region is required.');
+
+      // Open Region dropdown: must be enabled and list all loaded regions
+      const regionTrigger = container.querySelector(
+        '#runtime-profile-region'
+      ) as HTMLElement;
+      expect(regionTrigger.getAttribute('aria-disabled')).not.toBe('true');
+      await act(async () => {
+        regionTrigger.dispatchEvent(
+          new MouseEvent('mousedown', { bubbles: true, button: 0 })
+        );
+      });
+      const options = Array.from(
+        document.body.querySelectorAll('li[role="option"]')
+      ).map(el => el.getAttribute('data-value'));
+      expect(options).toEqual(['us-central1', 'us-east1']);
+
+      // Selecting a region clears the error and enables the Create button
+      const eastOption = document.body.querySelector(
+        'li[role="option"][data-value="us-east1"]'
+      ) as HTMLElement;
+      await act(async () => {
+        eastOption.click();
+      });
+
+      expect(
+        container.querySelector('#runtime-profile-region-error')
+      ).toBeNull();
+      expect(submitBtn.disabled).toBe(false);
+    });
+
+    it('aborts early submit and shows "Region is required." with valid regions when authApi region is not in getRegions', async () => {
+      const regions =
+        createDeferred<Array<{ name: string; displayName: string }>>();
+      const staleSubnets =
+        createDeferred<Array<{ name: string; ipCidrRange?: string }>>();
+      (authApi as jest.Mock).mockResolvedValueOnce({
+        project_id: 'my-project',
+        region_id: 'us-east1',
+        login_error: 0,
+        config_error: 0
+      });
+      jest.spyOn(mockService, 'getRegions').mockReturnValue(regions.promise);
+      const subnetworksSpy = jest
+        .spyOn(mockService, 'getSubnetworks')
+        .mockReturnValue(staleSubnets.promise);
+      const createSpy = jest
+        .spyOn(mockService, 'createRuntimeProfile')
+        .mockResolvedValue({ displayName: 'created', region: 'us-central1' });
+
+      await act(async () => {
+        root.render(<CreateRuntimeProfileComponent service={mockService} />);
+      });
+
+      expect(subnetworksSpy).toHaveBeenCalledWith(
+        'default',
+        'my-project',
+        'us-east1'
+      );
+
+      await submitForm();
+
+      await act(async () => {
+        regions.resolve([
+          { name: 'us-central1', displayName: 'us-central1 (Iowa)' }
+        ]);
+        // Resolve stale subnetwork check as AVAILABLE to ensure abort comes
+        // from clearing effectiveRegion, not from a failed subnetwork check.
+        staleSubnets.resolve([
+          { name: 'default', ipCidrRange: '10.142.0.0/20' }
+        ]);
+        await Promise.all([regions.promise, staleSubnets.promise]);
+      });
+
+      expect(createSpy).not.toHaveBeenCalled();
+      expect(
+        container.querySelector('#runtime-profile-region-error')?.textContent
+      ).toBe('Region is required.');
+      expect(
+        (
+          container.querySelector(
+            '.runtime-profile-submit-btn'
+          ) as HTMLButtonElement
+        ).disabled
+      ).toBe(true);
+    });
+
+    it('does not select Region or check subnetworks when credentials report login_error or config_error even if getRegions returns a match', async () => {
+      const regions =
+        createDeferred<Array<{ name: string; displayName: string }>>();
+      (authApi as jest.Mock).mockResolvedValueOnce({
+        project_id: '',
+        region_id: 'us-central1',
+        access_token: '',
+        login_error: 0,
+        config_error: 1
+      });
+      jest.spyOn(mockService, 'getRegions').mockReturnValue(regions.promise);
+      const subnetworksSpy = jest
+        .spyOn(mockService, 'getSubnetworks')
+        .mockResolvedValue([]);
+
+      await act(async () => {
+        root.render(<CreateRuntimeProfileComponent service={mockService} />);
+      });
+
+      expect(subnetworksSpy).not.toHaveBeenCalled();
+      expect(
+        container.querySelector(
+          '[data-testid="default-network-warning-banner"]'
+        )
+      ).toBeNull();
+
+      await act(async () => {
+        regions.resolve([
+          { name: 'us-central1', displayName: 'us-central1 (Iowa)' }
+        ]);
+        await regions.promise;
+      });
+
+      const submitBtn = container.querySelector(
+        '.runtime-profile-submit-btn'
+      ) as HTMLButtonElement;
+      expect(subnetworksSpy).not.toHaveBeenCalled();
+      expect(submitBtn.disabled).toBe(true);
+      expect(
+        container.querySelector('#runtime-profile-region-error')?.textContent
+      ).toBe('Region is required.');
+    });
+
+    it('disables Create and shows "Region is required." when authApi has no region and getRegions fails', async () => {
+      (authApi as jest.Mock).mockResolvedValueOnce({
+        project_id: 'my-project',
+        region_id: ''
+      });
+      jest
+        .spyOn(mockService, 'getRegions')
+        .mockRejectedValue(new Error('Regions API failed'));
+      const consoleSpy = jest.spyOn(console, 'error').mockImplementation();
+
+      await act(async () => {
+        root.render(<CreateRuntimeProfileComponent service={mockService} />);
+      });
+
+      const submitBtn = container.querySelector(
+        '.runtime-profile-submit-btn'
+      ) as HTMLButtonElement;
+      expect(submitBtn.disabled).toBe(true);
+      expect(
+        container.querySelector('#runtime-profile-region-error')?.textContent
+      ).toBe('Region is required.');
+      consoleSpy.mockRestore();
+    });
   });
 
   it('syncs Display name to Runtime profile name in create mode and validates alphanumeric requirement', async () => {

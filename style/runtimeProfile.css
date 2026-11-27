@@ -733,6 +733,12 @@ body[data-jp-theme-name='JupyterLab Dark'] .node-config-card.disabled {
   padding: 40px;
 }
 
+.no-profiles-message {
+  text-align: center;
+  padding-top: 40px;
+  font-size: 14px;
+  color: var(--jp-ui-font-color2);
+}
 .dropdown {
   position: relative;
   display: inline-block;
