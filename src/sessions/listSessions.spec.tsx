@@ -51,7 +51,7 @@ jest.mock('../handler/handler', () => ({
 
 jest.mock('../utils/pollingTimer', () => ({
   __esModule: true,
-  default: jest.fn()
+  default: jest.fn(() => 'mock-timer-id' as unknown as NodeJS.Timeout)
 }));
 
 jest.mock('../utils/utils', () => ({
@@ -167,9 +167,7 @@ describe('ListSessions Component', () => {
     });
 
     it('disables polling via PollingTimer when component unmounts', async () => {
-      jest
-        .spyOn(SessionService, 'listSessionsAPIService')
-        .mockImplementation(async () => undefined);
+      mockListSessions(() => []);
 
       await renderComponent();
 
@@ -178,10 +176,10 @@ describe('ListSessions Component', () => {
         root = null;
       });
 
-      expect(PollingTimer).toHaveBeenCalledWith(
+      expect(PollingTimer).toHaveBeenLastCalledWith(
         expect.any(Function),
         true,
-        undefined
+        'mock-timer-id'
       );
     });
 
