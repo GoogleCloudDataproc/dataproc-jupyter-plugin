@@ -15,6 +15,7 @@
 from datetime import datetime
 import json
 import subprocess
+from types import SimpleNamespace
 from unittest.mock import ANY, AsyncMock, Mock, call
 
 import pytest
@@ -321,22 +322,25 @@ def test_logged_out_startup_still_registers_remote_kernel_support(monkeypatch):
     assert fake_server_app.config.GatewayClient.auth_token == "Initial, invalid value"
 
 
-def test_dynamic_gateway_kernelspec_manager_falls_back_without_user_filter(monkeypatch):
+def test_dynamic_gateway_kernelspec_manager_falls_back_without_user_filter():
     gateway_client = GatewayClient.instance()
     original_url = gateway_client.url
     try:
         gateway_client.url = "https://123-dot-us-central1.kernels.googleusercontent.com"
-        manager = _DynamicGatewayKernelSpecManager()
-        monkeypatch.delattr(
-            type(manager), "_get_endpoint_for_user_filter", raising=False
-        )
-        for cls in type(manager).__mro__:
-            if "_get_endpoint_for_user_filter" in cls.__dict__:
-                monkeypatch.delattr(cls, "_get_endpoint_for_user_filter")
-        assert manager._sync_gateway_endpoints() is True
+        manager_without_filter = SimpleNamespace()
         assert (
-            manager.base_endpoint
+            _DynamicGatewayKernelSpecManager._sync_gateway_endpoints(
+                manager_without_filter
+            )
+            is True
+        )
+        assert (
+            manager_without_filter.base_endpoint
             == "https://123-dot-us-central1.kernels.googleusercontent.com/api/kernelspecs"
+        )
+        assert (
+            manager_without_filter.base_resource_endpoint
+            == "https://123-dot-us-central1.kernels.googleusercontent.com/kernelspecs"
         )
     finally:
         gateway_client.url = original_url
