@@ -734,7 +734,6 @@ body[data-jp-theme-name='JupyterLab Dark'] .node-config-card.disabled {
 }
 
 .no-profiles-message {
-  justify-content: center;
   text-align: center;
   padding-top: 40px;
   font-size: 14px;

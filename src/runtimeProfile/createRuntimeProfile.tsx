@@ -1238,13 +1238,12 @@ export const CreateRuntimeProfileComponent: React.FC<
           typeof credentials?.project_id === 'string'
             ? credentials.project_id.trim()
             : '';
-        const provisionalRegion =
-          !isEditMode &&
+        const canUseSettingsRegion =
           !credentials?.login_error &&
           !credentials?.config_error &&
-          settingsRegion
-            ? settingsRegion
-            : '';
+          Boolean(settingsRegion);
+        const provisionalRegion =
+          !isEditMode && canUseSettingsRegion ? settingsRegion : '';
 
         if (isMounted) {
           if (credentialsProjectId) {
@@ -1269,7 +1268,7 @@ export const CreateRuntimeProfileComponent: React.FC<
           // Pre-select the region saved in Settings if available; otherwise
           // leave empty so the user chooses from the populated region list.
           // An edited profile keeps its own region, which can't change.
-          const defaultRegion = settingsRegion
+          const defaultRegion = canUseSettingsRegion
             ? loadedRegions.find(r => r.name === settingsRegion)
             : undefined;
           if (!isEditMode) {
@@ -1360,9 +1359,10 @@ export const CreateRuntimeProfileComponent: React.FC<
         pendingNetworkCheckRef.current.isActive()
       ) {
         const isAvailable = await pendingNetworkCheckRef.current.promise;
-        if (!isAvailable) {
-          return false;
+        if (!shouldApplyState()) {
+          return true;
         }
+        return isAvailable;
       }
 
       if (networkCheckResultRef.current?.key === networkKey) {
@@ -1530,9 +1530,7 @@ export const CreateRuntimeProfileComponent: React.FC<
       if (!isEditMode) {
         if (pendingInitialLoadRef.current) {
           const initialResult = await pendingInitialLoadRef.current;
-          if (initialResult.region) {
-            effectiveRegion = initialResult.region;
-          }
+          effectiveRegion = initialResult.region;
           if (!effectiveProjectId && initialResult.projectId) {
             effectiveProjectId = initialResult.projectId;
           }

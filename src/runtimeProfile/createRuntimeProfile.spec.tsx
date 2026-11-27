@@ -4053,7 +4053,11 @@ describe('CreateRuntimeProfileComponent UI & Service', () => {
         regions.resolve([
           { name: 'us-central1', displayName: 'us-central1 (Iowa)' }
         ]);
-        staleSubnets.resolve([]);
+        // Resolve stale subnetwork check as AVAILABLE to ensure abort comes
+        // from clearing effectiveRegion, not from a failed subnetwork check.
+        staleSubnets.resolve([
+          { name: 'default', ipCidrRange: '10.142.0.0/20' }
+        ]);
         await Promise.all([regions.promise, staleSubnets.promise]);
       });
 
@@ -4070,15 +4074,15 @@ describe('CreateRuntimeProfileComponent UI & Service', () => {
       ).toBe(true);
     });
 
-    it('does not provisionally set Region or check subnetworks when credentials report login_error or config_error', async () => {
+    it('does not select Region or check subnetworks when credentials report login_error or config_error even if getRegions returns a match', async () => {
       const regions =
         createDeferred<Array<{ name: string; displayName: string }>>();
       (authApi as jest.Mock).mockResolvedValueOnce({
         project_id: '',
         region_id: 'us-central1',
         access_token: '',
-        login_error: 1,
-        config_error: 0
+        login_error: 0,
+        config_error: 1
       });
       jest.spyOn(mockService, 'getRegions').mockReturnValue(regions.promise);
       const subnetworksSpy = jest
@@ -4097,7 +4101,9 @@ describe('CreateRuntimeProfileComponent UI & Service', () => {
       ).toBeNull();
 
       await act(async () => {
-        regions.resolve([]);
+        regions.resolve([
+          { name: 'us-central1', displayName: 'us-central1 (Iowa)' }
+        ]);
         await regions.promise;
       });
 
@@ -4109,6 +4115,30 @@ describe('CreateRuntimeProfileComponent UI & Service', () => {
       expect(
         container.querySelector('#runtime-profile-region-error')?.textContent
       ).toBe('Region is required.');
+    });
+
+    it('disables Create and shows "Region is required." when authApi has no region and getRegions fails', async () => {
+      (authApi as jest.Mock).mockResolvedValueOnce({
+        project_id: 'my-project',
+        region_id: ''
+      });
+      jest
+        .spyOn(mockService, 'getRegions')
+        .mockRejectedValue(new Error('Regions API failed'));
+      const consoleSpy = jest.spyOn(console, 'error').mockImplementation();
+
+      await act(async () => {
+        root.render(<CreateRuntimeProfileComponent service={mockService} />);
+      });
+
+      const submitBtn = container.querySelector(
+        '.runtime-profile-submit-btn'
+      ) as HTMLButtonElement;
+      expect(submitBtn.disabled).toBe(true);
+      expect(
+        container.querySelector('#runtime-profile-region-error')?.textContent
+      ).toBe('Region is required.');
+      consoleSpy.mockRestore();
     });
   });
 
