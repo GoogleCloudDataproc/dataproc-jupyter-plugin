@@ -16,7 +16,6 @@
  */
 
 import React from 'react';
-import { setImmediate } from 'timers';
 import NotebookTemplateService from './notebookTemplatesService';
 import { loggedFetch } from '../utils/utils';
 import { NOTEBOOK_TEMPLATES_LIST_URL } from '../utils/const';
@@ -31,7 +30,8 @@ jest.mock('../utils/utils', () => ({
   loggedFetch: jest.fn()
 }));
 
-const flushPromises = () => new Promise<void>(resolve => setImmediate(resolve));
+const flushPromises = () =>
+  new Promise<void>(resolve => setTimeout(resolve, 0));
 
 const EXPECTED_REQUEST_OPTIONS = {
   method: 'GET',
