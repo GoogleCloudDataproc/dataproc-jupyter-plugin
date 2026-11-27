@@ -27,12 +27,57 @@ except ImportError:
     DataprocGatewayWebSocketConnection = None
 
 from google.cloud.jupyter_config.tokenrenewer import CommandTokenRenewer
+from jupyter_server.gateway.gateway_client import GatewayClient
+from jupyter_server.gateway.managers import GatewayKernelSpecManager
 from jupyter_server.services.sessions.sessionmanager import SessionManager
+from jupyter_server.utils import url_path_join
 from kernels_mixer.kernels import MixingMappingKernelManager
 from kernels_mixer.kernelspecs import MixingKernelSpecManager
 from kernels_mixer.websockets import DelegatingWebsocketConnection
 
 from .handlers import DataprocPluginConfig, configure_gateway_client_url, setup_handlers
+
+_BaseGatewayKernelSpecManager = (
+    DataprocGatewayKernelSpecManager
+    if DataprocGatewayKernelSpecManager is not None
+    else GatewayKernelSpecManager
+)
+
+
+class _DynamicGatewayKernelSpecManager(_BaseGatewayKernelSpecManager):
+    """Skips remote calls until a gateway URL is configured and keeps endpoints synced."""
+
+    def _sync_gateway_endpoints(self):
+        gateway_client = GatewayClient.instance()
+        if not gateway_client.gateway_enabled:
+            return False
+        base_endpoint = url_path_join(
+            gateway_client.url, gateway_client.kernelspecs_endpoint
+        )
+        if hasattr(self, "_get_endpoint_for_user_filter"):
+            self.base_endpoint = self._get_endpoint_for_user_filter(base_endpoint)
+        else:
+            self.base_endpoint = base_endpoint
+        self.base_resource_endpoint = url_path_join(
+            gateway_client.url, gateway_client.kernelspecs_resource_endpoint
+        )
+        return True
+
+    async def get_all_specs(self):
+        if not self._sync_gateway_endpoints():
+            return {}
+        return await super().get_all_specs()
+
+    async def get_kernel_spec(self, kernel_name, **kwargs):
+        if not self._sync_gateway_endpoints():
+            raise KeyError(f"kernelspec {kernel_name} not found")
+        return await super().get_kernel_spec(kernel_name, **kwargs)
+
+    async def get_kernel_spec_resource(self, kernel_name, path):
+        if not self._sync_gateway_endpoints():
+            return None
+        return await super().get_kernel_spec_resource(kernel_name, path)
+
 
 # In seconds
 MIN_GATEWAY_REQUEST_TIMEOUT = 600
@@ -77,19 +122,17 @@ def _link_jupyter_server_extension(server_app):
 
     c = server_app.config
     if not configure_gateway_client_url(c, server_app.log, plugin_config.kernel_gateway_project_number):
-        # We were not able to configure the gateway client URL so do not modify
-        # any of the server settings that rely on that.
-
-        # Short-circuiting these remaining configurations should not have any
-        # impact on the UI components of the Dataproc Jupyter Plugin, as these
-        # are only related to running remote kernels and are independent of
-        # the UI extensions provided by the plugin.
-        server_app.log.warning("Disabling remote kernel support due to a gateway config error.")
-        return
+        # Keep the mixing managers registered even when logged out or unconfigured
+        # at startup, so signing in or saving settings activates remote kernels
+        # without restarting JupyterLab.
+        server_app.log.warning(
+            "Remote kernel gateway URL is not configured yet; remote kernels will remain inactive until sign-in and project/region configuration."
+        )
 
     c.ServerApp.kernel_spec_manager_class = MixingKernelSpecManager
-    if DataprocGatewayKernelSpecManager is not None:
-        c.MixingKernelSpecManager.remote_kernel_spec_manager_class = DataprocGatewayKernelSpecManager
+    c.MixingKernelSpecManager.remote_kernel_spec_manager_class = (
+        _DynamicGatewayKernelSpecManager
+    )
 
     c.ServerApp.kernel_manager_class = MixingMappingKernelManager
     if DataprocGatewayMappingKernelManager is not None:

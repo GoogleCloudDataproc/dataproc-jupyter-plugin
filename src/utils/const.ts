@@ -311,6 +311,11 @@ export const DEFAULT_PUBLIC_PROJECT_ID = 'bigquery-public-data';
 export const BIGQUERY_API_URL =
   'https://console.cloud.google.com/apis/library/bigquery.googleapis.com';
 
+export const METASTORE_API_URL =
+  'https://console.cloud.google.com/apis/library/metastore.googleapis.com';
+export const METASTORE_API_NOT_ENABLED_MESSAGE =
+  'The Dataproc Metastore API is not enabled for this project.';
+
 export const DEFAULT_GENERAL_EXECUTOR_TYPE = 'highmem-4';
 export const DEFAULT_ACCELERATED_EXECUTOR_TYPE = 'l4-4';
 // Standard tier allows <= 7,424 MB memory per core (incl. 40% overhead), so highmem shapes are not supported.

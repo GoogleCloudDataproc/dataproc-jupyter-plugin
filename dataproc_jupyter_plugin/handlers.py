@@ -12,9 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from datetime import datetime
 import json
+import os
 import re
 import subprocess
+from subprocess import CalledProcessError, SubprocessError
 
 
 from google.cloud.jupyter_config.config import (
@@ -24,6 +27,7 @@ from google.cloud.jupyter_config.config import (
     gcp_region,
 )
 from jupyter_server.base.handlers import APIHandler
+from jupyter_server.gateway.gateway_client import GatewayClient
 from jupyter_server.serverapp import ServerApp
 from jupyter_server.utils import url_path_join
 from traitlets import Bool, Undefined, Unicode
@@ -78,12 +82,68 @@ def configure_gateway_client_url(c, log, kernel_gateway_project_number):
         kernel_gateway_url = f"https://{project_number}-dot-{region}.kernels.googleusercontent.com"
         log.info(f"Updating remote kernel gateway URL to {kernel_gateway_url}")
         c.GatewayClient.url = kernel_gateway_url
+        if GatewayClient.initialized():
+            gateway_client = GatewayClient.instance()
+            gateway_client.url = kernel_gateway_url
+            if not os.environ.get(gateway_client.ws_url_env):
+                gateway_client.ws_url = kernel_gateway_url.lower().replace("http", "ws")
         return True
-    except subprocess.SubprocessError as e:
+    except SubprocessError as e:
         log.error(
             f"Error constructing the kernel gateway URL; configure your project, region, and credentials using gcloud: {e}"
         )
         return False
+
+
+def _refresh_gateway_for_server(serverapp, config, log, config_project_number=None):
+    """Clears cached gcloud/gateway tokens and updates live gateway endpoints."""
+    clear_gcloud_cache()
+    if GatewayClient.initialized():
+        gateway_client = GatewayClient.instance()
+        if gateway_client.auth_token is not None:
+            gateway_client.auth_token = "Initial, invalid value"
+        renewer = getattr(gateway_client, "gateway_token_renewer", None)
+        if renewer is not None and hasattr(renewer, "_created"):
+            renewer._created = datetime.min
+
+    if config_project_number is None:
+        raw_project_number = config.DataprocPluginConfig.kernel_gateway_project_number
+        config_project_number = (
+            raw_project_number
+            if isinstance(raw_project_number, str)
+            else DataprocPluginConfig.instance().kernel_gateway_project_number
+        )
+
+    if not configure_gateway_client_url(config, log, config_project_number):
+        return
+
+    if not GatewayClient.initialized() or serverapp is None:
+        return
+    gateway_client = GatewayClient.instance()
+    if not gateway_client.gateway_enabled:
+        return
+
+    remote_ksm = getattr(
+        getattr(serverapp, "kernel_spec_manager", None), "remote_manager", None
+    )
+    if remote_ksm is not None and hasattr(remote_ksm, "_get_endpoint_for_user_filter"):
+        base_endpoint = url_path_join(
+            gateway_client.url, gateway_client.kernelspecs_endpoint
+        )
+        remote_ksm.base_endpoint = remote_ksm._get_endpoint_for_user_filter(
+            base_endpoint
+        )
+        remote_ksm.base_resource_endpoint = url_path_join(
+            gateway_client.url, gateway_client.kernelspecs_resource_endpoint
+        )
+
+    remote_km = getattr(
+        getattr(serverapp, "kernel_manager", None), "remote_manager", None
+    )
+    if remote_km is not None and hasattr(remote_km, "kernels_url"):
+        remote_km.kernels_url = url_path_join(
+            gateway_client.url, gateway_client.kernels_endpoint or ""
+        )
 
 
 class DataprocPluginConfig(SingletonConfigurable):
@@ -164,12 +224,22 @@ class LoginHandler(APIHandler):
     @tornado.web.authenticated
     async def post(self):
         cmd = "gcloud auth login"
+        # gcloud asks questions on a terminal, such as a confirmation on Compute
+        # Engine VMs. Nobody sees them here, so with no input gcloud takes its
+        # default answers instead of waiting forever.
         process = subprocess.Popen(
-            cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True
+            cmd,
+            stdin=subprocess.DEVNULL,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            shell=True,
         )
         output, _ = process.communicate()
         # Check if the authentication was successful
         if process.returncode == 0:
+            _refresh_gateway_for_server(
+                self.settings.get("serverapp"), self.config, self.log
+            )
             self.finish({"login": "SUCCEEDED"})
         else:
             self.finish({"login": "FAILED"})
@@ -198,10 +268,14 @@ class ConfigHandler(APIHandler):
             if not config_project_number:
                 await async_run_gcloud_subcommand(f"config set project {project_id}")
             await async_run_gcloud_subcommand(f"config set dataproc/region {region}")
-            clear_gcloud_cache()
-            configure_gateway_client_url(self.config, self.log, config_project_number)
+            _refresh_gateway_for_server(
+                self.settings.get("serverapp"),
+                self.config,
+                self.log,
+                config_project_number,
+            )
             self.finish({"config": ERROR_MESSAGE + "successful"})
-        except subprocess.CalledProcessError as er:
+        except CalledProcessError as er:
             self.finish({"config": ERROR_MESSAGE + "failed"})
 
 

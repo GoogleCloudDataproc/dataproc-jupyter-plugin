@@ -12,14 +12,23 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from datetime import datetime
 import json
 import subprocess
+from types import SimpleNamespace
 from unittest.mock import ANY, AsyncMock, Mock, call
 
 import pytest
+from dataproc_jupyter_plugin import (
+    _DynamicGatewayKernelSpecManager,
+    _link_jupyter_server_extension,
+)
 from dataproc_jupyter_plugin.services import biglake
 from dataproc_jupyter_plugin.tests import mocks
 from google.cloud import jupyter_config
+from jupyter_server.gateway.gateway_client import GatewayClient
+from kernels_mixer.kernelspecs import MixingKernelSpecManager
+from traitlets.config import Config
 from tornado.simple_httpclient import HTTPTimeoutError
 
 
@@ -253,6 +262,219 @@ async def test_post_config_handler_gcloud_error(jp_fetch, monkeypatch):
     assert response.code == 200
     payload = json.loads(response.body)
     assert payload == {"config": "Project and region update failed"}
+
+
+@pytest.mark.parametrize(
+    "returncode,expected_status,should_refresh",
+    [(0, "SUCCEEDED", True), (1, "FAILED", False)],
+)
+async def test_login_handler_runs_gcloud_without_input(
+    jp_fetch, monkeypatch, returncode, expected_status, should_refresh
+):
+    process = Mock(returncode=returncode)
+    process.communicate.return_value = (b"", b"")
+    popen = Mock(return_value=process)
+    mock_clear_cache = Mock()
+    mock_configure_gateway = Mock(return_value=True)
+    monkeypatch.setattr(
+        "dataproc_jupyter_plugin.handlers.subprocess",
+        Mock(Popen=popen, PIPE=subprocess.PIPE, DEVNULL=subprocess.DEVNULL),
+    )
+    monkeypatch.setattr(
+        "dataproc_jupyter_plugin.handlers.clear_gcloud_cache", mock_clear_cache
+    )
+    monkeypatch.setattr(
+        "dataproc_jupyter_plugin.handlers.configure_gateway_client_url",
+        mock_configure_gateway,
+    )
+
+    response = await jp_fetch(
+        "dataproc-plugin", "login", method="POST", allow_nonstandard_methods=True
+    )
+
+    assert json.loads(response.body) == {"login": expected_status}
+    # With no input, gcloud cannot wait on a question that the UI never shows.
+    assert popen.call_args.kwargs["stdin"] == subprocess.DEVNULL
+    assert mock_clear_cache.called is should_refresh
+    assert mock_configure_gateway.called is should_refresh
+
+
+def test_logged_out_startup_still_registers_remote_kernel_support(monkeypatch):
+    monkeypatch.setattr(
+        "dataproc_jupyter_plugin.configure_gateway_client_url",
+        lambda c, log, kernel_gateway_project_number: False,
+    )
+    fake_server_app = Mock()
+    fake_server_app.config = Config()
+    fake_server_app.log = Mock()
+    monkeypatch.setattr(
+        "dataproc_jupyter_plugin.DataprocPluginConfig.instance",
+        lambda parent=None: Mock(
+            log_path="",
+            kernel_gateway_project_number="",
+            custom_user_agent="dataproc-jupyter-plugin/test",
+        ),
+    )
+
+    _link_jupyter_server_extension(fake_server_app)
+
+    assert fake_server_app.config.ServerApp.kernel_spec_manager_class is MixingKernelSpecManager
+    assert fake_server_app.config.GatewayClient.auth_token == "Initial, invalid value"
+
+
+def test_dynamic_gateway_kernelspec_manager_falls_back_without_user_filter():
+    gateway_client = GatewayClient.instance()
+    original_url = gateway_client.url
+    try:
+        gateway_client.url = "https://123-dot-us-central1.kernels.googleusercontent.com"
+        manager_without_filter = SimpleNamespace()
+        assert (
+            _DynamicGatewayKernelSpecManager._sync_gateway_endpoints(
+                manager_without_filter
+            )
+            is True
+        )
+        assert (
+            manager_without_filter.base_endpoint
+            == "https://123-dot-us-central1.kernels.googleusercontent.com/api/kernelspecs"
+        )
+        assert (
+            manager_without_filter.base_resource_endpoint
+            == "https://123-dot-us-central1.kernels.googleusercontent.com/kernelspecs"
+        )
+    finally:
+        gateway_client.url = original_url
+
+
+async def test_login_refreshes_gateway_and_lists_remote_runtime_templates(
+    jp_fetch, jp_serverapp, monkeypatch
+):
+    gateway_client = GatewayClient.instance()
+    original_url = gateway_client.url
+    original_ws_url = gateway_client.ws_url
+
+    gateway_requests = []
+
+    async def fake_gateway_request(endpoint, **kwargs):
+        gateway_requests.append(endpoint)
+        payload = {
+            "default": "python3",
+            "kernelspecs": {
+                "pyspark-existing-template": {
+                    "name": "pyspark-existing-template",
+                    "spec": {
+                        "display_name": "Existing Template",
+                        "language": "python",
+                        "argv": ["python"],
+                    },
+                    "resources": {
+                        "endpointParentResource": "//dataproc.googleapis.com/projects/my-proj/locations/us-central1/sessions"
+                    },
+                }
+            },
+        }
+        return Mock(body=json.dumps(payload).encode("utf-8"))
+
+    monkeypatch.setattr(
+        "jupyter_server.gateway.managers.gateway_request", fake_gateway_request
+    )
+
+    try:
+        # Simulate starting JupyterLab while signed out (no gateway URL yet, stale token).
+        gateway_client.url = None
+        gateway_client.ws_url = None
+        gateway_client.auth_token = "stale-revoked-token"
+        gateway_client.gateway_token_renewer._created = datetime(2026, 1, 1)
+
+        pre_login_specs_resp = await jp_fetch("api", "kernelspecs")
+        pre_login_specs = json.loads(pre_login_specs_resp.body)["kernelspecs"]
+        assert "pyspark-existing-template" not in pre_login_specs
+        assert gateway_requests == []
+
+        # Verify runtime kernel_manager operations (listing & starting local kernels)
+        # succeed while signed out (gateway_enabled is False) without hitting the gateway.
+        pre_login_kernels_resp = await jp_fetch("api", "kernels")
+        assert json.loads(pre_login_kernels_resp.body) == []
+        local_kernel_name = next(iter(pre_login_specs))
+        monkeypatch.setattr(
+            jp_serverapp.kernel_manager.local_manager,
+            "start_kernel",
+            AsyncMock(return_value="local-kernel-1"),
+        )
+        monkeypatch.setattr(
+            jp_serverapp.kernel_manager.local_manager,
+            "kernel_model",
+            Mock(
+                return_value={
+                    "id": "local-kernel-1",
+                    "name": local_kernel_name,
+                    "execution_state": "idle",
+                    "last_activity": "2026-01-01T00:00:00.000000Z",
+                    "connections": 0,
+                }
+            ),
+        )
+        monkeypatch.setattr(
+            jp_serverapp.kernel_manager.local_manager,
+            "shutdown_kernel",
+            AsyncMock(),
+        )
+        started_id = await jp_serverapp.kernel_manager.start_kernel(
+            kernel_name=local_kernel_name
+        )
+        assert started_id in jp_serverapp.kernel_manager._kernels
+        assert not jp_serverapp.kernel_manager.has_remote_kernels()
+        listed_kernels_resp = await jp_fetch("api", "kernels")
+        assert [k["id"] for k in json.loads(listed_kernels_resp.body)] == [started_id]
+        await jp_serverapp.kernel_manager.shutdown_kernel(started_id, now=True)
+        assert gateway_requests == []
+
+        # Simulate completing sign-in via the authenticator window.
+        process = Mock(returncode=0)
+        process.communicate.return_value = (b"", b"")
+        monkeypatch.setattr(
+            "dataproc_jupyter_plugin.handlers.subprocess",
+            Mock(
+                Popen=Mock(return_value=process),
+                PIPE=subprocess.PIPE,
+                DEVNULL=subprocess.DEVNULL,
+            ),
+        )
+        monkeypatch.setattr(
+            "dataproc_jupyter_plugin.handlers.gcp_region", lambda: "us-central1"
+        )
+        monkeypatch.setattr(
+            "dataproc_jupyter_plugin.handlers.gcp_project_number", lambda: "987654321"
+        )
+        mock_clear_cache = Mock()
+        monkeypatch.setattr(
+            "dataproc_jupyter_plugin.handlers.clear_gcloud_cache", mock_clear_cache
+        )
+
+        login_resp = await jp_fetch(
+            "dataproc-plugin", "login", method="POST", allow_nonstandard_methods=True
+        )
+        assert json.loads(login_resp.body) == {"login": "SUCCEEDED"}
+        assert mock_clear_cache.called
+
+        expected_url = "https://987654321-dot-us-central1.kernels.googleusercontent.com"
+        assert gateway_client.url == expected_url
+        assert gateway_client.ws_url == "wss://987654321-dot-us-central1.kernels.googleusercontent.com"
+        assert gateway_client.auth_token == "Initial, invalid value"
+        assert gateway_client.gateway_token_renewer._created == datetime.min
+        assert (
+            jp_serverapp.kernel_manager.remote_manager.kernels_url
+            == f"{expected_url}/api/kernels"
+        )
+
+        # On reload after login, /api/kernelspecs now lists existing runtime templates.
+        post_login_specs_resp = await jp_fetch("api", "kernelspecs")
+        post_login_specs = json.loads(post_login_specs_resp.body)["kernelspecs"]
+        assert "pyspark-existing-template" in post_login_specs
+        assert gateway_requests == [f"{expected_url}/api/kernelspecs"]
+    finally:
+        gateway_client.url = original_url
+        gateway_client.ws_url = original_ws_url
 
 
 async def test_resource_manager_handler_success(jp_fetch, monkeypatch):

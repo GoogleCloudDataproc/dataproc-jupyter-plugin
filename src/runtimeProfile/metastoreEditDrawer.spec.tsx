@@ -80,6 +80,11 @@ import {
   listIcebergCatalogsAPI
 } from '../utils/biglakeService';
 import { metastoreServiceListAPI } from '../utils/metastoreService';
+import {
+  METASTORE_API_NOT_ENABLED_MESSAGE,
+  METASTORE_API_URL
+} from '../utils/const';
+import { Notification } from '@jupyterlab/apputils';
 
 describe('MetastoreEditDrawer & Metastore Flow', () => {
   const initialLakehouseConfig: IMetastoreConfig = {
@@ -542,6 +547,84 @@ describe('MetastoreEditDrawer interactions', () => {
     expect(saveButton().disabled).toBe(true);
   });
 
+  it('shows the API Not Enabled dialog and opens METASTORE_API_URL on Enable when Dataproc Metastore API is disabled', async () => {
+    const notifySpy = jest.spyOn(Notification, 'emit').mockImplementation();
+    const openSpy = jest.spyOn(window, 'open').mockImplementation();
+    (metastoreServiceListAPI as jest.Mock).mockRejectedValueOnce(
+      Object.assign(
+        new Error(
+          'Dataproc Metastore API has not been used in project my-project before or it is disabled'
+        ),
+        { errorResponse: { error: { code: 403 } } }
+      )
+    );
+
+    await renderDrawer();
+    await click(cards()[1]);
+    await wait();
+
+    expect(notifySpy).not.toHaveBeenCalled();
+    const dialog = document.body.querySelector('[role="dialog"]');
+    expect(dialog).not.toBeNull();
+    expect(dialog?.textContent).toContain('API Not Enabled');
+    expect(dialog?.textContent).toContain(METASTORE_API_NOT_ENABLED_MESSAGE);
+
+    const enableBtn = Array.from(
+      dialog?.querySelectorAll('button') ?? []
+    ).find(b => b.textContent?.trim() === 'Enable') as HTMLButtonElement;
+    await click(enableBtn);
+
+    expect(openSpy).toHaveBeenCalledWith(
+      `${METASTORE_API_URL}?project=my-project`,
+      '_blank'
+    );
+    expect(document.body.querySelector('[role="dialog"]')).toBeNull();
+
+    openSpy.mockRestore();
+    notifySpy.mockRestore();
+  });
+
+  it('closes the API Not Enabled dialog on Cancel without opening a link', async () => {
+    const openSpy = jest.spyOn(window, 'open').mockImplementation();
+    (metastoreServiceListAPI as jest.Mock).mockRejectedValueOnce(
+      Object.assign(new Error('API disabled'), {
+        errorResponse: { error: { code: 403 } }
+      })
+    );
+
+    await renderDrawer();
+    await click(cards()[1]);
+    await wait();
+
+    const dialog = document.body.querySelector('[role="dialog"]');
+    expect(dialog).not.toBeNull();
+    const cancelBtn = Array.from(
+      dialog?.querySelectorAll('button') ?? []
+    ).find(b => b.textContent?.trim() === 'Cancel') as HTMLButtonElement;
+    await click(cancelBtn);
+
+    expect(openSpy).not.toHaveBeenCalled();
+    expect(document.body.querySelector('[role="dialog"]')).toBeNull();
+    openSpy.mockRestore();
+  });
+
+  it('shows the API error notification when Dataproc Metastore services fail with a non-403 error', async () => {
+    const notifySpy = jest.spyOn(Notification, 'emit').mockImplementation();
+    (metastoreServiceListAPI as jest.Mock).mockRejectedValueOnce(
+      new Error('Internal Server Error')
+    );
+    await renderDrawer();
+    await click(cards()[1]);
+    await wait();
+
+    expect(notifySpy).toHaveBeenCalledWith(
+      'Failed to fetch Dataproc Metastore services: Error: Internal Server Error',
+      'error',
+      { autoClose: 5000 }
+    );
+    notifySpy.mockRestore();
+  });
+
   it('renders a loader spinner with loadingText while loading services and shows None once loaded', async () => {
     let resolveServices: (services: string[]) => void = () => undefined;
     (metastoreServiceListAPI as jest.Mock).mockReturnValueOnce(
@@ -590,5 +673,55 @@ describe('MetastoreEditDrawer interactions', () => {
     expect(emptyIcebergSelect.textContent).toContain(
       'No catalogs found in project'
     );
+  });
+});
+
+describe('metastoreServiceListAPI', () => {
+  const { metastoreServiceListAPI: actualMetastoreServiceListAPI } =
+    jest.requireActual('../utils/metastoreService');
+  const utilsModule = jest.requireMock('../utils/utils') as {
+    loggedFetch: jest.Mock;
+  };
+
+  afterEach(() => {
+    jest.restoreAllMocks();
+  });
+
+  it('throws when !resp.ok even if the response JSON has no error field', async () => {
+    const fetchSpy = jest
+      .spyOn(utilsModule, 'loggedFetch')
+      .mockResolvedValueOnce({
+        ok: false,
+        status: 500,
+        statusText: 'Internal Server Error',
+        json: async () => ({})
+      } as unknown as Response);
+
+    await expect(
+      actualMetastoreServiceListAPI('my-project', '')
+    ).rejects.toThrow(
+      'Failed to fetch Dataproc Metastore services: Internal Server Error'
+    );
+    fetchSpy.mockRestore();
+  });
+
+  it('throws a clean error when resp.json() fails on a non-JSON error body', async () => {
+    const fetchSpy = jest
+      .spyOn(utilsModule, 'loggedFetch')
+      .mockResolvedValueOnce({
+        ok: false,
+        status: 502,
+        statusText: 'Bad Gateway',
+        json: async () => {
+          throw new SyntaxError('Unexpected token < in JSON');
+        }
+      } as unknown as Response);
+
+    await expect(
+      actualMetastoreServiceListAPI('my-project', '')
+    ).rejects.toThrow(
+      'Failed to fetch Dataproc Metastore services: Bad Gateway'
+    );
+    fetchSpy.mockRestore();
   });
 });

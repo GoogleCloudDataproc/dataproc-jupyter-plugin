@@ -639,4 +639,27 @@ describe('RuntimeProfileList Component', () => {
     eventEmitter.emit(RUNTIME_PROFILE_UPDATED_EVENT, mockTemplates[0]);
     expect(RuntimeProfileService.fetchRuntimeProfiles).toHaveBeenCalledTimes(1);
   });
+
+  it('should show the API Not Enabled popup and disable Create on a 403', async () => {
+    const errorResponse = { error: { code: 403, message: 'API disabled' } };
+    (
+      RuntimeProfileService.fetchRuntimeProfiles as jest.Mock
+    ).mockRejectedValueOnce(
+      Object.assign(new Error('API disabled'), { errorResponse })
+    );
+
+    await act(async () => {
+      root.render(<RuntimeProfileList />);
+    });
+
+    expect(document.querySelector('[role="dialog"]')?.textContent).toContain(
+      'API Not Enabled'
+    );
+    expect(Notification.emit).not.toHaveBeenCalled();
+    const createButton = container.querySelector(
+      '.settings-header-actions button'
+    ) as HTMLButtonElement;
+    expect(createButton.textContent).toContain('Create runtime profile');
+    expect(createButton.disabled).toBe(true);
+  });
 });

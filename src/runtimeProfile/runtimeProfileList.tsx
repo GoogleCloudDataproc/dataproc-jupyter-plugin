@@ -36,6 +36,8 @@ import { JupyterLab } from '@jupyterlab/application';
 import RuntimeProfileDetails, {
   DeleteConfirmationModal
 } from './runtimeProfileDetails';
+import ApiEnableDialog from '../utils/apiErrorPopup';
+import { authApi, handleApiError } from '../utils/utils';
 
 const iconAddRuntime = new LabIcon({
   name: 'runtime-profile:add-runtime-icon',
@@ -63,6 +65,9 @@ export default function RuntimeProfileList({ app }: { app?: JupyterLab }) {
   const [profileToDelete, setProfileToDelete] =
     useState<IRuntimeProfileRow | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [apiDialogOpen, setApiDialogOpen] = useState(false);
+  const [enableLink, setEnableLink] = useState('');
+  const [isApiDisabled, setIsApiDisabled] = useState(false);
   const fetchIdRef = useRef(0);
 
   useEffect(() => {
@@ -90,6 +95,7 @@ export default function RuntimeProfileList({ app }: { app?: JupyterLab }) {
         return;
       }
 
+      setIsApiDisabled(false);
       setRawTemplates(templates);
       const mappedProfiles = runtimeProfileListMapper(templates);
       setProfiles(mappedProfiles);
@@ -105,6 +111,24 @@ export default function RuntimeProfileList({ app }: { app?: JupyterLab }) {
         `Error fetching runtime profiles: ${error}`,
         LOG_LEVEL.ERROR
       );
+      const errorResponse = (error as any)?.errorResponse;
+      if (errorResponse?.error?.code === 403) {
+        // Same popup as Clusters and Batches. Create stays disabled until a
+        // later fetch (Refresh) succeeds.
+        const credentials = await authApi();
+        if (fetchId !== fetchIdRef.current) {
+          return;
+        }
+        handleApiError(
+          errorResponse,
+          credentials,
+          setApiDialogOpen,
+          setEnableLink,
+          setIsApiDisabled,
+          'runtimeProfiles'
+        );
+        return;
+      }
       Notification.emit(`Failed to fetch runtime profiles: ${error}`, 'error', {
         autoClose: 5000
       });
@@ -232,6 +256,14 @@ export default function RuntimeProfileList({ app }: { app?: JupyterLab }) {
           onConfirm={() => void confirmDelete()}
         />
       )}
+      {apiDialogOpen && (
+        <ApiEnableDialog
+          open={apiDialogOpen}
+          onCancel={() => setApiDialogOpen(false)}
+          onEnable={() => setApiDialogOpen(false)}
+          enableLink={enableLink}
+        />
+      )}
 
       <div className="settings-header">
         <div className="settings-header-title">
@@ -239,6 +271,7 @@ export default function RuntimeProfileList({ app }: { app?: JupyterLab }) {
           <div className="settings-header-actions">
             <button
               className="secondary-action-btn"
+              disabled={isApiDisabled}
               onClick={() =>
                 app?.commands.execute('create-runtime-profile-component')
               }

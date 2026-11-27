@@ -226,6 +226,34 @@ describe('RuntimeProfileService', () => {
         RuntimeProfileService.fetchRuntimeProfiles()
       ).rejects.toThrow('API error');
     });
+
+    it('keeps the API error response on the thrown error', async () => {
+      const errorResponse = { error: { code: 403, message: 'API disabled' } };
+      (authenticatedFetch as jest.Mock).mockResolvedValue({
+        ok: false,
+        json: jest.fn().mockResolvedValue(errorResponse)
+      });
+
+      await expect(
+        RuntimeProfileService.fetchRuntimeProfiles()
+      ).rejects.toMatchObject({ message: 'API disabled', errorResponse });
+    });
+
+    it('getDataprocApiError returns the error response, and nothing in mock mode', async () => {
+      const errorResponse = { error: { code: 403, message: 'API disabled' } };
+      (authenticatedFetch as jest.Mock).mockResolvedValue({
+        ok: false,
+        json: jest.fn().mockResolvedValue(errorResponse)
+      });
+
+      await expect(
+        new RuntimeProfileService(false).getDataprocApiError()
+      ).resolves.toEqual(errorResponse);
+      await expect(
+        new RuntimeProfileService(true).getDataprocApiError()
+      ).resolves.toBeUndefined();
+      expect(authenticatedFetch).toHaveBeenCalledTimes(1);
+    });
   });
 
   describe('deleteRuntimeProfile', () => {

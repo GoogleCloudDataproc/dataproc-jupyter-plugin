@@ -126,7 +126,9 @@ import {
   runtimeProfileService
 } from './runtimeProfileService';
 import { registerSessionKernelsInLauncher } from './sessionKernelLauncher';
-import { authApi, IAuthCredentials } from '../utils/utils';
+import { authApi, handleApiError, IAuthCredentials } from '../utils/utils';
+import ApiEnableDialog from '../utils/apiErrorPopup';
+import LoginErrorComponent from '../utils/loginErrorComponent';
 import { requestRuntimeProfileListTab } from './runtimeProfileNavigation';
 import {
   ALL_MACHINE_TYPES,
@@ -692,6 +694,10 @@ export const CreateRuntimeProfileComponent: React.FC<
     useState<boolean>(false);
   const [isOtherCustomizationDrawerOpen, setIsOtherCustomizationDrawerOpen] =
     useState<boolean>(false);
+  const [apiDialogOpen, setApiDialogOpen] = useState<boolean>(false);
+  const [enableLink, setEnableLink] = useState<string>('');
+  const [isApiDisabled, setIsApiDisabled] = useState<boolean>(false);
+  const [loginError, setLoginError] = useState<boolean>(false);
 
   // Tier and Lightning Engine state
   const initialTierValue =
@@ -1195,7 +1201,7 @@ export const CreateRuntimeProfileComponent: React.FC<
       autoscalingConfig.maxExecutors
     ]
   );
-  // Load Regions from service
+  // Load Regions and check Dataproc API status from service
   useEffect(() => {
     let isMounted = true;
     const loadInitialData = async () => {
@@ -1203,7 +1209,41 @@ export const CreateRuntimeProfileComponent: React.FC<
       let credentials: IAuthCredentials | undefined;
       try {
         credentials = await authApi();
-        const loadedRegions = await service.getRegions();
+        // Like Clusters and Batches, revoked credentials show the
+        // "Sign in with Google" button instead of the form.
+        if (credentials?.login_error === 1) {
+          if (isMounted) {
+            setLoginError(true);
+          }
+          return;
+        }
+
+        // Same popup as Clusters and Batches: block Create when the Dataproc API is
+        // disabled (403), since the form makes no Dataproc call before submit.
+        const [apiErrorResult, regionsResult] = await Promise.allSettled([
+          Promise.resolve(service.getDataprocApiError?.()),
+          service.getRegions()
+        ]);
+
+        if (
+          isMounted &&
+          apiErrorResult.status === 'fulfilled' &&
+          apiErrorResult.value?.error?.code === 403
+        ) {
+          handleApiError(
+            apiErrorResult.value,
+            credentials,
+            setApiDialogOpen,
+            setEnableLink,
+            setIsApiDisabled,
+            'createRuntimeProfile'
+          );
+        }
+
+        if (regionsResult.status === 'rejected') {
+          throw regionsResult.reason;
+        }
+        const loadedRegions = regionsResult.value;
 
         if (isMounted) {
           if (credentials?.project_id) {
@@ -1240,7 +1280,7 @@ export const CreateRuntimeProfileComponent: React.FC<
       }
     };
 
-    loadInitialData();
+    void loadInitialData();
 
     return () => {
       isMounted = false;
@@ -1470,6 +1510,19 @@ export const CreateRuntimeProfileComponent: React.FC<
     // Otherwise (scrolling anywhere outside Summary & Pricing Estimate), scroll the create form container
     formScrollContainerRef.current.scrollTop += event.deltaY;
   };
+
+  if (loginError) {
+    return (
+      <div className="login-error-parent">
+        <LoginErrorComponent
+          loginError={loginError}
+          setLoginError={setLoginError}
+          setConfigError={() => undefined}
+          app={app}
+        />
+      </div>
+    );
+  }
 
   return (
     <div
@@ -1990,13 +2043,15 @@ export const CreateRuntimeProfileComponent: React.FC<
                   isSubmitting ||
                   hasFormErrors ||
                   isDefaultNetworkUnavailable ||
-                  isCheckingNetworkAvailability
+                  isCheckingNetworkAvailability ||
+                  isApiDisabled
                 }
                 className={`runtime-profile-submit-btn ${
                   isSubmitting ||
                   hasFormErrors ||
                   isDefaultNetworkUnavailable ||
-                  isCheckingNetworkAvailability
+                  isCheckingNetworkAvailability ||
+                  isApiDisabled
                     ? 'submit-button-disable-style'
                     : 'submit-button-style'
                 }`}
@@ -2142,6 +2197,14 @@ export const CreateRuntimeProfileComponent: React.FC<
           setIsOtherCustomizationDrawerOpen(false);
         }}
       />
+      {apiDialogOpen && (
+        <ApiEnableDialog
+          open={apiDialogOpen}
+          onCancel={() => setApiDialogOpen(false)}
+          onEnable={() => setApiDialogOpen(false)}
+          enableLink={enableLink}
+        />
+      )}
     </div>
   );
 };
