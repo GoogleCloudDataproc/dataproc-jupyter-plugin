@@ -89,7 +89,7 @@ describe('SessionTemplate Widget', () => {
       sessionId
     );
     await act(async () => {
-      root?.render(widget.renderInternal());
+      root?.render(widget['render']());
     });
     return widget;
   };
