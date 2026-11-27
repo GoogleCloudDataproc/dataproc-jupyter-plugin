@@ -15,8 +15,9 @@
  * limitations under the License.
  */
 
-import React, { act } from 'react';
+import React from 'react';
 import { createRoot, Root } from 'react-dom/client';
+import { act } from 'react-dom/test-utils';
 import { JupyterLab } from '@jupyterlab/application';
 import SessionDetails from './sessionDetails';
 import { SessionService } from './sessionService';
