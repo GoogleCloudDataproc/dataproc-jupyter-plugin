@@ -610,3 +610,53 @@ describe('MetastoreEditDrawer interactions', () => {
     );
   });
 });
+
+describe('metastoreServiceListAPI', () => {
+  const { metastoreServiceListAPI: actualMetastoreServiceListAPI } =
+    jest.requireActual('../utils/metastoreService');
+  const utilsModule = jest.requireMock('../utils/utils') as {
+    loggedFetch: jest.Mock;
+  };
+
+  afterEach(() => {
+    jest.restoreAllMocks();
+  });
+
+  it('throws when !resp.ok even if the response JSON has no error field', async () => {
+    const fetchSpy = jest
+      .spyOn(utilsModule, 'loggedFetch')
+      .mockResolvedValueOnce({
+        ok: false,
+        status: 500,
+        statusText: 'Internal Server Error',
+        json: async () => ({})
+      } as unknown as Response);
+
+    await expect(
+      actualMetastoreServiceListAPI('my-project', '')
+    ).rejects.toThrow(
+      'Failed to fetch Dataproc Metastore services: Internal Server Error'
+    );
+    fetchSpy.mockRestore();
+  });
+
+  it('throws a clean error when resp.json() fails on a non-JSON error body', async () => {
+    const fetchSpy = jest
+      .spyOn(utilsModule, 'loggedFetch')
+      .mockResolvedValueOnce({
+        ok: false,
+        status: 502,
+        statusText: 'Bad Gateway',
+        json: async () => {
+          throw new SyntaxError('Unexpected token < in JSON');
+        }
+      } as unknown as Response);
+
+    await expect(
+      actualMetastoreServiceListAPI('my-project', '')
+    ).rejects.toThrow(
+      'Failed to fetch Dataproc Metastore services: Bad Gateway'
+    );
+    fetchSpy.mockRestore();
+  });
+});

@@ -1201,31 +1201,7 @@ export const CreateRuntimeProfileComponent: React.FC<
       autoscalingConfig.maxExecutors
     ]
   );
-  // Same popup as Clusters and Batches: block Create when the Dataproc API is
-  // disabled (403), since the form makes no Dataproc call before submit.
-  useEffect(() => {
-    let isMounted = true;
-    void service.getDataprocApiError().then(async errorResponse => {
-      if (errorResponse?.error?.code === 403) {
-        const credentials = await authApi();
-        if (isMounted) {
-          handleApiError(
-            errorResponse,
-            credentials,
-            setApiDialogOpen,
-            setEnableLink,
-            setIsApiDisabled,
-            'createRuntimeProfile'
-          );
-        }
-      }
-    });
-    return () => {
-      isMounted = false;
-    };
-  }, [service]);
-
-  // Load Regions from service
+  // Load Regions and check Dataproc API status from service
   useEffect(() => {
     let isMounted = true;
     const loadInitialData = async () => {
@@ -1235,10 +1211,39 @@ export const CreateRuntimeProfileComponent: React.FC<
         credentials = await authApi();
         // Like Clusters and Batches, revoked credentials show the
         // "Sign in with Google" button instead of the form.
-        if (isMounted && credentials?.login_error === 1) {
-          setLoginError(true);
+        if (credentials?.login_error === 1) {
+          if (isMounted) {
+            setLoginError(true);
+          }
+          return;
         }
-        const loadedRegions = await service.getRegions();
+
+        // Same popup as Clusters and Batches: block Create when the Dataproc API is
+        // disabled (403), since the form makes no Dataproc call before submit.
+        const [apiErrorResult, regionsResult] = await Promise.allSettled([
+          Promise.resolve(service.getDataprocApiError?.()),
+          service.getRegions()
+        ]);
+
+        if (
+          isMounted &&
+          apiErrorResult.status === 'fulfilled' &&
+          apiErrorResult.value?.error?.code === 403
+        ) {
+          handleApiError(
+            apiErrorResult.value,
+            credentials,
+            setApiDialogOpen,
+            setEnableLink,
+            setIsApiDisabled,
+            'createRuntimeProfile'
+          );
+        }
+
+        if (regionsResult.status === 'rejected') {
+          throw regionsResult.reason;
+        }
+        const loadedRegions = regionsResult.value;
 
         if (isMounted) {
           if (credentials?.project_id) {
@@ -1275,7 +1280,7 @@ export const CreateRuntimeProfileComponent: React.FC<
       }
     };
 
-    loadInitialData();
+    void loadInitialData();
 
     return () => {
       isMounted = false;

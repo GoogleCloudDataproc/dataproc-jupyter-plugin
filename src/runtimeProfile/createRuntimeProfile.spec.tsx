@@ -4070,12 +4070,17 @@ describe('CreateRuntimeProfileComponent UI & Service', () => {
   });
 
   it('shows the Sign in with Google button instead of the form when credentials are revoked', async () => {
+    const apiErrorSpy = jest.spyOn(mockService, 'getDataprocApiError');
+    const regionsSpy = jest.spyOn(mockService, 'getRegions');
     (authApi as jest.Mock).mockResolvedValueOnce({ login_error: 1 });
 
     await act(async () => {
       root.render(<CreateRuntimeProfileComponent service={mockService} />);
     });
 
+    expect(authApi).toHaveBeenCalledTimes(1);
+    expect(apiErrorSpy).not.toHaveBeenCalled();
+    expect(regionsSpy).not.toHaveBeenCalled();
     expect(container.textContent).toContain('Please login to continue');
     expect(container.querySelector('.signin-google-icon')).not.toBeNull();
     expect(container.querySelector('form.runtime-profile-form')).toBeNull();

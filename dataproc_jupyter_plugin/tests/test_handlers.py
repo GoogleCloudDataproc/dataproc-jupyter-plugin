@@ -18,7 +18,10 @@ import subprocess
 from unittest.mock import ANY, AsyncMock, Mock, call
 
 import pytest
-from dataproc_jupyter_plugin import _link_jupyter_server_extension
+from dataproc_jupyter_plugin import (
+    _DynamicGatewayKernelSpecManager,
+    _link_jupyter_server_extension,
+)
 from dataproc_jupyter_plugin.services import biglake
 from dataproc_jupyter_plugin.tests import mocks
 from google.cloud import jupyter_config
@@ -318,6 +321,27 @@ def test_logged_out_startup_still_registers_remote_kernel_support(monkeypatch):
     assert fake_server_app.config.GatewayClient.auth_token == "Initial, invalid value"
 
 
+def test_dynamic_gateway_kernelspec_manager_falls_back_without_user_filter(monkeypatch):
+    gateway_client = GatewayClient.instance()
+    original_url = gateway_client.url
+    try:
+        gateway_client.url = "https://123-dot-us-central1.kernels.googleusercontent.com"
+        manager = _DynamicGatewayKernelSpecManager()
+        monkeypatch.delattr(
+            type(manager), "_get_endpoint_for_user_filter", raising=False
+        )
+        for cls in type(manager).__mro__:
+            if "_get_endpoint_for_user_filter" in cls.__dict__:
+                monkeypatch.delattr(cls, "_get_endpoint_for_user_filter")
+        assert manager._sync_gateway_endpoints() is True
+        assert (
+            manager.base_endpoint
+            == "https://123-dot-us-central1.kernels.googleusercontent.com/api/kernelspecs"
+        )
+    finally:
+        gateway_client.url = original_url
+
+
 async def test_login_refreshes_gateway_and_lists_remote_runtime_templates(
     jp_fetch, jp_serverapp, monkeypatch
 ):
@@ -361,6 +385,44 @@ async def test_login_refreshes_gateway_and_lists_remote_runtime_templates(
         pre_login_specs_resp = await jp_fetch("api", "kernelspecs")
         pre_login_specs = json.loads(pre_login_specs_resp.body)["kernelspecs"]
         assert "pyspark-existing-template" not in pre_login_specs
+        assert gateway_requests == []
+
+        # Verify runtime kernel_manager operations (listing & starting local kernels)
+        # succeed while signed out (gateway_enabled is False) without hitting the gateway.
+        pre_login_kernels_resp = await jp_fetch("api", "kernels")
+        assert json.loads(pre_login_kernels_resp.body) == []
+        local_kernel_name = next(iter(pre_login_specs))
+        monkeypatch.setattr(
+            jp_serverapp.kernel_manager.local_manager,
+            "start_kernel",
+            AsyncMock(return_value="local-kernel-1"),
+        )
+        monkeypatch.setattr(
+            jp_serverapp.kernel_manager.local_manager,
+            "kernel_model",
+            Mock(
+                return_value={
+                    "id": "local-kernel-1",
+                    "name": local_kernel_name,
+                    "execution_state": "idle",
+                    "last_activity": "2026-01-01T00:00:00.000000Z",
+                    "connections": 0,
+                }
+            ),
+        )
+        monkeypatch.setattr(
+            jp_serverapp.kernel_manager.local_manager,
+            "shutdown_kernel",
+            AsyncMock(),
+        )
+        started_id = await jp_serverapp.kernel_manager.start_kernel(
+            kernel_name=local_kernel_name
+        )
+        assert started_id in jp_serverapp.kernel_manager._kernels
+        assert not jp_serverapp.kernel_manager.has_remote_kernels()
+        listed_kernels_resp = await jp_fetch("api", "kernels")
+        assert [k["id"] for k in json.loads(listed_kernels_resp.body)] == [started_id]
+        await jp_serverapp.kernel_manager.shutdown_kernel(started_id, now=True)
         assert gateway_requests == []
 
         # Simulate completing sign-in via the authenticator window.

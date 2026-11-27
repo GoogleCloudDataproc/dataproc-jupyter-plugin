@@ -54,7 +54,10 @@ class _DynamicGatewayKernelSpecManager(_BaseGatewayKernelSpecManager):
         base_endpoint = url_path_join(
             gateway_client.url, gateway_client.kernelspecs_endpoint
         )
-        self.base_endpoint = self._get_endpoint_for_user_filter(base_endpoint)
+        if hasattr(self, "_get_endpoint_for_user_filter"):
+            self.base_endpoint = self._get_endpoint_for_user_filter(base_endpoint)
+        else:
+            self.base_endpoint = base_endpoint
         self.base_resource_endpoint = url_path_join(
             gateway_client.url, gateway_client.kernelspecs_resource_endpoint
         )
